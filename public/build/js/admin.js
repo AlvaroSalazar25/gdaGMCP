@@ -1,0 +1,1 @@
+export const environment={development:!0,URL_BASE:"http://localhost/gdagmcp",NOMBRE_CARPETA:"/gdagmcp"};

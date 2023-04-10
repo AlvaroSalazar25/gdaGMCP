@@ -1,0 +1,1 @@
+import{environment}from"./admin.js";console.log(environment);

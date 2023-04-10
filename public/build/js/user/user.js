@@ -1,0 +1,1 @@
+import{environment}from"../app.js";console.log(environment);

@@ -1,0 +1,27 @@
+{
+    "name": "alvar/gestion_doc_archivo_gmcp",
+    "description": "Proyecto PHP 8, MVC, MySQL, jQuery",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "MVC\\": "./",
+            "Controllers\\": "./controllers",
+            "Model\\": "./models",
+            "Classes\\": "./classes",
+            "Alvar\\gdaGMCP\\": "src/"
+
+
+        }
+    },
+    "authors": [
+        {
+            "name": "AlvaroSalazar25",
+            "email": "alvaro_wtf06@hotmail.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.5",
+        "phpmailer/phpmailer": "^6.7",
+        "firebase/php-jwt": "^6.3"
+    }
+}
