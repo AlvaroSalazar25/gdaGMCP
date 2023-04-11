@@ -211,13 +211,14 @@ class ActiveRecord
         $valor = array_shift($resultado);
         return array_shift($valor);
     }
+
     public  function saveDoc()
     {
 
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         try {
             self::$db->begin_transaction();
-            $atributos = $this->sanitizarAtributos();
+            $atributos = $this->atributos();
             $idSeccion = intval($atributos['idSeccion']);
             $seccion = Seccion::where('id', $idSeccion);
             $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
@@ -226,7 +227,6 @@ class ActiveRecord
             $path = explode("/", $_FILES['path']['type']);
             $archivo = new Documento($atributos);
             $archivo->codigo = $refDoc;
-
             $carpetaArchivos = '../public/archivos/';
             if (!is_dir($carpetaArchivos)) {
                 mkdir($carpetaArchivos);
@@ -251,11 +251,11 @@ class ActiveRecord
             $archivo->path = explode("..",$seccionArchivo . $refDoc . "." . $path['1'])[1];
             $rep = $archivo->guardar();
             $resultado = self::$db->commit();
-            dd($resultado);
+            return $resultado;
         } catch (Exception $e) {
             $resultado = self::$db->rollBack();
+            return $resultado;
 
-            return ['error' => 'Documento No se pudo Guardar'];
         }
     }
 

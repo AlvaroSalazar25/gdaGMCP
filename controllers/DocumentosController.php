@@ -37,7 +37,7 @@ class DocumentosController
                 switch ($_POST['tipo']) {
                     case 'documentos':
                         $id = $_POST['id'];
-                        $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.codigo,d.data,d.keywords,d.path,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario  WHERE d.idSeccion = $id";
+                        $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario  WHERE d.idSeccion = $id";
                         $docs = Documento::consultaPlana($consulta);
                         echo json_encode($docs);
                         return;
@@ -54,6 +54,11 @@ class DocumentosController
                         echo json_encode($formularios);
                         return;
                         break;
+                    case '5docs':
+                        $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario ORDER BY created_at DESC limit 5";
+                        $docs = Documento::consultaPlana($consulta);
+                        echo json_encode($docs);
+                        return;
                     default:
                         $resolve = [
                             'error' => 'No existe busqueda de ese tipo'
@@ -84,29 +89,28 @@ class DocumentosController
                 $archivo = new Documento($_POST);
                 $archivo->idUser = $_SESSION['id'];
                 $alertas = $archivo->validar();
-                if(empty($alertas)){
-                    if(!$_FILES['path']){
-                        dd('hola');
+                if (empty($alertas)) {
+                    if (!$_FILES) {
                         $resolve = [
-                            'error' => 'Ocurrió un problema al cargar el archivo'
+                            'archivo' => 'Falta agregar el archivo'
                         ];
                         echo json_encode($resolve);
                         return;
-                    } else{
+                    } else {
                         $resultado = $archivo->saveDoc();
-                    }
-                }
-
-                
-                if (empty($alertas)) {
-                    $respuesta = $archivo->guardar();
-                    dd($respuesta);
-                    if ($respuesta['resultado'] == true) {
-                        $resolve = [
-                            'exito' => 'Archivo guardado correctamente'
-                        ];
-                        echo json_encode($respuesta);
-                        return;
+                        if ($resultado == true) {
+                            $resolve = [
+                                'exito' => 'Archivo Guardado Correctamente'
+                            ];
+                            echo json_encode($resolve);
+                            return;
+                        } else {
+                            $resolve = [
+                                'error' => 'Error al guardar el archivo'
+                            ];
+                            echo json_encode($resolve);
+                            return;
+                        }
                     }
                 }
             } else if ($validar['status'] == false) {

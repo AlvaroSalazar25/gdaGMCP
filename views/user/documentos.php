@@ -3,15 +3,12 @@
 
 <section class="mt-3">
     <div class="dibujar" id="dibujar-js">
-        
         </div>
-        <div class="dibujar  mt-4" id="dibujar-tabla">
-        
+        <div class="dibujar  mt-4 mb-5" id="dibujar-tabla">
         </div>  
     </section>
 
    <div id="modales">
-
    </div> 
    
 <?php 
