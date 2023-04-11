@@ -33,15 +33,21 @@ class SeccionController
                 switch ($_POST['tipo']) {
                     case 'seccion':
                         //$roles = seccionRoles::consultaPlana($consulta);
-                        $consulta = "SELECT s.id,s.seccion,s.idFormulario,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
+                        $consulta = "SELECT s.id,s.seccion,s.idFormulario,s.idPadre,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
                         $seccionFormularios = Seccion::consultaPlana($consulta);
                         echo json_encode($seccionFormularios);
                         break;
-                        case 'formularios':
-                            $formularios = Formulario::all();
-                            array_shift($formularios);
-                            echo json_encode($formularios);
-                            break;
+                    case 'formularios':
+                        $formularios = Formulario::all();
+                        array_shift($formularios);
+                        echo json_encode($formularios);
+                        break;
+                    case 'hijos':
+                        $id = $_POST['id'];
+                        $consulta = "SELECT s.* from seccion s WHERE s.idPadre = $id";
+                        $hijos = Seccion::consultaPlana($consulta);
+                        echo json_encode($hijos);
+                        break;
                     default:
                         $resolve = [
                             'error' => 'No existe búsqueda de ese tipo'
@@ -109,7 +115,7 @@ class SeccionController
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = $_POST['id'];
                 $seccion = Seccion::find($id);
-                if($seccion){
+                if ($seccion) {
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
 
@@ -137,8 +143,6 @@ class SeccionController
                         return;
                     }
                 }
-
-                
             }
         } else if ($validar['status'] == false) {
             $resolve = [
@@ -150,23 +154,23 @@ class SeccionController
     }
 
     public static function delete()
-    {  
+    {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] == true) {
             $alertas = [];
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $seccion = Seccion::find($_POST['id']);
                 if ($seccion) {
-                    $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion',$seccion->id);
-                    if($seccionUnidad != true){
+                    $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
+                    if ($seccionUnidad != true) {
                         $resolve = [
                             'error' => 'No se pudo eliminar las Unidades asociadas a la Sección'
                         ];
                         echo json_encode($resolve);
                         return;
                     }
-                    $seccionUser = SeccionUser::eliminarTodos('idSeccion',$seccion->id);
-                    if($seccionUser != true){
+                    $seccionUser = SeccionUser::eliminarTodos('idSeccion', $seccion->id);
+                    if ($seccionUser != true) {
                         $resolve = [
                             'error' => 'No se pudo eliminar los Usuarios asociadas a la Sección'
                         ];
@@ -175,25 +179,25 @@ class SeccionController
                     }
                     $resultado = $seccion->eliminar();
                     if ($resultado == true) {
-                            $resolve = [
-                                'exito' => 'Sección eliminada correctamente'
-                            ];
-                            echo json_encode($resolve);
-                            return;
-                        } else {
-                            $resolve = [
-                                'error' => 'Ocurrió un problema al Eliminar la Sección'
-                            ];
-                            echo json_encode($resolve);
-                            return;
-                        }   
+                        $resolve = [
+                            'exito' => 'Sección eliminada correctamente'
+                        ];
+                        echo json_encode($resolve);
+                        return;
                     } else {
                         $resolve = [
-                            'error' => 'Sección no existe o no se encuentra'
+                            'error' => 'Ocurrió un problema al Eliminar la Sección'
                         ];
                         echo json_encode($resolve);
                         return;
                     }
+                } else {
+                    $resolve = [
+                        'error' => 'Sección no existe o no se encuentra'
+                    ];
+                    echo json_encode($resolve);
+                    return;
+                }
             }
         } else if ($validar['status'] == false) {
             $resolve = [

@@ -6,11 +6,12 @@ namespace Model;
 class Seccion extends ActiveRecord
 {
     protected static $tabla = 'seccion';
-    protected static $columnasDB = ['id','seccion','idFormulario'];
+    protected static $columnasDB = ['id','seccion','idFormulario','idPadre'];
 
     public $id;
     public $seccion;
     public $idFormulario;
+    public $idPadre;
     public $created_at;
     public $updated_at;
 
@@ -19,6 +20,7 @@ class Seccion extends ActiveRecord
         $this->id = $args['id'] ?? null;
         $this->seccion = $args['seccion'] ?? '';
         $this->idFormulario = $args['idFormulario'] ?? '';
+        $this->idPadre = $args['idPadre'] ?? '';
     }
 
     public function validar()

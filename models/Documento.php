@@ -5,12 +5,13 @@ namespace Model;
 class Documento extends ActiveRecord
 {
     protected static $tabla = 'documento';
-    protected static $columnasDB = ['id','idUser', 'idSeccion', 'idFormulario','codigo', 'data','keywords', 'path','status'];
+    protected static $columnasDB = ['id','idUser', 'idSeccion', 'idFormulario','idPadre','codigo', 'data','keywords', 'path','status'];
 
     public $id;
     public $idUser;
     public $idSeccion;
     public $idFormulario;
+    public $idPadre;
     public $codigo;
     public $data;
     public $keywords;
@@ -25,6 +26,7 @@ class Documento extends ActiveRecord
         $this->idUser = $args['idUser'] ?? '';
         $this->idSeccion = $args['idSeccion'] ?? '';
         $this->idFormulario = $args['idFormulario'] ?? '';
+        $this->idPadre = $args['idPadre'] ?? '';
         $this->codigo = $args['codigo'] ?? '';
         $this->data = $args['data'] ?? '';
         $this->keywords = $args['keywords'] ?? '';
