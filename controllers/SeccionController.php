@@ -33,7 +33,7 @@ class SeccionController
                 switch ($_POST['tipo']) {
                     case 'seccion':
                         //$roles = seccionRoles::consultaPlana($consulta);
-                        $consulta = "SELECT s.id,s.seccion,s.idFormulario,s.idPadre,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
+                        $consulta = "SELECT s.id,s.seccion,s.descripcion,s.idFormulario,s.idPadre,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
                         $seccionFormularios = Seccion::consultaPlana($consulta);
                         echo json_encode($seccionFormularios);
                         break;
@@ -78,7 +78,9 @@ class SeccionController
                 if (empty($alertas)) {
                     $resultado = $seccion->guardar();
                     if ($resultado['resultado'] == true) {
+                        $hijos = Seccion::whereTodos('idPadre',$_POST['idPadre']);
                         $resolve = [
+                            'hijos' => $hijos,
                             'exito' => 'Sección agredada correctamente'
                         ];
                         echo json_encode($resolve);
@@ -118,12 +120,12 @@ class SeccionController
                 if ($seccion) {
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
-
                     if (empty($alertas)) {
                         $resultado = $seccion->guardar();
-                        //dd($resultado);
                         if ($resultado == true) {
+                            $hijos = Seccion::whereTodos('idPadre',$_POST['idPadre']);
                             $resolve = [
+                                'hijos' => $hijos,
                                 'exito' => 'Sección actualizada correctamente'
                             ];
                             echo json_encode($resolve);
@@ -179,7 +181,9 @@ class SeccionController
                     }
                     $resultado = $seccion->eliminar();
                     if ($resultado == true) {
+                        $hijos= Seccion::whereTodos('idPadre',$_POST['padre']);
                         $resolve = [
+                            'hijos' => $hijos ,
                             'exito' => 'Sección eliminada correctamente'
                         ];
                         echo json_encode($resolve);
