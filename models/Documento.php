@@ -2,6 +2,9 @@
 
 namespace Model;
 
+use Exception;
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 class Documento extends ActiveRecord
 {
     protected static $tabla = 'documento';
@@ -42,5 +45,50 @@ class Documento extends ActiveRecord
             self::$alertas['error'][] = 'Las palabras claves son obligatorias';
         }   
         return self::$alertas;
+    }
+
+    public  function saveDoc()
+    {
+        try {
+            self::$db->begin_transaction();
+            $atributos = $this->atributos();
+            $idSeccion = intval($atributos['idSeccion']);
+            $seccion = Seccion::where('id', $idSeccion);
+            $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
+            $idDoc = Documento::selectMax('id');
+            $refDoc = $recorteNSeccion . "-" . $atributos['idFormulario'] . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
+            $path = explode("/", $_FILES['path']['type']);
+            $archivo = new Documento($atributos);
+            $archivo->codigo = $refDoc;
+            $carpetaArchivos = '../public/archivos/';
+            if (!is_dir($carpetaArchivos)) {
+                mkdir($carpetaArchivos);
+            }
+            setlocale(LC_ALL,"spanish");
+            $year = strftime('%Y');
+            $mes = strftime('%B');
+            //dd($seccion->seccion);
+            $yearArchivo = $carpetaArchivos . $year . "/";
+            $mesArchivo = $yearArchivo . $mes . "/";
+            $seccionArchivo = $mesArchivo.strtolower($seccion->seccion). "/";
+            if (!is_dir($yearArchivo)) {
+                mkdir($yearArchivo);
+            }
+            if (!is_dir($mesArchivo)) {
+                mkdir($mesArchivo);
+            }
+            if(!is_dir($seccionArchivo)){
+                mkdir($seccionArchivo);
+            }
+            move_uploaded_file($_FILES['path']['tmp_name'], $seccionArchivo . $refDoc . "." . $path['1']);
+            $archivo->path = explode("..",$seccionArchivo . $refDoc . "." . $path['1'])[1];
+            $resp = $archivo->guardar();
+            $resolve = self::$db->commit();
+            return $resp;
+        } catch (Exception $e) {
+            self::$db->rollBack();       
+            return $e->getMessage();
+        
+        }
     }
 }

@@ -134,8 +134,7 @@ class FormularioController
                     ];
                     echo json_encode($resolve);
                     return;
-                }
-                
+                }  
             }
         } else if ($validar['status'] == false) {
             $resolve = [

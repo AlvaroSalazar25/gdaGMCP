@@ -98,6 +98,7 @@ class DocumentosController
                         return;
                     } else {
                         $resultado = $archivo->saveDoc();
+                        dd($resultado);  
                         if ($resultado == true) {
                             $resolve = [
                                 'exito' => 'Archivo Guardado Correctamente'

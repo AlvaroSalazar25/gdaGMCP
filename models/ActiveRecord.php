@@ -4,6 +4,8 @@ namespace Model;
 
 use Exception;
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 class ActiveRecord
 {
 
@@ -188,74 +190,36 @@ class ActiveRecord
     // crea un nuevo registro
     public function crear()
     {
-        // Sanitizar los datos
-        $atributos = $this->sanitizarAtributos();
-
-        // Insertar en la base de datos
-        $query = "INSERT INTO " . static::$tabla . " ( ";
-        $query .= join(', ', array_keys($atributos));
-        $query .= " ) VALUES ('";
-        $query .= join("', '", array_values($atributos));
-        $query .= "')";
-        // Resultado de la consulta
-        $resultado = self::$db->query($query);
-        return [
-            'resultado' =>  $resultado,
-            'id' => self::$db->insert_id
-        ];
+        try {
+            // Sanitizar los datos
+            $atributos = $this->sanitizarAtributos();
+            // Insertar en la base de datos
+            $query = "INSERT INTO " . static::$tabla . " ( ";
+            $query .= join(', ', array_keys($atributos));
+            $query .= " ) VALUES ('";
+            $query .= join("', '", array_values($atributos));
+            $query .= "')";
+            // Resultado de la consulta
+            $status = self::$db->query($query);
+            self::$db->commit();
+            return [
+                'resultado' =>  $status,
+                'id' => self::$db->insert_id
+            ];
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
     }
+
     public static function selectMax($buscar)
     {
-        $query = "SELECT MAX($buscar) + 1 FROM " . static::$tabla;
-        $resultado = self::consultaPlana($query);
-        $valor = array_shift($resultado);
-        return array_shift($valor);
-    }
-
-    public  function saveDoc()
-    {
-
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         try {
-            self::$db->begin_transaction();
-            $atributos = $this->atributos();
-            $idSeccion = intval($atributos['idSeccion']);
-            $seccion = Seccion::where('id', $idSeccion);
-            $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
-            $idDoc = Documento::selectMax('id');
-            $refDoc = $recorteNSeccion . "-" . $atributos['idFormulario'] . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
-            $path = explode("/", $_FILES['path']['type']);
-            $archivo = new Documento($atributos);
-            $archivo->codigo = $refDoc;
-            $carpetaArchivos = '../public/archivos/';
-            if (!is_dir($carpetaArchivos)) {
-                mkdir($carpetaArchivos);
-            }
-            setlocale(LC_ALL,"spanish");
-            $year = strftime('%Y');
-            $mes = strftime('%B');
-            //dd($seccion->seccion);
-            $yearArchivo = $carpetaArchivos . $year . "/";
-            $mesArchivo = $yearArchivo . $mes . "/";
-            $seccionArchivo = $mesArchivo.strtolower($seccion->seccion). "/";
-            if (!is_dir($yearArchivo)) {
-                mkdir($yearArchivo);
-            }
-            if (!is_dir($mesArchivo)) {
-                mkdir($mesArchivo);
-            }
-            if(!is_dir($seccionArchivo)){
-                mkdir($seccionArchivo);
-            }
-            move_uploaded_file($_FILES['path']['tmp_name'], $seccionArchivo . $refDoc . "." . $path['1']);
-            $archivo->path = explode("..",$seccionArchivo . $refDoc . "." . $path['1'])[1];
-            $rep = $archivo->guardar();
-            $resultado = self::$db->commit();
-            return $resultado;
+            $query = "SELECT MAX($buscar) + 1 FROM " . static::$tabla;
+            $resultado = self::consultaPlana($query);
+            $valor = array_shift($resultado);
+            return array_shift($valor);
         } catch (Exception $e) {
-            $resultado = self::$db->rollBack();
-            return $resultado;
-
+            return $e->getMessage();
         }
     }
 
@@ -326,7 +290,6 @@ class ActiveRecord
     public function eliminar()
     {
         $query = "DELETE FROM "  . static::$tabla . " WHERE id = " . self::$db->escape_string($this->id) . " LIMIT 1";
-        //dd($query);
         $resultado = self::$db->query($query);
         return $resultado;
     }

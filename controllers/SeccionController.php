@@ -7,6 +7,7 @@ use Model\Errors;
 use Model\Unidad;
 use Model\Seccion;
 use Classes\JsonWT;
+use Model\Documento;
 use Model\Formulario;
 use Model\SeccionUser;
 use Model\SeccionUnidad;
@@ -78,7 +79,7 @@ class SeccionController
                 if (empty($alertas)) {
                     $resultado = $seccion->guardar();
                     if ($resultado['resultado'] == true) {
-                        $hijos = Seccion::whereTodos('idPadre',$_POST['idPadre']);
+                        $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
                         $resolve = [
                             'hijos' => $hijos,
                             'exito' => 'Sección agredada correctamente'
@@ -115,43 +116,105 @@ class SeccionController
         if ($validar['status'] == true) {
             $alertas = [];
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $id = $_POST['id'];
-                $seccion = Seccion::find($id);
-                if ($seccion) {
-                    $seccion->sincronizar($_POST);
-                    $alertas = $seccion->validar();
-                    if (empty($alertas)) {
-                        $resultado = $seccion->guardar();
-                        if ($resultado == true) {
-                            $hijos = Seccion::whereTodos('idPadre',$_POST['idPadre']);
-                            $resolve = [
-                                'hijos' => $hijos,
-                                'exito' => 'Sección actualizada correctamente'
-                            ];
-                            echo json_encode($resolve);
-                            return;
+                switch ($_POST['tipo']) {
+                    case 'updatePadre':
+                        $id = $_POST['padre'];
+                        $seccion = Seccion::find($id);
+                        $padre = $seccion->id;
+                        if ($seccion) {
+                            $seccion->sincronizar($_POST);
+                            $alertas = $seccion->validar();
+                            if (empty($alertas)) {
+                                $resultado = $seccion->guardar();
+                                if ($resultado == true) {
+                                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                                    $resolve = [
+                                        'hijos' => $hijos,
+                                        'exito' => 'Sección actualizada correctamente'
+                                    ];
+                                    echo json_encode($resolve);
+                                    return;
+                                } else {
+                                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                                    $resolve = [
+                                        'hijos' => $hijos,
+                                        'error' => 'Ocurrió un problema al guardar la Sección'
+                                    ];
+                                    echo json_encode($resolve);
+                                    return;
+                                }
+                            } else {
+                                $resolve = [
+                                    'alertas' => $alertas
+                                ];
+                                echo json_encode($resolve);
+                                return;
+                            }
                         } else {
                             $resolve = [
-                                'error' => 'Ocurrió un problema al guardar la Sección'
+                                'error' => 'La Sección no Existe'
                             ];
                             echo json_encode($resolve);
                             return;
                         }
-                    } else {
+                        break;
+                    case 'updateHijo':
+                        $id = $_POST['hijo'];
+                        $seccion = Seccion::find($id);
+                        $padre = $seccion->idPadre;
+                        if ($seccion) {
+                            $seccion->sincronizar($_POST);
+                            $alertas = $seccion->validar();
+                            if (empty($alertas)) {
+                                $resultado = $seccion->guardar();
+                                if ($resultado == true) {
+                                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                                    $resolve = [
+                                        'hijos' => $hijos,
+                                        'exito' => 'Sección actualizada correctamente'
+                                    ];
+                                    echo json_encode($resolve);
+                                    return;
+                                } else {
+                                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                                    $resolve = [
+                                        'hijos' => $hijos,
+                                        'error' => 'Ocurrió un problema al guardar la Sección'
+                                    ];
+                                    echo json_encode($resolve);
+                                    return;
+                                }
+                            } else {
+                                $resolve = [
+                                    'alertas' => $alertas
+                                ];
+                                echo json_encode($resolve);
+                                return;
+                            }
+                        } else {
+                            $resolve = [
+                                'error' => 'La Sección no Existe'
+                            ];
+                            echo json_encode($resolve);
+                            return;
+                        }
+                        break;
+                        default:
                         $resolve = [
-                            'alertas' => $alertas
+                            'error' => 'No existe búsqueda de ese tipo'
                         ];
                         echo json_encode($resolve);
                         return;
-                    }
+                        break;
                 }
+                
+            } else if ($validar['status'] == false) {
+                $resolve = [
+                    'exit' => $validar['error']
+                ];
+                echo json_encode($resolve);
+                return;
             }
-        } else if ($validar['status'] == false) {
-            $resolve = [
-                'exit' => $validar['error']
-            ];
-            echo json_encode($resolve);
-            return;
         }
     }
 
@@ -162,6 +225,7 @@ class SeccionController
             $alertas = [];
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $seccion = Seccion::find($_POST['id']);
+                $padre = $seccion->idPadre;
                 if ($seccion) {
                     $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
                     if ($seccionUnidad != true) {
@@ -179,22 +243,52 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $resultado = $seccion->eliminar();
-                    if ($resultado == true) {
-                        $hijos= Seccion::whereTodos('idPadre',$_POST['padre']);
+                    $docSeccion = Documento::eliminarTodos('idSeccion', $seccion->id);
+                    if ($docSeccion == true){
+                        $resultado = $seccion->eliminar();
+                        if ($resultado == true) {
+                            $hijos = Seccion::whereTodos('idPadre', $padre);
+                            $resolve = [
+                                'padre' => $padre,
+                                'hijos' => $hijos,
+                                'exito' => 'Sección eliminada correctamente'
+                            ];
+                            echo json_encode($resolve);
+                            return;
+                        } else {
+                            $hijos = Seccion::whereTodos('idPadre', $padre);
+                            $resolve = [
+                                'padre' => $padre,
+                                'hijos' => $hijos,
+                                'error' => 'Ocurrió un problema al Eliminar la Sección'
+                            ];
+                            echo json_encode($resolve);
+                            return;
+                        }
+                    } else{
+                            $datosError = debug_backtrace();
+                            $datosErrors = array_shift($datosError);
+                            $errorUnidadUpdate = [
+                                'idSeccion' =>  $seccion->id,
+                                'nombreSeccion' => $seccion->seccion,
+                                'padreSeccion' => $seccion->idPadre
+                            ];
+                            $errorGenerado = [
+                                'tabla_error' => Seccion::getTabla(),
+                                'controller_error' => $datosErrors['class'],
+                                'function_error' => $datosErrors['function'],
+                                'error' =>  json_encode($errorUnidadUpdate)
+                            ];
+                            $errorSave = new Errors($errorGenerado);
+                            $errorSave->guardar();
+
                         $resolve = [
-                            'hijos' => $hijos ,
-                            'exito' => 'Sección eliminada correctamente'
-                        ];
-                        echo json_encode($resolve);
-                        return;
-                    } else {
-                        $resolve = [
-                            'error' => 'Ocurrió un problema al Eliminar la Sección'
+                            'error' => 'Ocurrió un problema al Eliminar los documentos de la sección'
                         ];
                         echo json_encode($resolve);
                         return;
                     }
+                    
                 } else {
                     $resolve = [
                         'error' => 'Sección no existe o no se encuentra'

@@ -32,4 +32,5 @@ class Seccion extends ActiveRecord
         }
         return self::$alertas;
     }
+
 }

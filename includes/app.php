@@ -9,4 +9,9 @@ require 'database.php';
 
 // Conectarnos a la base de datos
 use Model\ActiveRecord;
+use Model\Documento;
+use Model\Seccion;
+
 ActiveRecord::setDB($db);
+Seccion::setDB($db);
+Documento::setDB($db);
