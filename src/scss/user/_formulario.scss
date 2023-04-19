@@ -1,0 +1,37 @@
+.divDinamico{
+    display: flex !important;
+    flex-direction: row !important;
+}
+.divCrear{
+    display: grid !important;
+    grid-template-columns: 0.1fr  1.8fr 1.4fr 0.15fr;
+    grid-template-rows: none;
+    gap: 10px;
+    padding: 5px 10px;
+    margin: 5px 0px 5px 0px;
+}
+
+.errorInput{
+    border:1px solid red !important;
+}
+
+.errorAccordeon{
+    background-color: #dc3545!important;
+    color:white !important;
+}
+
+
+.apagar{
+    display: none !important; 
+}
+.cursito{
+    cursor: not-allowed !important;
+}
+
+.btnAltura{
+    height:80px
+}
+
+.puntero{
+    cursor:pointer;
+}

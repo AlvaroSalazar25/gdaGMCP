@@ -1,0 +1,40 @@
+.botonCarpeta{
+    font-size: 12px;
+}
+
+.hoverCarpeta:hover{
+    .botonCarpeta{
+        color:white !important;
+    }
+    .botonesCarpeta{
+        color:white !important;
+    }
+}
+
+.widthCarpeta{
+    min-width:100px;
+    height:100px
+
+}
+
+.padreCarpeta{
+    position: relative;
+}
+
+.botonesCarpeta{
+    position: absolute;
+    top: 15px;
+    right: 23px;
+}
+
+.dropdown-toggle:after{
+    display:none !important;
+}
+
+.noVisible{
+    visibility: hidden;
+}
+
+.puntero{
+    cursor:pointer;
+}
