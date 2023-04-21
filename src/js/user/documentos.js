@@ -160,9 +160,9 @@ function traerSeccionesFormulario() {
 }
 
 async function dibujarDocumentos() {
+    var html = "";
     let seccionesActualizadas = await traerSecciones();
     let ultimos = await traerUltimosDocs();
-    var html = "";
     document.getElementById("dibujar-tabla").innerHTML = "";
 
     html +=
@@ -206,7 +206,6 @@ async function dibujarDocumentos() {
     html2 += "</tr>";
     html2 += "</thead>";
     html2 += '<tbody class="contenido" id="contenido">';
-    console.log(ultimos);
     ultimos.forEach((documento,index) => {
             html2 += "<tr>"
             html2 += "<td>" + (parseInt(index) + 1) + "</td>"
@@ -244,11 +243,10 @@ async function dibujarDocumentos() {
             html2 += ' </div>';
             html2 += '  <div class="modal-body">';
 
-            let claves = JSON.parse(documento.keywords)
+            let claves = documento.keywords
             let datos = JSON.parse(documento.data)
             html2 += "<p><strong>KEYWORDS</strong></p>";
-            html2 += "<p>" + claves.keywords + "</p>";
-            console.log('datos', datos);
+            html2 += "<p>" + claves + "</p>";
             datos.forEach(dato => {
                 html2 += "<p><strong>" + dato.nombre.toUpperCase() + "</strong></p>";
                 html2 += "<p>" + dato.valor + "</p>";
@@ -386,6 +384,7 @@ async function elegirSeccionAgregar() {
 }
 
 async function saveArchivo(idFormulario = 1, seccion = 1) {
+    var html = "";
     const inputs = document.querySelectorAll(".datos");
     const nombres = Array.apply(null, inputs);
     //ya tengo un array con los inputs, debo hacer la validacion  para agregar el rojo y el texto
@@ -414,9 +413,8 @@ async function saveArchivo(idFormulario = 1, seccion = 1) {
             }
 
             if (nombreInput == 'keywords') {
-                claves = { 'keywords': valorInput };
+                claves = valorInput ;
             } else if (nombreInput == 'archivo') {
-                console.log('nombreInput', nombre);
                 documento = nombre.files[0];
             } else {
                 info.push({
@@ -455,7 +453,12 @@ async function saveArchivo(idFormulario = 1, seccion = 1) {
                 timer: 1500
             }).then(() => {
                 dibujarDocumentos();
-
+            })
+        } else if (response.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.error
             })
         } else if (response.archivo) {
             Swal.fire({

@@ -13,7 +13,7 @@ use Model\Documento;
 use Model\Formulario;
 use Model\SeccionUser;
 use Model\SeccionUnidad;
-
+use Exception;
 
 define('token', $_SERVER['HTTP_TOKEN'] ?? '');
 class DocumentosController
@@ -98,8 +98,7 @@ class DocumentosController
                         return;
                     } else {
                         $resultado = $archivo->saveDoc();
-                        dd($resultado);  
-                        if ($resultado == true) {
+                        if ($resultado['resultado'] == true) {
                             $resolve = [
                                 'exito' => 'Archivo Guardado Correctamente'
                             ];

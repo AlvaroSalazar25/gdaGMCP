@@ -44,12 +44,6 @@ class UnidadController
                         }
                         echo json_encode($unidades);
                         break;
-                    case 'seccion':
-                        //$roles = seccionRoles::consultaPlana($consulta);
-                        $consulta = "SELECT s.id,s.seccion,s.idFormulario,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
-                        $unidadFormularios = Seccion::consultaPlana($consulta);
-                        echo json_encode($unidadFormularios);
-                        break;
                     default:
                         $resolve = [
                             'error' => 'No existe busqueda de ese tipo'

@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', iniciarApp())
 
 async function iniciarApp() {
     unidades = await traerUnidades();
-    secciones = await traerSecciones();
     console.log('asdfasdf', unidades);
+
     dibujarUnidades(unidades)
 }
 
@@ -84,46 +84,7 @@ function traerUnidades() {
     })
 }
 
-function traerSecciones() {
-    return new Promise((resolve, reject) => {
-        let secciones = []
-        $.ajax({
-            data: {
-                "tipo": 'seccion'
-            },
-            //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/unidad/datos',
-            type: 'POST',
-            headers: {
-                'token': token
-            },
-            dataType: 'json'
-        }).done((response) => {
-            if (response.exit) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: response.exit,
-                    showConfirmButton: false,
-                    text: 'Sesión expirada, vuelva a iniciar sesión',
-                    timer: 3000
-                }).then(() => {
-                    window.location.href = URL_BASE + "/?r=8";
-                })
-            }
-            if(response.length == 0){
-                resolve(secciones)
-            }
-            $.each(response, (index, seccion) => {
-                secciones.push(seccion);
-                if (response.length == index + 1) {
-                    resolve(secciones)
-                }
-            })
-        }).fail((err) => {
-            reject(err);
-        });
-    })
-}
+
 
 async function dibujarUnidadesUpdate() {
     let unid = await traerUnidades();

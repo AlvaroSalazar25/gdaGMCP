@@ -49,6 +49,13 @@ class SeccionController
                         $hijos = Seccion::consultaPlana($consulta);
                         echo json_encode($hijos);
                         break;
+                    case 'documentos':
+                        $id = $_POST['id'];
+                        $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario  WHERE d.idSeccion =  $id";
+                        $documentos = Seccion::consultaPlana($consulta);
+                        echo json_encode($documentos);
+                        break;
+
                     default:
                         $resolve = [
                             'error' => 'No existe búsqueda de ese tipo'
@@ -199,7 +206,7 @@ class SeccionController
                             return;
                         }
                         break;
-                        default:
+                    default:
                         $resolve = [
                             'error' => 'No existe búsqueda de ese tipo'
                         ];
@@ -207,7 +214,6 @@ class SeccionController
                         return;
                         break;
                 }
-                
             } else if ($validar['status'] == false) {
                 $resolve = [
                     'exit' => $validar['error']
@@ -244,7 +250,7 @@ class SeccionController
                         return;
                     }
                     $docSeccion = Documento::eliminarTodos('idSeccion', $seccion->id);
-                    if ($docSeccion == true){
+                    if ($docSeccion == true) {
                         $resultado = $seccion->eliminar();
                         if ($resultado == true) {
                             $hijos = Seccion::whereTodos('idPadre', $padre);
@@ -265,22 +271,22 @@ class SeccionController
                             echo json_encode($resolve);
                             return;
                         }
-                    } else{
-                            $datosError = debug_backtrace();
-                            $datosErrors = array_shift($datosError);
-                            $errorUnidadUpdate = [
-                                'idSeccion' =>  $seccion->id,
-                                'nombreSeccion' => $seccion->seccion,
-                                'padreSeccion' => $seccion->idPadre
-                            ];
-                            $errorGenerado = [
-                                'tabla_error' => Seccion::getTabla(),
-                                'controller_error' => $datosErrors['class'],
-                                'function_error' => $datosErrors['function'],
-                                'error' =>  json_encode($errorUnidadUpdate)
-                            ];
-                            $errorSave = new Errors($errorGenerado);
-                            $errorSave->guardar();
+                    } else {
+                        $datosError = debug_backtrace();
+                        $datosErrors = array_shift($datosError);
+                        $errorUnidadUpdate = [
+                            'idSeccion' =>  $seccion->id,
+                            'nombreSeccion' => $seccion->seccion,
+                            'padreSeccion' => $seccion->idPadre
+                        ];
+                        $errorGenerado = [
+                            'tabla_error' => Seccion::getTabla(),
+                            'controller_error' => $datosErrors['class'],
+                            'function_error' => $datosErrors['function'],
+                            'error' =>  json_encode($errorUnidadUpdate)
+                        ];
+                        $errorSave = new Errors($errorGenerado);
+                        $errorSave->guardar();
 
                         $resolve = [
                             'error' => 'Ocurrió un problema al Eliminar los documentos de la sección'
@@ -288,7 +294,6 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    
                 } else {
                     $resolve = [
                         'error' => 'Sección no existe o no se encuentra'

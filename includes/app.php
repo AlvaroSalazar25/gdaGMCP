@@ -13,5 +13,3 @@ use Model\Documento;
 use Model\Seccion;
 
 ActiveRecord::setDB($db);
-Seccion::setDB($db);
-Documento::setDB($db);
