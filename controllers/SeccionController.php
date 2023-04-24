@@ -54,6 +54,13 @@ class SeccionController
                         $documentos = Seccion::consultaPlana($consulta);
                         echo json_encode($documentos);
                         break;
+                        case 'buscarCarpetas':
+                            $id = $_POST['id'];
+                            $value = $_POST['value'];
+                            $consulta = "SELECT * FROM seccion s WHERE s.idPadre = $id AND s.seccion like '%$value%'";
+                            $documentos = Seccion::consultaPlana($consulta);
+                            echo json_encode($documentos);
+                            break;
 
                     default:
                         $resolve = [
