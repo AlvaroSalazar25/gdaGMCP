@@ -66,6 +66,7 @@ function traerSecciones() {
                 })
             }
             if (response.length == 0) {
+                console.log('secciones', secciones);
                 resolve(secciones)
             }
             $.each(response, (index, seccion) => {
@@ -215,7 +216,7 @@ async function dibujarSecciones() {
     html += '<section>'
     html += '<div class="mb-3">'
     html += '<div class="d-flex justify-content-end">'
-    html += '<a class=" btn btn-primary " onclick="agregarSeccion(0)"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton">Agregar Sección</span></a>'
+    html += '<a class=" btn btn-primary " onclick="agregarSeccion(0)"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton"> Carpeta</span></a>'
     html += '</div>'
     html += '</div>'
     html += '</section>'
@@ -224,10 +225,10 @@ async function dibujarSecciones() {
     seccionesActualizadas.forEach(seccion => {
         if (seccion.idPadre == 0) {
             html += '<div class="p-3 ">'
-            html += '<a class="btn btn-outline-dark" style="border:1px solid" onclick="entrarSeccion(' + seccion.id + ')">'
-            html += '<div class="row justify-content-center align-items-center hoverCarpeta widthCarpeta">'
+            html += '<a class="btn btn-outline-dark hoverCarpeta" style="border:1px solid" onclick="entrarSeccion(' + seccion.id + ')">'
+            html += '<div class="row justify-content-center align-items-center widthCarpeta">'
             html += '<div>'
-            html += '<i class="fa-regular fa-folder-open" style="font-size:40px"></i>'
+            html += '<i class="fa-regular fa-folder-open" style="font-size:40px;;color:' + seccion.color + '"></i>'
             html += '<p class="botonCarpeta">' + seccion.seccion + '</p>'
             html += '</div>'
             html += '</div>'
@@ -246,9 +247,52 @@ async function dibujarAtras(padre) {
     dibujarHijos(seccionActual.idPadre, seccionesAnterior)
 }
 
+function hexToRgb(hex) {
+    const normal = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (normal) {
+        return (normal.slice(1).map(e => parseInt(e, 16)))
+    };
+    const shorthand = hex.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+    if (shorthand) {
+        return (shorthand.slice(1).map(e => 0x11 * parseInt(e, 16)));
+    }
+    return (0);
+}
+
+function colorCarpetas(carpeta) {
+    var html = ""
+    html += '<div class="p-3 padreCarpeta">'
+    html += '<div class="">'
+    html += '<a class="btn btn-outline-dark" style="border:1px solid" onclick="entrarSeccion(' + carpeta.id + ')">'
+    html += '<div class="row justify-content-center align-items-center  widthCarpeta ">'
+    html += '<div class="">'
+    html += '<i class="fa-regular fa-folder-open" style="font-size:40px;margin-bottom:10px;color:' + carpeta.color + '"></i>'
+    html += '<div style="margin-bottom:-7px"><p>' + (carpeta.seccion[0].toUpperCase() + carpeta.seccion.substring(1)) + '</p></div>'
+    html += '</div>'
+
+    html += '</div>'
+    html += '</a>'
+
+    html += '<div class="d-flex justify-content-center align-items-center elip">'
+
+    html += '<buttom class="btn btn-outline-secondary botonesCarpeta btn-hover dropdown-toggle py-2 px-3"  style="border:none" data-bs-toggle="dropdown" aria-expanded="false" type="buttom">'
+    html += '<i class="fa-solid fa-ellipsis-vertical fa-xl elip" ></i>'
+    html += '</buttom>'
+
+    html += '<ul class="dropdown-menu dropdown-menu-dark">'
+    html += '<li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal' + carpeta.id + '"><i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>Editar</a></li>'
+    html += '<li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + carpeta.id + ')"><i class="fa-solid fa-trash" style="margin-right:7px"></i>Eliminar</a></li>'
+    html += ' </ul>'
+    html += '</div>' // fin dropdown
+    html += '</div>' // div de la carpeta
+    return html;
+}
+
 async function dibujarHijos(padre, hijos) {
     var html = "";
+    console.log('en los hijos');
     let seccionesActualizadas = await traerSecciones();
+    console.log('seccionesActualizadas', seccionesActualizadas);
     let formularios = await traerFormularios();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
     if (seccionActual == undefined) {
@@ -259,7 +303,7 @@ async function dibujarHijos(padre, hijos) {
         html += '</div>'
     } else {
         html += '<div class="d-flex justify-content-center">'
-        html += '<h1 class="text-black mb-3"><i class="fa-solid fa-folder-open fa-xl" style="margin-right:5px"></i><strong>' + seccionActual.seccion + '</strong></h1>'
+        html += '<h1 class="text-black mb-3"><i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;color:' + seccionActual.color + '"></i><strong>' + seccionActual.seccion + '</strong></h1>'
 
         html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" style="margin-left:5px;margin-top:4px;width:25px;height:30px;border-radius:15px">'
         html += '<i class="fa-solid fa-ellipsis-vertical fa-xl "></i>'
@@ -285,14 +329,14 @@ async function dibujarHijos(padre, hijos) {
     html += '<div class="d-flex justify-content-end">'
 
     html += '<div>'
-    html += '<a class=" btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-folder-open fa-2x"></i><span class="span-boton">Agregar Carpeta</span></a>'
+    html += '<a class=" btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     //----------------------------------------------------------------------------------------------------
     html += '</div>'
 
     html += '</div>'
 
-    html += '<section class="contenedor-crearUsuario bg-light my-4">'
+    html += '<section class="contenedor-crearUsuario my-4 bordeContenedor" style="">'
 
     html += '<div class=" d-flex justify-content-center" style="flex-wrap:wrap">'
     if (hijos.length == 0) {
@@ -303,29 +347,7 @@ async function dibujarHijos(padre, hijos) {
         html += "</div>";
     } else {
         hijos.forEach(hijo => {
-            html += '<div class="p-3 padreCarpeta ">'
-            html += '<div class="botonesCarpeta row justify-content-center align-items-center">'
-            html += '<button type="button" style="border:none" class="btn btn-outline-secondary dropdown-toggle py-2 px-3" data-bs-toggle="dropdown" aria-expanded="false">'
-            html += '<i class="fa-solid fa-ellipsis-vertical fa-xl "></i>'
-            html += '</button>'
-            html += '<ul class="dropdown-menu dropdown-menu-dark">'
-            html += ' <li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal' + hijo.id + '">'
-            html += '<i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>'
-            html += 'Editar</a></li>'
-            html += ' <li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + hijo.id + ')">'
-            html += '<i class="fa-solid fa-trash" style="margin-right:7px"></i>'
-            html += 'Eliminar</a></li>'
-            html += ' </ul>'
-            html += '</div>'
-
-            html += '<a class="btn btn-outline-dark " style="border:1px solid" onclick="entrarSeccion(' + hijo.id + ')">'
-            html += '<div class="row justify-content-center align-items-center hoverCarpeta widthCarpeta">'
-            html += '<div>'
-            html += '<i class="fa-regular fa-folder-open" style="font-size:40px"></i>'
-            html += '<p class="botonCarpeta">' + (hijo.seccion[0].toUpperCase() + hijo.seccion.substring(1)) + '</p>'
-            html += '</div>'
-            html += '</div>'
-            html += '</a>'
+            html += colorCarpetas(hijo)
             html += '</div>'
             // ----------------------------------- modal para editar por cada hijo ----------------------------------
             html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
@@ -336,27 +358,12 @@ async function dibujarHijos(padre, hijos) {
             html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
             html += '  </div>'
             html += '  <div class="modal-body">'
-            html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta ' + hijo.seccion + '</h3>'
+            html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
 
             html += '<form >'
             html += '<div class="mb-3">'
             html += '<label  class="form-label"><strong>Nombre:</strong></label>'
             html += '<input type="text" class="form-control" id="seccion' + hijo.id + '" value="' + hijo.seccion + '">'
-            html += '</div>'
-
-            html += '<div class="mb-3">'
-            html += '<label class="form-label"><strong>Formulario:</strong></label>'
-            html += '<select class="form-select" id="formulario' + hijo.id + '" style="height:30px">'
-            html += '<option value="" selected disabled> -- Seleccione una opcion -- </option>'
-
-            formularios.forEach(formulario => {
-                if (hijo.idFormulario == formulario.id) {
-                    html += '<option value="' + formulario.id + '" selected>' + formulario.nombre + '</option>'
-                } else {
-                    html += '<option value="' + formulario.id + '">' + formulario.nombre + '</option>'
-                }
-            })
-            html += '</select>'
             html += '</div>'
 
             html += '<div class="mb-3">'
@@ -368,7 +375,12 @@ async function dibujarHijos(padre, hijos) {
             }
             html += '</div>'
 
-            html += '<div class="w-100 mt-2" id="alertas">'
+            html += '<div class="mb-3">'
+            html += '<label class="form-label"><strong>Color:</strong></label>'
+            html += '<input type="color" class="form-control w-25 puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
+            html += '</div>'
+
+            html += '<div class="w-100 mt-2" id="alertas'+hijo.id+'">'
             html += '</div>'
 
             html += '</form>'
@@ -390,33 +402,28 @@ async function dibujarHijos(padre, hijos) {
     html += '<div class="modal-content">'
     html += '  <div class="modal-header bg-black">'
     if (seccionActual == undefined) {
-        html += '   <h5 class="modal-title text-white">Agregar Sección</h5>'
+        html += '   <h5 class="modal-title text-white">Crear Carpeta</h5>'
     } else {
-        html += '   <h5 class="modal-title text-white">Agregar Sección en ' + seccionActual.seccion + '</h5>'
+        html += '   <h5 class="modal-title text-white">Agregar Carpeta en ' + seccionActual.seccion + '</h5>'
     }
     html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
     html += '  </div>'
     html += '  <div class="modal-body">'
-    html += '<h3 class="text-black mt-2 mb-4">Ingrese los datos de la nueva Sección</h3>'
+    html += '<h3 class="text-black mt-2 mb-4">Ingresar datos de la Carpeta</h3>'
 
     html += '<div class="mb-3">'
     html += '<label  class="form-label"><strong>Nombre:</strong></label>'
     html += '<input type="text" class="form-control" id="seccion" name="seccion" placeholder="Ingrese nombre">'
     html += '</div>'
 
-    html += '<div class="mb-3">'
-    html += '<label  class="form-label"><strong>Formulario:</strong></label>'
-    html += '<select class="form-select" id="formulario" name="formulario" style="height:30px">'
-    html += '<option value="" selected disabled> -- Seleccione una opcion -- </option>'
-    formularios.forEach(formulario => {
-        html += '<option value="' + formulario.id + '">' + formulario.nombre + '</option>'
-    })
-    html += '</select>'
+    html += '<div class="mb-2">'
+    html += '<label  class="form-label"><strong>Descripción:</strong></label>'
+    html += '<textarea class="form-control" rows="5" id="descripcion" placeholder="Ingrese descripción"></textarea>'
     html += '</div>'
 
     html += '<div class="mb-3">'
-    html += '<label  class="form-label"><strong>Descripción:</strong></label>'
-    html += '<textarea class="form-control" rows="5" id="descripcion" placeholder="Ingrese descripción"></textarea>'
+    html += '<label  class="form-label"><strong>Color:</strong></label>'
+    html += '<input type="color" class="form-control w-25" id="color" name="color">'
     html += '</div>'
 
     html += '<div class="w-100 mt-2" id="alertas">'
@@ -426,7 +433,7 @@ async function dibujarHijos(padre, hijos) {
     html += '<div class="modal-footer">'
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
     if (seccionActual == undefined) {
-        html += '<a class="btn btn-success" id="botonCrear" onclick="createSeccion(0,)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+        html += '<a class="btn btn-success" id="botonCrear" onclick="createSeccion(0)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
 
     } else {
         html += '<a class="btn btn-success" id="botonCrear" onclick="createSeccion(' + padre + ')"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
@@ -438,7 +445,7 @@ async function dibujarHijos(padre, hijos) {
 
     /// --------------------------------------     Modal para editar la seccion actual --------------------------------------
     if (seccionActual !== undefined) {
-        html += '<div class="modal fade" id="exampleModalEditar' + padre + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
+        html += '<div class="modal fade" id="exampleModalEditar' + seccionActual.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
         html += '<div class="modal-dialog">'
         html += '<div class="modal-content">'
         html += '  <div class="modal-header bg-black">'
@@ -478,7 +485,7 @@ async function dibujarHijos(padre, hijos) {
         }
         html += '</div>'
 
-        html += '<div class="w-100 mt-2" id="alertas">'
+        html += '<div class="w-100 mt-2" id="alertas'+seccionActual.id+'">'
         html += '</div>'
 
         html += '</form>'
@@ -683,21 +690,15 @@ function botonesGuardar(boton, largo = "px-2", ancho = "py-3") {
 
 async function createSeccion(padre = 0) {
     var html = "";
-    const hijos = await traerHijos(padre);
     const seccion = document.getElementById('seccion').value
     const descripcion = document.getElementById('descripcion').value
-    const formulario = document.getElementById('formulario').value
+    const color = document.getElementById('color').value
+    let colorRGB = hexToRgb(color)
     const datos = new FormData()
     datos.append('idPadre', padre);
-    if (formulario == "") {
-        datos.append('idFormulario', 1);
-    } else {
-        datos.append('idFormulario', formulario);
-
-    }
     datos.append('seccion', seccion);
     datos.append('descripcion', descripcion);
-
+        datos.append('color', color);
     console.log([...datos]);
     let url = URL_BASE + '/seccion/create';
     const request = await fetch(url, {
@@ -727,7 +728,7 @@ async function createSeccion(padre = 0) {
             text: response.error
         }).then(() => {
             $('#exampleModal' + padre).modal('hide')
-            dibujarHijos(padre, hijos)
+            dibujarHijos(padre, response.hijos)
         })
     } else if (response.exit) {
         Swal.fire({
@@ -756,16 +757,14 @@ async function updateSeccion(padre, hijo, tipo) {
     var html = "";
     const seccion = document.getElementById('seccion' + hijo).value
     const descripcion = document.getElementById('descripcion' + hijo).value
-    const formulario = document.getElementById('formulario' + hijo).value
+    const color = document.getElementById('color' + hijo).value
 
     const datos = new FormData()
     datos.append('hijo', hijo);
     datos.append('padre', padre);
-    if (formulario != "") {
-        datos.append('idFormulario', formulario);
-    }
     datos.append('seccion', seccion);
     datos.append('descripcion', descripcion);
+    datos.append('color', color);
     if (tipo == 1) {
         datos.append('tipo', 'updatePadre');
     } else {
@@ -816,6 +815,7 @@ async function updateSeccion(padre, hijo, tipo) {
             window.location.href = URL_BASE + "/?r=8";
         })
     } else {
+        console.log('alertas',response);
         html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
         response.alertas.error.forEach(alerta => {
             html += '<li class="text-danger"  >'
@@ -823,7 +823,7 @@ async function updateSeccion(padre, hijo, tipo) {
             html += '</li>'
         })
         html += '</ul>'
-        document.getElementById('alertas').innerHTML = html;
+        document.getElementById('alertas'+hijo).innerHTML = html;
     }
     alertas();
 }

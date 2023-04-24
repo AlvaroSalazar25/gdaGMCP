@@ -6,7 +6,7 @@ namespace Model;
 class Seccion extends ActiveRecord
 {
     protected static $tabla = 'seccion';
-    protected static $columnasDB = ['id','idPadre','seccion','descripcion','color'];
+    protected static $columnasDB = ['id', 'idPadre', 'seccion', 'descripcion', 'color'];
 
     public $id;
     public $idPadre;
@@ -30,7 +30,10 @@ class Seccion extends ActiveRecord
         if (!$this->seccion) {
             self::$alertas['error'][] = 'El Nombre de la Sección es Obligatorio';
         }
+        list($r, $g, $b) = sscanf($this->color, "#%02x%02x%02x");
+        if ($r > 220 && $g > 220 && $b > 220 ) {
+            self::$alertas['error'][] = 'Elija un color más oscuro';
+        }
         return self::$alertas;
     }
-
 }

@@ -1,40 +1,80 @@
-.botonCarpeta{
-    font-size: 12px;
+
+@use 'base/mixins' as m;
+
+.widthCarpeta {
+  min-width: 100px;
+  height: 100px;
 }
 
-.hoverCarpeta:hover{
+.padreCarpeta {
+  position: relative;
+}
+
+.botonesCarpeta {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+ &:hover{
     .botonCarpeta{
-        color:white !important;
+        color: black !important;
     }
-    .botonesCarpeta{
-        color:white !important;
-    }
+ }
 }
 
-.widthCarpeta{
-    min-width:100px;
-    height:100px
+.dropdown-toggle:after {
+  display: none !important;
+}
+
+.noVisible {
+  visibility: hidden;
+}
+
+.puntero {
+  cursor: pointer;
+}
+
+.botonCustom-white{
+    font-weight: bold;
+    @include m.botonClaro(#a4a6a8,20, #212529,10);
 
 }
 
-.padreCarpeta{
-    position: relative;
+.botonCustom-light{
+    font-weight: bold;
+    @include m.botonClaro(#e7e9eb,20, #212529,90);
+
 }
 
-.botonesCarpeta{
-    position: absolute;
-    top: 15px;
-    right: 23px;
+.botonCustom-dark{
+    font-weight: bold;
+    @include m.botonOscuro(#e7e9eb,40, #212529,90);
 }
 
-.dropdown-toggle:after{
-    display:none !important;
+.hoverCarpeta-dark{
+    &:hover{
+        .elip{
+            color: white !important;
+        }
+      }
+}
+.hoverCarpeta-light{
+    &:hover{
+        .elip{
+            color: black !important;
+        }
+      }
 }
 
-.noVisible{
-    visibility: hidden;
+.hoverCarpeta-white{
+    &:hover{
+        .elip{
+            color: black !important;
+        }
+      }
 }
 
-.puntero{
-    cursor:pointer;
+.bordeContenedor{
+    border:0px !important;
+    border-top:1px solid !important;
+    border-radius: 0px;
 }

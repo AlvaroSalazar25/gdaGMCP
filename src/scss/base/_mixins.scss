@@ -1,51 +1,83 @@
-@use 'variables' as v;
+@use "variables" as v;
 
 /** Media Queries **/
 @mixin telefono {
-    @media (min-width: v.$telefono) {
-        @content;
-    }
+  @media (min-width: v.$telefono) {
+    @content;
+  }
 }
 @mixin tablet {
-    @media (min-width: v.$tablet) {
-        @content;
-    }
+  @media (min-width: v.$tablet) {
+    @content;
+  }
 }
 @mixin desktop {
-    @media (min-width: v.$desktop) {
-        @content;
-    }
+  @media (min-width: v.$desktop) {
+    @content;
+  }
 }
 
+@mixin botonClaro($bgColor,$gradoBg, $colorTexto,$gradoTexto) {
+  background-color: $bgColor;
+  color: $colorTexto;
+  display: inline-block;
+  border: none;
+  transition-property: background-color;
+  transition-duration: 0.3s;
+  text-align: center;
+  display: block;
+  @include tablet {
+    width: auto;
+  }
+  &:hover {
+    p{
+        color: lighten($colorTexto,$gradoTexto);
+    }
+    background-color: darken($bgColor,$gradoBg);
+    cursor: pointer;
+  }
+}
 
-@mixin boton($bgColor, $colorTexto) {
+@mixin botonOscuro($bgColor,$gradoBg, $colorTexto, $gradoTexto) {
     background-color: $bgColor;
-    padding: 1.5rem 4rem;
     color: $colorTexto;
-    margin-top: 2rem;
-    font-size: 2rem;
-    font-weight: 400;
     display: inline-block;
-    font-weight: 700;
     border: none;
     transition-property: background-color;
-    transition-duration: .3s;
+    transition-duration: 0.3s;
     text-align: center;
     display: block;
-    width: 100%;
-    margin: 5rem 0;
-
     @include tablet {
         width: auto;
     }
     &:hover {
-        background-color: darken( $bgColor, 10% );
-        cursor: pointer;
+        p{
+            color: lighten($colorTexto,$gradoTexto);
+        }
+        background-color: darken($bgColor, $gradoBg);
+      cursor: pointer;
     }
+  }
+
+@mixin grid($columnas, $espaciado) {
+  display: grid;
+  gap: $espaciado;
+  grid-template-columns: repeat($columnas, 1fr);
 }
 
-@mixin grid($columnas, $espaciado ) {
-    display: grid;
-    gap: $espaciado;
-    grid-template-columns: repeat($columnas, 1fr);
+@mixin button-outline-variant(
+  $color,
+  $color-hover: color-contrast($color),
+  $active-background: $color,
+  $active-border: $color,
+  $active-color: color-contrast($active-background)
+) {
+  color: black !important;
+  border-color: $color;
+
+  &:hover {
+    color: black !important;
+    background-color: $active-background;
+    border-color: $active-border;
+  }
 }

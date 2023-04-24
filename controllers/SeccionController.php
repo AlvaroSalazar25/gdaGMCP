@@ -34,9 +34,8 @@ class SeccionController
                 switch ($_POST['tipo']) {
                     case 'seccion':
                         //$roles = seccionRoles::consultaPlana($consulta);
-                        $consulta = "SELECT s.id,s.seccion,s.descripcion,s.idFormulario,s.idPadre,f.nombre as nombreFormulario from seccion s LEFT OUTER JOIN formulario f on f.id = s.idFormulario";
-                        $seccionFormularios = Seccion::consultaPlana($consulta);
-                        echo json_encode($seccionFormularios);
+                        $seccion = Seccion::all();  
+                        echo json_encode($seccion);
                         break;
                     case 'formularios':
                         $formularios = Formulario::all();
@@ -80,7 +79,6 @@ class SeccionController
         if ($validar['status'] == true) {
             $alertas = [];
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
                 $seccion = new Seccion($_POST);
                 $alertas = $seccion->validar();
                 if (empty($alertas)) {
@@ -89,13 +87,13 @@ class SeccionController
                         $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
                         $resolve = [
                             'hijos' => $hijos,
-                            'exito' => 'Sección agredada correctamente'
+                            'exito' => 'Carpeta creada correctamente'
                         ];
                         echo json_encode($resolve);
                         return;
                     } else {
                         $resolve = [
-                            'error' => 'Ocurrió un problema al guardar la Sección'
+                            'error' => 'Ocurrió un problema al crear la Carpeta'
                         ];
                         echo json_encode($resolve);
                         return;
