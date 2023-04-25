@@ -7,6 +7,7 @@ use Model\Errors;
 use Model\Unidad;
 use Model\Seccion;
 use Classes\JsonWT;
+use Exception;
 use Model\Documento;
 use Model\Formulario;
 use Model\SeccionUser;
@@ -89,7 +90,8 @@ class SeccionController
                 $seccion = new Seccion($_POST);
                 $alertas = $seccion->validar();
                 if (empty($alertas)) {
-                    $resultado = $seccion->guardar();
+                    $seccion->path = $seccion->getPath(); //metodo para generar path de carpeta
+                    $resultado = $seccion->guardar(); // metodo para guardar
                     if ($resultado['resultado'] == true) {
                         $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
                         $resolve = [
@@ -236,72 +238,31 @@ class SeccionController
             $alertas = [];
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $seccion = Seccion::find($_POST['id']);
-                $padre = $seccion->idPadre;
                 if ($seccion) {
-                    $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
-                    if ($seccionUnidad != true) {
-                        $resolve = [
-                            'error' => 'No se pudo eliminar las Unidades asociadas a la Sección'
-                        ];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $seccionUser = SeccionUser::eliminarTodos('idSeccion', $seccion->id);
-                    if ($seccionUser != true) {
-                        $resolve = [
-                            'error' => 'No se pudo eliminar los Usuarios asociadas a la Sección'
-                        ];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $docSeccion = Documento::eliminarTodos('idSeccion', $seccion->id);
-                    if ($docSeccion == true) {
+                    $padre = $seccion->idPadre;
+                    try{
+                        $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
+                        $seccionUser = SeccionUser::eliminarTodos('idSeccion', $seccion->id);
+                        $docSeccion = Documento::eliminarTodos('idSeccion', $seccion->id);
+                        $deletedCarpetas = rmDir_rf('../public/archivos'.$seccion->path);
                         $resultado = $seccion->eliminar();
-                        if ($resultado == true) {
+                        if($resultado == true){
                             $hijos = Seccion::whereTodos('idPadre', $padre);
                             $resolve = [
                                 'padre' => $padre,
                                 'hijos' => $hijos,
-                                'exito' => 'Sección eliminada correctamente'
-                            ];
-                            echo json_encode($resolve);
-                            return;
-                        } else {
-                            $hijos = Seccion::whereTodos('idPadre', $padre);
-                            $resolve = [
-                                'padre' => $padre,
-                                'hijos' => $hijos,
-                                'error' => 'Ocurrió un problema al Eliminar la Sección'
+                                'exito' => 'Carpeta eliminada correctamente'
                             ];
                             echo json_encode($resolve);
                             return;
                         }
-                    } else {
-                        $datosError = debug_backtrace();
-                        $datosErrors = array_shift($datosError);
-                        $errorUnidadUpdate = [
-                            'idSeccion' =>  $seccion->id,
-                            'nombreSeccion' => $seccion->seccion,
-                            'padreSeccion' => $seccion->idPadre
-                        ];
-                        $errorGenerado = [
-                            'tabla_error' => Seccion::getTabla(),
-                            'controller_error' => $datosErrors['class'],
-                            'function_error' => $datosErrors['function'],
-                            'error' =>  json_encode($errorUnidadUpdate)
-                        ];
-                        $errorSave = new Errors($errorGenerado);
-                        $errorSave->guardar();
-
-                        $resolve = [
-                            'error' => 'Ocurrió un problema al Eliminar los documentos de la sección'
-                        ];
-                        echo json_encode($resolve);
-                        return;
+                    } catch(Exception $e){
+                        Seccion::generarError($e->getMessage());
+                        return ['error' => 'No se pudo eliminar la carpeta'];
                     }
                 } else {
                     $resolve = [
-                        'error' => 'Sección no existe o no se encuentra'
+                        'error' => 'Carpeta no existe o no se encuentra'
                     ];
                     echo json_encode($resolve);
                     return;

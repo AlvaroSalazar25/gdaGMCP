@@ -93,9 +93,8 @@ class Documento extends ActiveRecord
             $resp = $archivo->guardar();
             return $resp;
         } catch (Exception $e) {
-            $gh = Documento::generarError($e->getMessage(),$_SESSION['nombre']);
-            dd($_SESSION);
-            return ['error' => $e->getMessage()];
+            Documento::generarError($e->getMessage());
+            return ['error' => 'No se pudo guardar el documento'];
         }
     }
 }

@@ -302,7 +302,6 @@ escucharCarpeta = (value,id) =>{
 async function dibujarHijos(padre, hijos) {
     var html = "";
     let seccionesActualizadas = await traerSecciones();
-    let formularios = await traerFormularios();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
 
     html += '<div class="d-flex justify-content-center padreAtras">'
@@ -435,13 +434,18 @@ async function dibujarHijos(padre, hijos) {
         html += '</div>'
         html += '</div>'
     }
+    console.log('seccionActual', seccionActual );
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
-    $('.js-example-basic-single').select2();
-
     if (padre > 0) {
         await dibujarDocs(padre, seccionActual.seccion);
     }
+    hijos.forEach(seccion =>{
+        console.log('seccion',seccion.id);
+        $("#select" + seccion.id).select2({
+            dropdownParent: $("#exampleModal" + seccion.id)
+        });
+    })
 }
 
 function dibujarCarpetas(hijos,padre,secciones){
@@ -461,21 +465,21 @@ function dibujarCarpetas(hijos,padre,secciones){
         html += '</section>'
     } else{
         html = ""
-        html += '<section class=" " id="contenedorCarpetas">'
+        html += '<section id="contenedorCarpetas">'
         html += '<div class=" d-flex justify-content-center" style="flex-wrap:wrap">'
         hijos.forEach(hijo => {
             console.log('hijo',hijo);
             html += colorCarpetas(hijo)
             html += '</div>'
             // ----------------------------------- modal para editar por cada hijo ----------------------------------
-            html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
-            html += '<div class="modal-dialog modal-xl">'
+            html += '<div class="modal fade" id="exampleModal'+hijo.id+'" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
+            html += '<div class="modal-dialog">'
             html += '<div class="modal-content">'
             html += '  <div class="modal-header bg-black">'
             html += '   <h5 class="modal-title text-white">Editar</h5>'
             html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
             html += '  </div>'
-            html += '  <div class="modal-body" style="z-index:1">'
+            html += '  <div class="modal-body">'
             html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
     
             html += '<form >'
@@ -495,7 +499,7 @@ function dibujarCarpetas(hijos,padre,secciones){
     
             html += '<div class="mb-3">'
             html += '<label class="form-label"><strong>Color:</strong></label>'
-            html += '<input type="color" class="form-control w-25 puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
+            html += '<input type="color" class="form-control w-50 puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
             html += '</div>'
 
             html += '<div class="mb-3">'
@@ -503,14 +507,12 @@ function dibujarCarpetas(hijos,padre,secciones){
             html += '<label class="form-label"><strong>Mover Carpeta:</strong></label>'
             html += '</div>'
 
-            html += '<div >'
-            html += '<select style="width:25%;z-index:2000000000" class="js-example-basic-single" >'
+            html += '<select style="width:50%" id="select'+hijo.id+'" class="js-example-basic-single" >'
+            console.log('sec',seccionesActualizadas);
             seccionesActualizadas.forEach(seccion =>{
-            html += '<option value="'+seccion.id+'">'+seccion.seccion+'</option>'
+                html += '<option value="'+seccion.id+'">'+seccion.seccion+'</option>'
             })
             html += '</select>'
-            html += '</div>'
-
             html += '</div>' /// fin del contenedor del select
     
             html += '<div class="w-100 mt-2" id="alertas' + hijo.id + '">'

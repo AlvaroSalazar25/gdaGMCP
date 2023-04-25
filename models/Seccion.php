@@ -6,13 +6,14 @@ namespace Model;
 class Seccion extends ActiveRecord
 {
     protected static $tabla = 'seccion';
-    protected static $columnasDB = ['id', 'idPadre', 'seccion', 'descripcion', 'color'];
+    protected static $columnasDB = ['id', 'idPadre', 'seccion', 'descripcion', 'color','path'];
 
     public $id;
     public $idPadre;
     public $seccion;
     public $descripcion;
     public $color;
+    public $path;
     public $created_at;
     public $updated_at;
 
@@ -23,6 +24,7 @@ class Seccion extends ActiveRecord
         $this->seccion = $args['seccion'] ?? '';
         $this->descripcion = $args['descripcion'] ?? '';
         $this->color = $args['color'] ?? '';
+        $this->path = $args['path'] ?? '';
     }
 
     public function validar()
@@ -30,10 +32,33 @@ class Seccion extends ActiveRecord
         if (!$this->seccion) {
             self::$alertas['error'][] = 'El Nombre de la Sección es Obligatorio';
         }
+        $nombre = Seccion::whereUnidad('seccion',$this->seccion,'idPadre',$this->idPadre);
+        if($nombre){
+            self::$alertas['error'][] = 'La carpeta ya existe';
+        }
+        
         list($r, $g, $b) = sscanf($this->color, "#%02x%02x%02x");
         if ($r > 220 && $g > 220 && $b > 220 ) {
             self::$alertas['error'][] = 'Elija un color más oscuro';
         }
         return self::$alertas;
     }
+    
+    public function getPath(){
+        $idPadre = intval($this->idPadre);
+        $carpetaArchivos = '../public/archivos';
+        $pathBase = "/".$this->seccion;
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id',$idPadre);
+            $pathBase = "/".$secPadre->seccion.$pathBase;
+            $idPadre = $secPadre->idPadre;
+        }
+        $carpeta = $carpetaArchivos.$pathBase;
+        if(!mkdir($carpeta,0777,true)){
+            mkdir($carpeta);
+        }
+        return $pathBase;
+    }
+
+
 }

@@ -49,3 +49,16 @@ function validarCI($strCedula): bool
     $intVerificador = $residuo == 0 ? 0 : 10 - $residuo;
     return ($intVerificador == $intUltimo ? TRUE : FALSE);
 }
+
+
+function rmDir_rf($carpeta)
+    {
+      foreach(glob($carpeta . "/*") as $archivos_carpeta){             
+        if (is_dir($archivos_carpeta)){
+          rmDir_rf($archivos_carpeta);
+        } else {
+        unlink($archivos_carpeta);
+        }
+      }
+      return rmdir($carpeta);
+     }
