@@ -234,46 +234,44 @@ class SeccionController
     public static function delete()
     {
         $validar = JsonWT::validateJwt(token);
-        if ($validar['status'] == true) {
-            $alertas = [];
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $seccion = Seccion::find($_POST['id']);
-                if ($seccion) {
-                    $padre = $seccion->idPadre;
-                    try{
-                        $seccionUnidad = SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
-                        $seccionUser = SeccionUser::eliminarTodos('idSeccion', $seccion->id);
-                        $docSeccion = Documento::eliminarTodos('idSeccion', $seccion->id);
-                        $deletedCarpetas = rmDir_rf('../public/archivos'.$seccion->path);
-                        $resultado = $seccion->eliminar();
-                        if($resultado == true){
-                            $hijos = Seccion::whereTodos('idPadre', $padre);
-                            $resolve = [
-                                'padre' => $padre,
-                                'hijos' => $hijos,
-                                'exito' => 'Carpeta eliminada correctamente'
-                            ];
-                            echo json_encode($resolve);
-                            return;
-                        }
-                    } catch(Exception $e){
-                        Seccion::generarError($e->getMessage());
-                        return ['error' => 'No se pudo eliminar la carpeta'];
-                    }
-                } else {
-                    $resolve = [
-                        'error' => 'Carpeta no existe o no se encuentra'
-                    ];
-                    echo json_encode($resolve);
-                    return;
-                }
-            }
-        } else if ($validar['status'] == false) {
+        if ($validar['status'] != true) {
             $resolve = [
                 'exit' => $validar['error']
             ];
             echo json_encode($resolve);
             return;
-        }
+        } 
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $alertas = [];
+            $seccion = Seccion::find($_POST['id']);
+            if (!$seccion) {
+                $resolve = [
+                    'error' => 'Carpeta no existe o no se encuentra'
+                ];
+                echo json_encode($resolve);
+                return;
+            } 
+            $padre = $seccion->idPadre;
+            try{
+                SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
+                SeccionUser::eliminarTodos('idSeccion', $seccion->id);
+                Documento::eliminarTodos('idSeccion', $seccion->id);
+                $dd = rmDir_rf('../public/archivos'.$seccion->path);
+                $resultado = $seccion->eliminar();
+                if($resultado == true){
+                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                    $resolve = [
+                        'padre' => $padre,
+                        'hijos' => $hijos,
+                        'exito' => 'Carpeta eliminada correctamente'
+                    ];
+                    echo json_encode($resolve);
+                    return;
+                }
+            } catch(Exception $e){
+                Seccion::generarError($e->getMessage());
+                return ['error' => 'No se pudo eliminar la carpeta'];
+            }                
+        }        
     }
 }

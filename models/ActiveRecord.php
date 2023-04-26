@@ -294,12 +294,14 @@ class ActiveRecord
         public static function generarError($error)
         {
                 $datosErrors = debug_backtrace()[1];
-                $controller = explode("\\", $datosErrors['file']);
-                $data = $datosErrors['object'];
-                $data->user = $_SESSION['nombre'] . " " . "(id: " . $_SESSION['id'] . ")";
+                $controller = explode("\\", $datosErrors['class'])[1];
+                $data = $datosErrors['object'] ?? "";
+                if($data != ""){
+                        $data->user = $_SESSION['nombre'] . " " . "(id: " . $_SESSION['id'] . ")";
+                }
                 $errorGenerado = [
                         'tabla_error' => explode("\\", $datosErrors['class'])[1],
-                        'controller_error' => explode(".", end($controller))[0] . "  " . "line:" . $datosErrors['line'],
+                        'controller_error' => $controller,
                         'function_error' => $datosErrors['function'],
                         'data' => json_encode($data),
                         'error' =>  $error

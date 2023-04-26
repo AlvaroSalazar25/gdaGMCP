@@ -879,6 +879,7 @@ async function deleteSeccion(hijo) {
                 },
                 dataType: 'json'
             }).done((response) => {
+                console.log('response Eliminar',response);
                 if (response.exito) {
                     Swal.fire({
                         position: 'top-end',

@@ -50,15 +50,17 @@ function validarCI($strCedula): bool
     return ($intVerificador == $intUltimo ? TRUE : FALSE);
 }
 
-
 function rmDir_rf($carpeta)
-    {
-      foreach(glob($carpeta . "/*") as $archivos_carpeta){             
-        if (is_dir($archivos_carpeta)){
-          rmDir_rf($archivos_carpeta);
+{
+    if(is_dir($carpeta) != true){
+        throw new Exception(json_encode(['error'=>'No se encuentra la carpeta fisica']));
+    }
+    foreach (glob($carpeta . "/*") as $archivos_carpeta) {
+        if (is_dir($archivos_carpeta)) {
+            rmDir_rf($archivos_carpeta);
         } else {
-        unlink($archivos_carpeta);
+            unlink($archivos_carpeta);
         }
-      }
-      return rmdir($carpeta);
-     }
+        rmdir($carpeta);
+    }
+}
