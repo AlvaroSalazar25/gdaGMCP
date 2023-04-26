@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', iniciarApp())
 async function iniciarApp() {
     secciones = await traerHijos(0);
     dibujarHijos(0, secciones)
-    
+
 }
 
 function alertas() {
@@ -258,20 +258,20 @@ function colorCarpetas(carpeta) {
     return html;
 }
 
-function buscarCarpeta(seccionActual){
+function buscarCarpeta(seccionActual) {
     document.getElementById('divBtnBuscar').innerHTML = "";
-    console.log('seecionActual',seccionActual);
+    console.log('seecionActual', seccionActual);
     var html = "";
     html += '<div class=" d-flex  justify-content-end" >'
-    html += '<input style="width:193.5px;height:32.3px" class="form-control" id="buscarFocus" type="text" placeholder="Ingrese nombre de carpeta" onKeyUp="escucharCarpeta(this.value,'+(seccionActual != undefined ? seccionActual : 0 )+')">';
+    html += '<input style="width:193.5px;height:32.3px" class="form-control" id="buscarFocus" type="text" placeholder="Ingrese nombre de carpeta" onKeyUp="escucharCarpeta(this.value,' + (seccionActual != undefined ? seccionActual : 0) + ')">';
     html += '</div>'
     document.getElementById('divBtnBuscar').innerHTML = html;
     document.getElementById('buscarFocus').focus();
 }
 
-escucharCarpeta = (value,id) =>{
+escucharCarpeta = (value, id) => {
     $.ajax({
-        data: { "tipo": "buscarCarpetas","value": value, "id": id },
+        data: { "tipo": "buscarCarpetas", "value": value, "id": id },
         url: URL_BASE + '/seccion/datos',
         type: 'POST',
         headers: {
@@ -292,12 +292,12 @@ escucharCarpeta = (value,id) =>{
         }
         console.log(response);
         document.getElementById('contenedorCarpetas').innerHTML = " ";
-        let html = dibujarCarpetas(response,id);
+        let html = dibujarCarpetas(response, id);
         document.getElementById('contenedorCarpetas').innerHTML = html;
     }).fail((err) => {
         console.log(err);
     });
-} 
+}
 
 async function dibujarHijos(padre, hijos) {
     var html = "";
@@ -309,9 +309,9 @@ async function dibujarHijos(padre, hijos) {
     html += '<div class="d-flex justify-content-center hijoAtras">'
     html += '<a class=" btn btn-outline-danger ' + (seccionActual == undefined ? 'noVisible' : '') + ' " onclick="dibujarAtras(' + padre + ')"><i class="fa-solid fa-arrow-left-long fa-2x"></i> <span class="span-boton">Atrás</span></a>'
     html += '</div>'
-    if(seccionActual == undefined){
+    if (seccionActual == undefined) {
         html += '<h1 class="text-black mb-3"><strong>Administrar Carpetas</strong></h1>'
-    } else{
+    } else {
         html += '<div class="d-flex flex-column justify-content-center">'
         html += '<div class="d-flex justify-content-center">'
         html += '<h1 class="text-black mb-3"><i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;color:' + seccionActual.color + '"></i><strong>' + seccionActual.seccion + '</strong></h1>'
@@ -330,7 +330,7 @@ async function dibujarHijos(padre, hijos) {
 
     html += '<div class="d-flex justify-content-end mt-2">'
     html += '<div style="margin-right:5px" id="divBtnBuscar">'
-    html += '<a class="btn btn-outline-primary" onclick="buscarCarpeta('+(seccionActual != undefined ? seccionActual.id : 0)+')"><i class="fa-solid fa-magnifying-glass fa-2x"></i><span class="span-boton">Carpeta</span></a>'
+    html += '<a class="btn btn-outline-primary" onclick="buscarCarpeta(' + (seccionActual != undefined ? seccionActual.id : 0) + ')"><i class="fa-solid fa-magnifying-glass fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '<div>'
     html += '<a class=" btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
@@ -338,9 +338,9 @@ async function dibujarHijos(padre, hijos) {
     html += '</div>';
 
     html += '<div class="contenedor-carpetas my-4">'
-    html += dibujarCarpetas(hijos,padre,JSON.stringify(seccionesActualizadas));
-      html += '</div>'
-      
+    html += dibujarCarpetas(hijos, padre, JSON.stringify(seccionesActualizadas));
+    html += '</div>'
+
 
     // ----------------------------------- modal para CREAR nuevos hijos ------------------------------------------------
     html += '<div class="modal fade" id="exampleModal' + padre + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
@@ -401,7 +401,7 @@ async function dibujarHijos(padre, hijos) {
         html += '  </div>'
         html += '  <div class="modal-body">'
         html += '<h3 class="text-black mt-2 mb-4">Editar datos de Carpeta <strong>' + seccionActual.seccion + '</strong></h3>'
-        
+
         html += '<div class="mb-3">'
         html += '<label  class="form-label"><strong>Nombre:</strong></label>'
         html += '<input type="text" class="form-control" id="seccion' + seccionActual.id + '" placeholder="Ingrese nombre" value="' + seccionActual.seccion + '">'
@@ -434,25 +434,25 @@ async function dibujarHijos(padre, hijos) {
         html += '</div>'
         html += '</div>'
     }
-    console.log('seccionActual', seccionActual );
+    console.log('seccionActual', seccionActual);
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
     if (padre > 0) {
         await dibujarDocs(padre, seccionActual.seccion);
     }
-    hijos.forEach(seccion =>{
-        console.log('seccion',seccion.id);
+    hijos.forEach(seccion => {
+        console.log('seccion', seccion.id);
         $("#select" + seccion.id).select2({
             dropdownParent: $("#exampleModal" + seccion.id)
         });
     })
 }
 
-function dibujarCarpetas(hijos,padre,secciones){
+function dibujarCarpetas(hijos, padre, secciones) {
     let seccionesActualizadas = JSON.parse(secciones)
     var html = "";
-    
-    if(hijos.length === 0){
+
+    if (hijos.length === 0) {
         html = "";
         html += '<section class=""  id="contenedorCarpetas">'
         html += '<div class=" d-flex justify-content-center" style="flex-wrap:wrap">'
@@ -463,16 +463,16 @@ function dibujarCarpetas(hijos,padre,secciones){
         html += "</div>";
         html += '</div>'
         html += '</section>'
-    } else{
+    } else {
         html = ""
         html += '<section id="contenedorCarpetas">'
         html += '<div class=" d-flex justify-content-center" style="flex-wrap:wrap">'
         hijos.forEach(hijo => {
-            console.log('hijo',hijo);
+            console.log('hijo', hijo);
             html += colorCarpetas(hijo)
             html += '</div>'
             // ----------------------------------- modal para editar por cada hijo ----------------------------------
-            html += '<div class="modal fade" id="exampleModal'+hijo.id+'" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
+            html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
             html += '<div class="modal-dialog">'
             html += '<div class="modal-content">'
             html += '  <div class="modal-header bg-black">'
@@ -481,13 +481,12 @@ function dibujarCarpetas(hijos,padre,secciones){
             html += '  </div>'
             html += '  <div class="modal-body">'
             html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
-    
-            html += '<form >'
+
             html += '<div class="mb-3">'
             html += '<label  class="form-label"><strong>Nombre:</strong></label>'
             html += '<input type="text" class="form-control" id="seccion' + hijo.id + '" value="' + hijo.seccion + '">'
             html += '</div>'
-    
+
             html += '<div class="mb-3">'
             html += '<label for="exampleFormControlInput1" class="form-label"><strong>Descripción:</strong></label>'
             if (hijo.descripcion == "") {
@@ -496,7 +495,7 @@ function dibujarCarpetas(hijos,padre,secciones){
                 html += '<textarea class="form-control" rows="5" id="descripcion' + hijo.id + '" >' + hijo.descripcion + '</textarea>'
             }
             html += '</div>'
-    
+
             html += '<div class="mb-3">'
             html += '<label class="form-label"><strong>Color:</strong></label>'
             html += '<input type="color" class="form-control w-50 puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
@@ -507,18 +506,22 @@ function dibujarCarpetas(hijos,padre,secciones){
             html += '<label class="form-label"><strong>Mover Carpeta:</strong></label>'
             html += '</div>'
 
-            html += '<select style="width:50%" id="select'+hijo.id+'" class="js-example-basic-single" >'
-            console.log('sec',seccionesActualizadas);
-            seccionesActualizadas.forEach(seccion =>{
-                html += '<option value="'+seccion.id+'">'+seccion.seccion+'</option>'
+            html += '<div class="mb-3">'
+            html += '<select style="width:50%" id="select' + hijo.id + '" class="js-example-basic-single" >'
+            console.log('sec', seccionesActualizadas);
+            seccionesActualizadas.forEach(seccion => {
+                html += '<optgroup label="' + seccion.seccion + '"></optgroup>'
+                html += '<option value="' + seccion.id + '">' + seccion.path + '</option>'
+                html += '</optgroup>'
             })
             html += '</select>'
             html += '</div>' /// fin del contenedor del select
-    
-            html += '<div class="w-100 mt-2" id="alertas' + hijo.id + '">'
+
+            
+            html += '<div class="w-100 mt-4" id="alertas' + hijo.id + '">'
             html += '</div>'
-    
-            html += '</form>'
+            
+            html += '</div>'
             html += '</div>'
             html += '<div class="modal-footer">'
             html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
@@ -879,7 +882,7 @@ async function deleteSeccion(hijo) {
                 },
                 dataType: 'json'
             }).done((response) => {
-                console.log('response Eliminar',response);
+                console.log('response Eliminar', response);
                 if (response.exito) {
                     Swal.fire({
                         position: 'top-end',
@@ -894,7 +897,7 @@ async function deleteSeccion(hijo) {
                     Swal.fire({
                         icon: 'error',
                         title: 'ERROR',
-                        text: response.error
+                        html: '<strong>'+response.carpeta+'</strong> '+ response.error
                     }).then(() => {
                         dibujarHijos(response.padre, response.hijos)
                     })

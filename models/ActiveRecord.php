@@ -295,7 +295,7 @@ class ActiveRecord
         {
                 $datosErrors = debug_backtrace()[1];
                 $controller = explode("\\", $datosErrors['class'])[1];
-                $data = $datosErrors['object'] ?? "";
+                $data = $datosErrors['object'] ?? [];
                 if($data != ""){
                         $data->user = $_SESSION['nombre'] . " " . "(id: " . $_SESSION['id'] . ")";
                 }

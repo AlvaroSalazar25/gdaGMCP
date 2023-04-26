@@ -31,31 +31,36 @@ class Seccion extends ActiveRecord
     {
         if (!$this->seccion) {
             self::$alertas['error'][] = 'El Nombre de la Sección es Obligatorio';
-        }
+        }        
+
         $nombre = Seccion::whereUnidad('seccion',$this->seccion,'idPadre',$this->idPadre);
         if($nombre){
-            self::$alertas['error'][] = 'La carpeta ya existe';
+            if($this->id != $nombre->id){
+                self::$alertas['error'][] = 'La carpeta ya existe';
+            }
         }
-        
+        return self::$alertas;
+
         list($r, $g, $b) = sscanf($this->color, "#%02x%02x%02x");
         if ($r > 220 && $g > 220 && $b > 220 ) {
             self::$alertas['error'][] = 'Elija un color más oscuro';
         }
         return self::$alertas;
     }
-    
+
     public function getPath(){
         $idPadre = intval($this->idPadre);
         $carpetaArchivos = '../public/archivos';
-        $pathBase = "/".$this->seccion;
+        $pathBase = "/".str_replace(" ","_",$this->seccion);
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id',$idPadre);
-            $pathBase = "/".$secPadre->seccion.$pathBase;
+            $nombreCarpeta = str_replace(" ","_",$secPadre->seccion);
+            $pathBase = "/".$nombreCarpeta.$pathBase;
             $idPadre = $secPadre->idPadre;
         }
         $carpeta = $carpetaArchivos.$pathBase;
         if(!mkdir($carpeta,0777,true)){
-            mkdir($carpeta);
+            mkdir($carpeta,0777,true);
         }
         return $pathBase;
     }
