@@ -65,6 +65,19 @@ class SeccionController
                     $documentos = Seccion::consultaPlana($consulta);
                     echo json_encode($documentos);
                     break;
+
+                case 'updateCarpetas':
+                    $id = $_POST['id'];
+                    dd($_POST);
+                    $respuesta = getHijos($id);
+                    $sql = "";
+                    foreach ($respuesta as $index => $resp) {
+                        if ($index != count($respuesta) - 1) {$sql .= "'$resp',";} else {$sql .= "'$resp'";}
+                    }
+                    $consulta = "SELECT * FROM seccion s WHERE s.idPadre NOT IN ($sql)";
+                    $moverHijos = Seccion::consultaPlana($consulta);
+                    echo json_encode($moverHijos);
+                    break;
                 default:
                     $resolve = ['error' => 'No existe búsqueda de ese tipo'];
                     echo json_encode($resolve);
@@ -85,30 +98,29 @@ class SeccionController
             $alertas = [];
             $seccion = new Seccion($_POST);
             $alertas = $seccion->validar();
-            if (empty($alertas)) {
-                $seccion->path = $seccion->getPath(); //metodo para generar path de carpeta
+            if (!empty($alertas)) {
+                $resolve = ['alertas' => $alertas];
+                echo json_encode($resolve);
+                return;
+            }
+            try {
+                $seccion->path = $seccion->getPath(); //crear el path
                 $resultado = $seccion->guardar(); // metodo para guardar
-                if ($resultado['resultado'] == true) {
-                    $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
-                    $resolve = [
-                        'hijos' => $hijos,
-                        'exito' => 'Carpeta creada correctamente'
-                    ];
-                    echo json_encode($resolve);
-                    return;
-                } else {
-                    $resolve = [
-                        'error' => 'Ocurrió un problema al crear la Carpeta'
-                    ];
+                if ($resultado['resultado'] != true) {
+                    $resolve = ['error' => 'Ocurrió un problema al crear la Carpeta'];
                     echo json_encode($resolve);
                     return;
                 }
-            } else {
+                $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
                 $resolve = [
-                    'alertas' => $alertas
+                    'hijos' => $hijos,
+                    'exito' => 'Carpeta creada correctamente'
                 ];
                 echo json_encode($resolve);
                 return;
+            } catch (Exception $e) {
+                Seccion::generarError($e->getMessage());
+                return ['error' => 'No se pudo crear la carpeta'];
             }
         }
     }
@@ -165,9 +177,7 @@ class SeccionController
                     $seccion = Seccion::find($id);
                     $padre = $seccion->idPadre;
                     if (!$seccion) {
-                        $resolve = [
-                            'error' => 'La Sección no Existe'
-                        ];
+                        $resolve = ['error' => 'La Sección no Existe'];
                         echo json_encode($resolve);
                         return;
                     }
@@ -238,7 +248,7 @@ class SeccionController
                 if (is_dir('../public/archivos' . $seccion->path)) {
                     rmDir_rf('../public/archivos' . $seccion->path);
                 } else {
-                    throw new Exception('Esta mal el path');
+                    throw new Exception('Falla en el path de la carpeta');
                 }
 
                 $padre = $seccion->idPadre;
@@ -254,9 +264,9 @@ class SeccionController
                     'hijos' => $hijos,
                     'exito' => 'Carpeta eliminada correctamente'
                 ];
-                echo json_encode($resolve);return;
+                echo json_encode($resolve);
+                return;
             } catch (Exception $e) {
-                dd($e->getMessage());
                 Seccion::generarError($e->getMessage());
                 return ['error' => 'No se pudo eliminar la carpeta'];
             }
