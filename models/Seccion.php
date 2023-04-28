@@ -55,6 +55,24 @@ class Seccion extends ActiveRecord
         return self::$alertas;
     }
 
+    public function obtenerSecRama($respuesta){
+        $sql = "";
+        foreach ($respuesta as $index => $resp) {
+            if ($index != count($respuesta) - 1) {
+                $sql .= "'$resp',";
+            } else {
+                $sql .= "'$resp'";
+            }
+            $moverHijos = "";
+            if (!empty($respuesta)) {
+                $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
+                $moverHijos = Seccion::consultaPlana($consulta);
+            } else {
+                $moverHijos =  Seccion::all();
+            }
+        }
+    }
+
     public function getPath()
     {
         $idPadre = intval($this->idPadre);

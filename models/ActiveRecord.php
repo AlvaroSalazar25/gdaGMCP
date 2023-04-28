@@ -176,9 +176,29 @@ class ActiveRecord
         public static function wherePlano($columna, $valor)
         {
                 $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor'";
-                $resultado = self::consultarSQL($query);
-                return  $resultado;
+                $resultados = self::consultarSQL($query);
+                foreach ($resultados as $resultado) {
+                        $respuesta = getHijos(intval($resultado->id));
+                        $sql = "";
+                        foreach ($respuesta as $index => $resp) {
+                                if ($index != count($respuesta) - 1) {
+                                        $sql .= "'$resp',";
+                                } else {
+                                        $sql .= "'$resp'";
+                                }
+                        }
+                        $moverHijos = "";
+                        if (!empty($respuesta)) {
+                                $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
+                                $moverHijos = Seccion::consultaPlana($consulta);
+                        } else {
+                                $moverHijos =  Seccion::all();
+                        }
+                        $resultado->carpetas = json_encode($moverHijos);
+                }
+                return  $resultados;
         }
+
         // Obtener Registros con cierta cantidad
         public static function get($limite)
         {
@@ -296,7 +316,7 @@ class ActiveRecord
                 $datosErrors = debug_backtrace()[1];
                 $controller = explode("\\", $datosErrors['class'])[1];
                 $data = $datosErrors['object'] ?? [];
-                if($data != ""){
+                if ($data != "") {
                         $data->user = $_SESSION['nombre'] . " " . "(id: " . $_SESSION['id'] . ")";
                 }
                 $errorGenerado = [

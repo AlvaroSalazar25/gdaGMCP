@@ -38,8 +38,27 @@ class SeccionController
             $alertas = [];
             switch ($_POST['tipo']) {
                 case 'seccion':
-                    $seccion = Seccion::all();
-                    echo json_encode($seccion);
+                    $secciones = Seccion::all();
+                    foreach ($secciones as $seccion) {
+                        $respuesta = getHijos(intval($seccion->id));
+                        $sql = "";
+                        foreach ($respuesta as $index => $resp) {
+                            if ($index != count($respuesta) - 1) {
+                                $sql .= "'$resp',";
+                            } else {
+                                $sql .= "'$resp'";
+                            }
+                        }
+                        $moverHijos = "";
+                        if (!empty($respuesta)) {
+                            $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
+                            $moverHijos = Seccion::consultaPlana($consulta);
+                        } else {
+                            $moverHijos =  Seccion::all();
+                        }
+                        $seccion->carpetas = json_encode($moverHijos);
+                    }
+                    echo json_encode($secciones);
                     break;
                 case 'formularios':
                     $formularios = Formulario::all();
@@ -48,8 +67,7 @@ class SeccionController
                     break;
                 case 'hijos':
                     $id = $_POST['id'];
-                    $consulta = "SELECT s.* from seccion s WHERE s.idPadre = $id";
-                    $hijos = Seccion::consultaPlana($consulta);
+                    $hijos = Seccion::wherePlano('idPadre', $id);
                     echo json_encode($hijos);
                     break;
                 case 'documentos':
@@ -68,20 +86,27 @@ class SeccionController
 
                 case 'updateCarpetas':
                     $id = $_POST['id'];
-                    dd($_POST);
                     $respuesta = getHijos($id);
                     $sql = "";
                     foreach ($respuesta as $index => $resp) {
-                        if ($index != count($respuesta) - 1) {$sql .= "'$resp',";} else {$sql .= "'$resp'";}
+                        if ($index != count($respuesta) - 1) {
+                            $sql .= "'$resp',";
+                        } else {
+                            $sql .= "'$resp'";
+                        }
+                        $moverHijos = "";
+                        if (!empty($respuesta)) {
+                            $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
+                            $moverHijos = Seccion::consultaPlana($consulta);
+                        } else {
+                            $moverHijos =  Seccion::all();
+                        }
+                        $resp->carpetas = json_encode($moverHijos);
                     }
-                    $consulta = "SELECT * FROM seccion s WHERE s.idPadre NOT IN ($sql)";
-                    $moverHijos = Seccion::consultaPlana($consulta);
-                    echo json_encode($moverHijos);
-                    break;
+                    echo json_encode($moverHijos);break;
                 default:
                     $resolve = ['error' => 'No existe búsqueda de ese tipo'];
-                    echo json_encode($resolve);
-                    break;
+                    echo json_encode($resolve); break;
             }
         }
     }
@@ -111,7 +136,7 @@ class SeccionController
                     echo json_encode($resolve);
                     return;
                 }
-                $hijos = Seccion::whereTodos('idPadre', $_POST['idPadre']);
+                $hijos = Seccion::wherePlano('idPadre', $_POST['idPadre']);
                 $resolve = [
                     'hijos' => $hijos,
                     'exito' => 'Carpeta creada correctamente'
@@ -147,6 +172,7 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
+                    $seccion->path = $seccion->getPath(); //crear el path
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
@@ -156,7 +182,8 @@ class SeccionController
                     }
                     $resultado = $seccion->guardar();
                     if ($resultado != true) {
-                        $hijos = Seccion::whereTodos('idPadre', $padre);
+                        $hijos = Seccion::wherePlano('idPadre', $padre);
+
                         $resolve = [
                             'hijos' => $hijos,
                             'error' => 'Ocurrió un problema al guardar la Sección'
@@ -164,7 +191,7 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                    $hijos = Seccion::wherePlano('idPadre', $padre);
                     $resolve = [
                         'hijos' => $hijos,
                         'exito' => 'Sección actualizada correctamente'
@@ -189,8 +216,10 @@ class SeccionController
                         return;
                     }
                     $resultado = $seccion->guardar();
+                    $seccion->path = $seccion->getPath(); //crear el path
+                    $resultado = $seccion->guardar();
                     if ($resultado != true) {
-                        $hijos = Seccion::whereTodos('idPadre', $padre);
+                        $hijos = Seccion::wherePlano('idPadre', $padre);
                         $resolve = [
                             'hijos' => $hijos,
                             'error' => 'Ocurrió un problema al guardar la Sección'
@@ -198,7 +227,8 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $hijos = Seccion::whereTodos('idPadre', $padre);
+                    $hijos = Seccion::wherePlano('idPadre', $padre);
+
                     $resolve = [
                         'hijos' => $hijos,
                         'exito' => 'Sección actualizada correctamente'
@@ -258,7 +288,8 @@ class SeccionController
                     echo json_encode($resolve);
                     return;
                 }
-                $hijos = Seccion::whereTodos('idPadre', $padre);
+                $hijos = Seccion::wherePlano('idPadre', $padre);
+
                 $resolve = [
                     'padre' => $padre,
                     'hijos' => $hijos,

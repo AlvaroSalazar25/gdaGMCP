@@ -17,7 +17,7 @@ let permisosDefault = [{
 document.addEventListener('DOMContentLoaded', iniciarApp())
 
 async function iniciarApp() {
-   await dibujarPadreAndCarpetas(0)
+    await dibujarPadreAndCarpetas(0)
 }
 
 function alertas() {
@@ -253,8 +253,7 @@ function moverCarpeta(id) {
 async function dibujarAtras(padre) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
-    let seccionesAnterior = seccionesActualizadas.filter(sec => sec.idPadre == seccionActual.idPadre);
-    dibujarHijos(seccionActual.idPadre, seccionesAnterior)
+    dibujarPadreAndCarpetas(seccionActual.idPadre)
 }
 
 function hexToRgb(hex) {
@@ -310,7 +309,7 @@ escucharCarpeta = (value, id) => {
     });
 }
 
-async function dibujarPadreAndCarpetas(padre){
+async function dibujarPadreAndCarpetas(padre) {
     await dibujarPadre(padre);
     await dibujarHijosPadre(padre);
 
@@ -319,7 +318,6 @@ async function dibujarPadre(padre) {
     var html = "";
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
-
     html += '<div class="d-flex justify-content-center padreAtras">'
     html += '<div class="d-flex justify-content-center hijoAtras">'
     html += '<a class=" btn btn-outline-danger ' + (seccionActual == undefined ? 'noVisible' : '') + ' " onclick="dibujarAtras(' + padre + ')"><i class="fa-solid fa-arrow-left-long fa-2x"></i> <span class="span-boton">Atrás</span></a>'
@@ -350,15 +348,13 @@ async function dibujarPadre(padre) {
     html += '<a class=" btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '</div>';
-
     //=====================================================================//
     // contenedor de hijos
     //=====================================================================//
-    html += '<section class="contenedor-carpetas my-4 d-flex justify-content-center" style="flex-wrap:wrap" id="contenedorCarpetas" >'
+    html += '<div class="contenedor-carpetas my-4"id="contenedorCarpetas" >'
 
 
-
-    html += '</section>'
+    html += '</div>'
     // ----------------------------------- modal para CREAR nuevos hijos ------------------------------------------------
     html += '<div class="modal fade" id="exampleModal' + padre + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
     html += '<div class="modal-dialog">'
@@ -451,7 +447,6 @@ async function dibujarPadre(padre) {
         html += '</div>'
         html += '</div>'
     }
-    console.log('seccionActual', seccionActual);
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
     if (padre > 0) {
@@ -460,6 +455,7 @@ async function dibujarPadre(padre) {
 }
 
 async function dibujarHijosPadre(padre) {
+    console.log('hijos');
     let hijos = await traerHijos(padre);
     var html = "";
     if (hijos.length === 0) {
@@ -469,15 +465,16 @@ async function dibujarHijosPadre(padre) {
         html += "</div>";
         html += "</div>";
     } else {
-        html = ""
+        html += '<div class="d-flex justify-content-center " style="flex-wrap:wrap">'
         hijos.forEach(hijo => {
             html += '<div class="p-3 padreCarpeta">'
-            html += '<div class="">'
-            html += '<a class="btn hoverCarpeta" style="border:1px solid #e2e4e6" onclick="entrarSeccion(' + hijo.id + ')">'
+            html += '<a class="btn hoverCarpeta" style="border:1px solid #e2e4e6" onclick="dibujarPadreAndCarpetas(' + hijo.id + ')">'
             html += '<div class="row justify-content-center align-items-center  widthCarpeta ">'
             html += '<div class="">'
             html += '<i class="fa-regular fa-folder-open" style="font-size:40px;margin-bottom:10px;color:' + hijo.color + '"></i>'
-            html += '<div style="margin-bottom:-7px"><p style="font-weight:bold">' + (hijo.seccion[0].toUpperCase() + hijo.seccion.substring(1)) + '</p></div>'
+            html += '<div style="margin-bottom:-7px">'
+            html += '<p style="font-weight:bold">' + (hijo.seccion[0].toUpperCase() + hijo.seccion.substring(1)) + '</p>'
+            html += '</div>'
             html += '</div>'
             html += '</div>'
             html += '</a>'
@@ -489,92 +486,94 @@ async function dibujarHijosPadre(padre) {
             html += '<li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal' + hijo.id + '"><i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>Editar</a></li>'
             html += '<li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + hijo.id + ')"><i class="fa-solid fa-trash" style="margin-right:7px"></i>Eliminar</a></li>'
             html += ' </ul>'
+            html += '</div>' // div de la elipsis
             html += '</div>' // div de la carpeta
-            document.getElementById("contenedorCarpetas").innerHTML = html;
+
+            // modales -----------------------------------------------------------------------
+            html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
+            html += '<div class="modal-dialog">'
+            html += '<div class="modal-content">'
+            html += '  <div class="modal-header bg-black">'
+            html += '   <h5 class="modal-title text-white">Editar</h5>'
+            html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+            html += '  </div>'
+            html += '  <div class="modal-body" style="min-height:350px">'
+            html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
+
+            html += '<div class="mb-4 d-flex justify-content-between">'
+
+            html += '<div class="d-flex flex-column" style="width:70%">'
+            html += '<label  class="form-label"><strong>Nombre:</strong></label>'
+            html += '<input type="text" class="form-control" id="seccion' + hijo.id + '" value="' + hijo.seccion + '">'
+            html += '</div>'
+
+            html += '<div class="d-flex flex-column" style="width:28%">'
+            html += '<label class="form-label"><strong>Color:</strong></label>'
+            html += '<input type="color" class="form-control  puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
+            html += '</div>'
+
+            html += '</div>'
+
+            html += '<div class="mb-4">'
+            html += '<label for="exampleFormControlInput1" class="form-label"><strong>Descripción:</strong></label>'
+            if (hijo.descripcion == "") {
+                html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" placeholder="Esta Sección no tiene descripción"></textarea>'
+            } else {
+                html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" >' + hijo.descripcion + '</textarea>'
+            }
+            html += '</div>'
+
+            html += '<div class="mb-4">'
+            html += '<div class="w-100">'
+            html += '<label class="form-label"><strong>Mover Carpeta:</strong></label>'
+            html += '</div>'
+
+            html += '<div style="height:30px">'
+            html += '<select style="width:100%;height:100% !important" id="select' + hijo.id + '" class="js-example-basic-single" >'
+            const base = {
+                id: '0',
+                idPadre: '0',
+                seccion: 'CARPETA BASE',
+                descripcion: '',
+                color: '#000000',
+                path: '/base',
+            }
+            let carpetas = JSON.parse(hijo.carpetas);
+            carpetas.unshift(base);
+            carpetas.forEach(seccion => {
+                // console.log('SecNom',seccion.seccion,'SecPadre:',seccion.idPadre,'padreHijos',padre);
+                if (seccion.id != hijo.id) {
+                    html += '<optgroup label="' + seccion.seccion + '">'
+                    html += '<option value="' + seccion.id + '" ' + (seccion.id == padre ? 'selected' : '') + '><strong><i class="fa-solid fa-folder-open"></i></strong>' + seccion.path + '</option>'
+                    html += '</optgroup>'
+                }
+            })
+            html += '</select>'
+            html += '</div>' /// fin del contenedor del select
+
+            html += '<div class="w-100 mt-4" id="alertas' + hijo.id + '">'
+            html += '</div>'
+
+            html += '</div>'
+            html += '</div>'
+            html += '<div class="modal-footer">'
+            html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
+            html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + padre + ',' + hijo.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+            html += '</div>'
+            html += '</div>'
+            html += '</div>'
+            html += '</div>'
         })
+        html += '</div>'
+
+
     }
-    crearModalEditarHijo(hijos);
+    document.getElementById("contenedorCarpetas").innerHTML = html;
     hijos.forEach(seccion => {
         $("#select" + seccion.id).select2({
             dropdownParent: $("#exampleModal" + seccion.id)
         });
     })
-}
-
-function crearModalEditarHijo(hijo) {
-    var html = ""
-    html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
-    html += '<div class="modal-dialog">'
-    html += '<div class="modal-content">'
-    html += '  <div class="modal-header bg-black">'
-    html += '   <h5 class="modal-title text-white">Editar</h5>'
-    html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
-    html += '  </div>'
-    html += '  <div class="modal-body" style="min-height:350px">'
-    html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
-
-    html += '<div class="mb-4 d-flex justify-content-between">'
-
-    html += '<div class="d-flex flex-column" style="width:70%">'
-    html += '<label  class="form-label"><strong>Nombre:</strong></label>'
-    html += '<input type="text" class="form-control" id="seccion' + hijo.id + '" value="' + hijo.seccion + '">'
-    html += '</div>'
-
-    html += '<div class="d-flex flex-column" style="width:28%">'
-    html += '<label class="form-label"><strong>Color:</strong></label>'
-    html += '<input type="color" class="form-control  puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
-    html += '</div>'
-
-    html += '</div>'
-
-    html += '<div class="mb-4">'
-    html += '<label for="exampleFormControlInput1" class="form-label"><strong>Descripción:</strong></label>'
-    if (hijo.descripcion == "") {
-        html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" placeholder="Esta Sección no tiene descripción"></textarea>'
-    } else {
-        html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" >' + hijo.descripcion + '</textarea>'
-    }
-    html += '</div>'
-
-    html += '<div class="mb-4">'
-    html += '<div class="w-100">'
-    html += '<label class="form-label"><strong>Mover Carpeta:</strong></label>'
-    html += '</div>'
-
-    html += '<div style="height:30px">'
-    html += '<select style="width:100%;height:100% !important" id="select' + hijo.id + '" class="js-example-basic-single" >'
-    const base = {
-        id: '0',
-        idPadre: '0',
-        seccion: 'Carpeta Base',
-        descripcion: '',
-        color: '#000000',
-        path: '/base',
-    }
-    // seccionesActualizadas.unshift(base);
-    // seccionesActualizadas.forEach(seccion => {
-    //     // console.log('SecNom',seccion.seccion,'SecPadre:',seccion.idPadre,'padreHijos',padre);
-    //         html += '<optgroup label="' + seccion.seccion + '">'
-    //         html += '<option value="' + seccion.id + '" '+(seccion.id == padre ? 'selected' : '')+'><strong><i class="fa-solid fa-folder-open"></i></strong>' + seccion.path + '</option>'
-    //         html += '</optgroup>'
-
-    // })
-    html += '</select>'
-    html += '</div>' /// fin del contenedor del select
-
-    html += '<div class="w-100 mt-4" id="alertas' + hijo.id + '">'
-    html += '</div>'
-
-    html += '</div>'
-    html += '</div>'
-    html += '<div class="modal-footer">'
-    html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
-    html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + padre + ',' + hijo.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
-    html += '</div>'
-    html += '</div>'
-    html += '</div>'
-    html += '</div>'
-    document.getElementById('modales').innerHTML = html;
 }
 
 async function dibujarDocs(id, nombreCarpeta) {
@@ -664,11 +663,126 @@ async function dibujarDocs(id, nombreCarpeta) {
     $("#tablaDocsUltimo").DataTable();
 }
 
-async function entrarSeccion(id) {
-    let hijos = await traerHijos(id)
-    dibujarHijos(id, hijos)
-}
+function dibujarHijosPadreResponse(padre,hijos) {
+    var html = "";
+    if (hijos.length === 0) {
+        html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
+        html += '<div class="d-flex justify-content-center align-items-center">';
+        html += '<h4 class="" style="color:red">No Existen Carpetas</h4>';
+        html += "</div>";
+        html += "</div>";
+    } else {
+        html += '<div class="d-flex justify-content-center " style="flex-wrap:wrap">'
+        hijos.forEach(hijo => {
+            html += '<div class="p-3 padreCarpeta">'
+            html += '<a class="btn hoverCarpeta" style="border:1px solid #e2e4e6" onclick="dibujarPadreAndCarpetas(' + hijo.id + ')">'
+            html += '<div class="row justify-content-center align-items-center  widthCarpeta ">'
+            html += '<div class="">'
+            html += '<i class="fa-regular fa-folder-open" style="font-size:40px;margin-bottom:10px;color:' + hijo.color + '"></i>'
+            html += '<div style="margin-bottom:-7px">'
+            html += '<p style="font-weight:bold">' + (hijo.seccion[0].toUpperCase() + hijo.seccion.substring(1)) + '</p>'
+            html += '</div>'
+            html += '</div>'
+            html += '</div>'
+            html += '</a>'
+            html += '<div class="d-flex justify-content-center align-items-center elip">'
+            html += '<buttom class="btn btn-outline-secondary botonesCarpeta btn-hover dropdown-toggle py-2 px-3"  style="border:none" data-bs-toggle="dropdown" aria-expanded="false" type="buttom">'
+            html += '<i class="fa-solid fa-ellipsis-vertical fa-xl elip" ></i>'
+            html += '</buttom>'
+            html += '<ul class="dropdown-menu dropdown-menu-dark">'
+            html += '<li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal' + hijo.id + '"><i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>Editar</a></li>'
+            html += '<li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + hijo.id + ')"><i class="fa-solid fa-trash" style="margin-right:7px"></i>Eliminar</a></li>'
+            html += ' </ul>'
+            html += '</div>' // div de la elipsis
+            html += '</div>' // div de la carpeta
 
+            // modales -----------------------------------------------------------------------
+            html += '<div class="modal fade" id="exampleModal' + hijo.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + hijo.id + '" aria-hidden="true">'
+            html += '<div class="modal-dialog">'
+            html += '<div class="modal-content">'
+            html += '  <div class="modal-header bg-black">'
+            html += '   <h5 class="modal-title text-white">Editar</h5>'
+            html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+            html += '  </div>'
+            html += '  <div class="modal-body" style="min-height:350px">'
+            html += '<h3 class="text-black mt-2 mb-4">Edite la carpeta <strong>' + hijo.seccion + '</strong></h3>'
+
+            html += '<div class="mb-4 d-flex justify-content-between">'
+
+            html += '<div class="d-flex flex-column" style="width:70%">'
+            html += '<label  class="form-label"><strong>Nombre:</strong></label>'
+            html += '<input type="text" class="form-control" id="seccion' + hijo.id + '" value="' + hijo.seccion + '">'
+            html += '</div>'
+
+            html += '<div class="d-flex flex-column" style="width:28%">'
+            html += '<label class="form-label"><strong>Color:</strong></label>'
+            html += '<input type="color" class="form-control  puntero" id="color' + hijo.id + '" value="' + hijo.color + '">'
+            html += '</div>'
+
+            html += '</div>'
+
+            html += '<div class="mb-4">'
+            html += '<label for="exampleFormControlInput1" class="form-label"><strong>Descripción:</strong></label>'
+            if (hijo.descripcion == "") {
+                html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" placeholder="Esta Sección no tiene descripción"></textarea>'
+            } else {
+                html += '<textarea class="form-control" rows="6" id="descripcion' + hijo.id + '" >' + hijo.descripcion + '</textarea>'
+            }
+            html += '</div>'
+
+            html += '<div class="mb-4">'
+            html += '<div class="w-100">'
+            html += '<label class="form-label"><strong>Mover Carpeta:</strong></label>'
+            html += '</div>'
+
+            html += '<div style="height:30px">'
+            html += '<select style="width:100%;height:100% !important" id="select' + hijo.id + '" class="js-example-basic-single" >'
+            const base = {
+                id: '0',
+                idPadre: '0',
+                seccion: 'CARPETA BASE',
+                descripcion: '',
+                color: '#000000',
+                path: '/base',
+            }
+            let carpetas = JSON.parse(hijo.carpetas);
+            carpetas.unshift(base);
+            console.log(hijo.seccion, 'carpetas', carpetas);
+            carpetas.forEach(seccion => {
+                // console.log('SecNom',seccion.seccion,'SecPadre:',seccion.idPadre,'padreHijos',padre);
+                if (seccion.id != hijo.id) {
+                    html += '<optgroup label="' + seccion.seccion + '">'
+                    html += '<option value="' + seccion.id + '" ' + (seccion.id == padre ? 'selected' : '') + '><strong><i class="fa-solid fa-folder-open"></i></strong>' + seccion.path + '</option>'
+                    html += '</optgroup>'
+                }
+            })
+            html += '</select>'
+            html += '</div>' /// fin del contenedor del select
+
+            html += '<div class="w-100 mt-4" id="alertas' + hijo.id + '">'
+            html += '</div>'
+
+            html += '</div>'
+            html += '</div>'
+            html += '<div class="modal-footer">'
+            html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
+            html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + padre + ',' + hijo.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+            html += '</div>'
+            html += '</div>'
+            html += '</div>'
+            html += '</div>'
+        })
+        html += '</div>'
+
+
+    }
+    document.getElementById("contenedorCarpetas").innerHTML = html;
+    hijos.forEach(seccion => {
+        $("#select" + seccion.id).select2({
+            dropdownParent: $("#exampleModal" + seccion.id)
+        });
+    })
+}
 async function guardarFormulario(id) {
     let formulario = document.getElementById('formularioSelected' + id).value
     var html = "";
@@ -789,7 +903,7 @@ async function createSeccion(padre = 0) {
             timer: 1500
         }).then(() => {
             $('#exampleModal' + padre).modal('hide')
-            dibujarHijos(padre, response.hijos)
+            dibujarHijosPadreResponse(padre, response.hijos)
         })
     } else if (response.error) {
         Swal.fire({
@@ -798,7 +912,7 @@ async function createSeccion(padre = 0) {
             text: response.error
         }).then(() => {
             $('#exampleModal' + padre).modal('hide')
-            dibujarHijos(padre, response.hijos)
+            dibujarHijosPadreResponse(padre, response.hijos)
         })
     } else if (response.exit) {
         Swal.fire({
@@ -867,7 +981,7 @@ async function updateSeccion(padre, hijo, tipo) {
         }).then(() => {
             $('#exampleModal' + hijo).modal('hide')
             $('#exampleModalEditar' + hijo).modal('hide')
-            dibujarHijos(padre, response.hijos)
+            dibujarHijosPadreResponse(padre, response.hijos)
         })
     } else if (response.error) {
         Swal.fire({
@@ -877,7 +991,7 @@ async function updateSeccion(padre, hijo, tipo) {
         }).then(() => {
             $('#exampleModal' + hijo).modal('hide')
             $('#exampleModalEditar' + hijo).modal('hide')
-            dibujarHijos(padre, response.hijos)
+            dibujarHijosPadreResponse(padre, response.hijos)
 
         })
     } else if (response.exit) {
