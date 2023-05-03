@@ -68,10 +68,8 @@ $GLOBALS['hijos'] = [];
 
 function getHijos($padre)
 {
-    // echo "array:"."         " . json_encode($hijos)."<br>";
     $consulta = "SELECT s.id FROM seccion s WHERE s.idPadre = '$padre'";
     $secciones = Seccion::consultaPlana($consulta);
-    // echo 'secciones'.json_encode($secciones)."<br>";
     if (!empty($secciones)) {
         foreach ($secciones as $seccion) {
             array_push($GLOBALS['hijos'], $seccion['id']);

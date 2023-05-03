@@ -43,9 +43,8 @@ class DocumentosController
                         return;
                         break;
                     case 'seccion':
-                        $consulta = "SELECT s.id,s.seccion,s.idFormulario,s.idPadre,f.nombre as nombreFormulario from seccion s INNER JOIN formulario f on f.id = s.idFormulario";
-                        $secciones = Documento::consultaPlana($consulta);
-                        echo json_encode($secciones);
+                        $seccion = Seccion::all();
+                        echo json_encode($seccion);
                         return;
                         break;
                     case 'formularios':

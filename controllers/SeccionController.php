@@ -41,22 +41,7 @@ class SeccionController
                     $secciones = Seccion::all();
                     foreach ($secciones as $seccion) {
                         $respuesta = getHijos(intval($seccion->id));
-                        $sql = "";
-                        foreach ($respuesta as $index => $resp) {
-                            if ($index != count($respuesta) - 1) {
-                                $sql .= "'$resp',";
-                            } else {
-                                $sql .= "'$resp'";
-                            }
-                        }
-                        $moverHijos = "";
-                        if (!empty($respuesta)) {
-                            $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
-                            $moverHijos = Seccion::consultaPlana($consulta);
-                        } else {
-                            $moverHijos =  Seccion::all();
-                        }
-                        $seccion->carpetas = json_encode($moverHijos);
+                        $seccion->carpetas = Seccion::obtenerSecRama($respuesta);
                     }
                     echo json_encode($secciones);
                     break;
@@ -80,33 +65,40 @@ class SeccionController
                     $id = $_POST['id'];
                     $value = $_POST['value'];
                     $consulta = "SELECT * FROM seccion s WHERE s.idPadre = $id AND s.seccion like '%$value%'";
-                    $documentos = Seccion::consultaPlana($consulta);
-                    echo json_encode($documentos);
+                    $secciones = Seccion::consultaPlana($consulta);
+                    $carpetas = [];
+                    foreach ($secciones as $seccion) {
+                        $respuesta = getHijos(intval($seccion['id']));
+                        $seccion['carpetas'] = Seccion::obtenerSecRama($respuesta);
+                        array_push($carpetas, $seccion);
+                    }
+                    echo json_encode($carpetas);
                     break;
-
+                case 'buscarPath':
+                    $value = $_POST['value'];
+                        $consulta = "SELECT * FROM seccion s WHERE s.seccion like '%$value%' LIMIT 1";
+                        $secciones = Seccion::consultaPlana($consulta);
+                    $carpetas = [];
+                    foreach ($secciones as $seccion) {
+                        $respuesta = getHijos(intval($seccion['id']));
+                        $seccion['carpetas'] = Seccion::obtenerSecRama($respuesta);
+                        array_push($carpetas, $seccion);
+                    }
+                    echo json_encode($carpetas);
+                    break;
                 case 'updateCarpetas':
                     $id = $_POST['id'];
                     $respuesta = getHijos($id);
                     $sql = "";
-                    foreach ($respuesta as $index => $resp) {
-                        if ($index != count($respuesta) - 1) {
-                            $sql .= "'$resp',";
-                        } else {
-                            $sql .= "'$resp'";
-                        }
-                        $moverHijos = "";
-                        if (!empty($respuesta)) {
-                            $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
-                            $moverHijos = Seccion::consultaPlana($consulta);
-                        } else {
-                            $moverHijos =  Seccion::all();
-                        }
-                        $resp->carpetas = json_encode($moverHijos);
+                    foreach ($respuesta as $resp) {
+                        $resp->carpetas = Seccion::obtenerSecRama($respuesta);
                     }
-                    echo json_encode($moverHijos);break;
+                    echo json_encode($respuesta);
+                    break;
                 default:
                     $resolve = ['error' => 'No existe búsqueda de ese tipo'];
-                    echo json_encode($resolve); break;
+                    echo json_encode($resolve);
+                    break;
             }
         }
     }
@@ -130,6 +122,7 @@ class SeccionController
             }
             try {
                 $seccion->path = $seccion->getPath(); //crear el path
+                $seccion->crearCarpeta();
                 $resultado = $seccion->guardar(); // metodo para guardar
                 if ($resultado['resultado'] != true) {
                     $resolve = ['error' => 'Ocurrió un problema al crear la Carpeta'];
@@ -172,7 +165,6 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $seccion->path = $seccion->getPath(); //crear el path
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
@@ -180,7 +172,15 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $resultado = $seccion->guardar();
+                    $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
+                    $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path
+                    $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
+                    $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
+                    $hijos = getHijos($seccion->id); // obtener hijos de carpeta padre
+                    Seccion::updatePathHijos($hijos); // cambiar el path de los hijos en caso de tener
+                    if ($_POST['idPadre']) {
+                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                    }
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);
 
@@ -193,6 +193,7 @@ class SeccionController
                     }
                     $hijos = Seccion::wherePlano('idPadre', $padre);
                     $resolve = [
+                        'padre' => $seccion,
                         'hijos' => $hijos,
                         'exito' => 'Sección actualizada correctamente'
                     ];
@@ -202,12 +203,14 @@ class SeccionController
                 case 'updateHijo':
                     $id = $_POST['hijo'];
                     $seccion = Seccion::find($id);
-                    $padre = $seccion->idPadre;
+                    $padre = Seccion::find($seccion->idPadre);
+
                     if (!$seccion) {
                         $resolve = ['error' => 'La Sección no Existe'];
                         echo json_encode($resolve);
                         return;
                     }
+
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
@@ -215,9 +218,13 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $resultado = $seccion->guardar();
-                    $seccion->path = $seccion->getPath(); //crear el path
-                    $resultado = $seccion->guardar();
+                    $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
+                    $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path
+                    $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
+                    $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
+                    $hijos = getHijos($seccion->id); // obtener hijos de carpeta padre
+                    Seccion::updatePathHijos($hijos); // cambiar el path de los hijos en caso de tener
+                    $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);
                         $resolve = [
@@ -227,9 +234,9 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
-                    $hijos = Seccion::wherePlano('idPadre', $padre);
-
+                    $hijos = Seccion::wherePlano('idPadre', $seccion->idPadre);
                     $resolve = [
+                        'padre' => $padre,
                         'hijos' => $hijos,
                         'exito' => 'Sección actualizada correctamente'
                     ];
