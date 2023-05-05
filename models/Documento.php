@@ -8,13 +8,12 @@ use Exception;
 class Documento extends ActiveRecord
 {
     protected static $tabla = 'documento';
-    protected static $columnasDB = ['id', 'idUser', 'idSeccion', 'idFormulario', 'idPadre', 'alias', 'codigo', 'data', 'keywords', 'path', 'status'];
+    protected static $columnasDB = ['id', 'idUser', 'idSeccion', 'idFormulario', 'alias', 'codigo', 'data', 'keywords', 'path', 'status'];
 
     public $id;
     public $idUser;
     public $idSeccion;
     public $idFormulario;
-    public $idPadre;
     public $alias;
     public $codigo;
     public $data;
@@ -40,9 +39,6 @@ class Documento extends ActiveRecord
 
     public function validar()
     {
-        if (!$this->alias) {
-            self::$alertas['error'][] = 'El alias es obligatorio';
-        }
         if (!$this->data) {
             self::$alertas['error'][] = 'Faltan campos por completar';
         }
@@ -52,49 +48,74 @@ class Documento extends ActiveRecord
         return self::$alertas;
     }
 
-    public function saveDoc()
+    // public function saveDoc()
+    // {
+    //     try {
+    //         $archivo = new Documento($this->atributos());
+
+    //         if (!intval($archivo->idSeccion)) {
+    //             return false;
+    //         } else {
+    //             $idSeccion =  $archivo->idSeccion;
+    //         };
+    //         $seccion = Seccion::where('id', $idSeccion);
+    //         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
+    //         $idDoc = Documento::selectMax('id');
+    //         $refDoc = $recorteNSeccion . "-" . $archivo->idFormulario . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
+    //         $path = explode("/", $_FILES['path']['type']);
+    //         $archivo->codigo = $refDoc;
+
+    //         $carpetaArchivos = '../public/archivos/';
+    //         if (!is_dir($carpetaArchivos)) {
+    //             mkdir($carpetaArchivos);
+    //         }
+    //         setlocale(LC_ALL, "spanish");
+    //         $year = strftime('%Y');
+    //         $mes = strftime('%B');
+    //         $yearArchivo = $carpetaArchivos . $year . "/";
+    //         $mesArchivo = $yearArchivo . $mes . "/";
+    //         $seccionArchivo = $mesArchivo . strtolower($seccion->seccion) . "/";
+    //         if (!is_dir($yearArchivo)) {
+    //             mkdir($yearArchivo);
+    //         }
+    //         if (!is_dir($mesArchivo)) {
+    //             mkdir($mesArchivo);
+    //         }
+    //         if (!is_dir($seccionArchivo)) {
+    //             mkdir($seccionArchivo);
+    //         }
+    //         move_uploaded_file($_FILES['path']['tmp_name'], $seccionArchivo . $refDoc . "." . $path['1']);
+    //         $archivo->path = explode("..", $seccionArchivo . $refDoc . "." . $path['1'])[1];
+
+    //         $resp = $archivo->guardar();
+    //         return $resp;
+    //     } catch (Exception $e) {
+    //         Documento::generarError($e->getMessage());
+    //         return ['error' => 'No se pudo guardar el documento'];
+    //     }
+    // }
+    
+    public function getPath()
     {
-        try {
-            $archivo = new Documento($this->atributos());
-            if (!intval($archivo->idSeccion)) {
-                return false;
-            } else {
-                $idSeccion =  $archivo->idSeccion;
-            };
-            $seccion = Seccion::where('id', $idSeccion);
-            $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
-            $idDoc = Documento::selectMax('id');
-            $refDoc = $recorteNSeccion . "-" . $archivo->idFormulario . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
-            $path = explode("/", $_FILES['path']['type']);
-            $archivo->codigo = $refDoc;
-
-            $carpetaArchivos = '../public/archivos/';
-            if (!is_dir($carpetaArchivos)) {
-                mkdir($carpetaArchivos);
-            }
-            setlocale(LC_ALL, "spanish");
-            $year = strftime('%Y');
-            $mes = strftime('%B');
-            $yearArchivo = $carpetaArchivos . $year . "/";
-            $mesArchivo = $yearArchivo . $mes . "/";
-            $seccionArchivo = $mesArchivo . strtolower($seccion->seccion) . "/";
-            if (!is_dir($yearArchivo)) {
-                mkdir($yearArchivo);
-            }
-            if (!is_dir($mesArchivo)) {
-                mkdir($mesArchivo);
-            }
-            if (!is_dir($seccionArchivo)) {
-                mkdir($seccionArchivo);
-            }
-            move_uploaded_file($_FILES['path']['tmp_name'], $seccionArchivo . $refDoc . "." . $path['1']);
-            $archivo->path = explode("..", $seccionArchivo . $refDoc . "." . $path['1'])[1];
-
-            $resp = $archivo->guardar();
-            return $resp;
-        } catch (Exception $e) {
-            Documento::generarError($e->getMessage());
-            return ['error' => 'No se pudo guardar el documento'];
+        $idPadre = intval($this->idSeccion);
+        // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
+        $pathBase = "/" . str_replace(" ", "_", $this->codigo);
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id', $idPadre);
+            $nombreCarpeta = str_replace(" ", "_", $secPadre->seccion);
+            $pathBase = "/" . $nombreCarpeta . $pathBase;
+            $idPadre = $secPadre->idPadre;
         }
+        return $pathBase;
+    }
+
+    public function getCodigo(){
+        $idSec = $this->idSeccion;
+        $seccion = Seccion::where('id',$idSec);
+        $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
+        $idDoc = Documento::selectMax('id');
+        if ($idDoc == null){ $idDoc = 1;}
+        $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
+        return $refDoc;
     }
 }

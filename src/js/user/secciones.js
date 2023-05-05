@@ -90,7 +90,7 @@ function traerFormularios() {
                 "tipo": 'formularios'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/seccion/datos',
+            url: URL_BASE + '/documentos/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -117,6 +117,39 @@ function traerFormularios() {
                     resolve(formularios)
                 }
             })
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}
+
+function traerFormulario(id) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                "tipo": 'formulario',
+                "id": id
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/documentos/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+            resolve(response)
         }).fail((err) => {
             reject(err);
         });
@@ -394,7 +427,7 @@ async function dibujarPadre(padre) {
         let paths = (CARPETA_BASE + seccionActual.path).split('/')
         let removes = paths.shift();
         paths.forEach(path => {
-            var nombre = path.replace('_',' ');
+            var nombre = path.replace('_', ' ');
             html += '<a class="puntero" style="text-decoration: none !important;" onclick="dibujarPath(\'' + nombre + '\')"><strong>' + (nombre[0].toUpperCase() + nombre.substring(1)) + '</strong></a> / ' + " " + '';
         })
 
@@ -404,7 +437,7 @@ async function dibujarPadre(padre) {
     /*=============================================================================================================//
                                                 Contenedor hijos
     //==============================================================================================================*/
-    html += '<div class="contenedor-carpetas my-4" id="contenedorCarpetas" >'
+    html += '<div class="contenedor-carpetas mt-3 mb-5" id="contenedorCarpetas" >'
 
     html += '<div class="d-flex justify-content-center align-items-center" style="height:129.5px">'
     html += ' <div class="spinner-grow" role="status">'
@@ -681,118 +714,253 @@ async function dibujarHijosPadre(padre, response = 0) {
     })
 }
 
-async function dibujarDocs(id, nombreCarpeta) {
-    let documentos = await traerDocs(id)
-    var html2 = "";
-    html2 += '<h3 class="mb-3 mt-5 text-black">Documentos de     <strong>' + nombreCarpeta + '</strong></h3>'
-    html2 += '<div class="d-flex mb-3 justify-content-end ">'
-    html2 += '<a class="btn btn-warning" style="margin-right:3px" data-bs-toggle="modal" data-bs-target="#exampleModal' + id + '" id="' + id + '"><i class="fa-solid fa-plus fa-2x"></i></i> <span class="span-boton">Documento</span></a>'
-    html2 += "</div>";
+async function dibujarDocs(padre, nombreCarpeta) {
+    let documentos = await traerDocs(padre)
+    var html = "";
+    html += '<div class="accordion" id="accordionExample">'
+    html += '<div class="accordion-item ">'
+    html += '<h2 class="accordion-header" id="headingOne">'
+    html += '<button class="accordion-button '+(documentos.length > 0 ? '' : 'collapsed')+' contenedor-carpetas" type="button"  style="height:55px" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"><div class="d-flex w-100 justify-content-center"><h4 style="color:black">Documentos de<strong>' + ' ' + nombreCarpeta + '</strong></h4></div></button>'
+    html += ' </h2>'
+    html += '<div id="collapseOne" class="accordion-collapse collapse ' + (documentos.length > 0 ? 'show' : '') + '" data-bs-parent="#accordionExample">'
+    html += ' <div class="accordion-body px-0">'
+    //--------------------------------------------------------------------------------------------------
+    html += '<div class="d-flex mb-3 justify-content-end ">'
+    html += '<a class="btn btn-warning"  onclick="agregarDocumento(' + padre + ')"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Documento</span></a>'
+    html += "</div>";
 
-    html2 += '<table class="table" style="min-width:1000px" id="tablaDocsUltimo">';
-    html2 += '<thead class="table-dark">';
-    html2 += '<tr class="" style="text-transform:uppercase">';
-    html2 += "<th>N°</th>";
-    html2 += '<th class="">Alias</th>';
-    html2 += '<th class="">Formulario</th>';
-    html2 += '<th class="">Datos</th>';
-    html2 += '<th class="">Responsable</th>';
-    html2 += '<th class="">Fecha</th>';
-    html2 += '<th class="">Estado</th>';
-    html2 += '<th class="">Archivo</th>';
-    // html2 += '<th class="col-1">Acciones</th>';
-    html2 += "</tr>";
-    html2 += "</thead>";
-    html2 += '<tbody class="contenido" id="contenido">';
+    html += '<table class="table" style="min-width:1000px" id="tablaDocsUltimo">';
+    html += '<thead class="table-dark">';
+    html += '<tr class="" style="text-transform:uppercase">';
+    html += "<th>N°</th>";
+    html += '<th class="">Nombre</th>';
+    html += '<th class="">Formulario</th>';
+    html += '<th class="">Datos</th>';
+    html += '<th class="">Responsable</th>';
+    html += '<th class="">Fecha</th>';
+    // html += '<th class="">Estado</th>';
+    html += '<th class="">Archivo</th>';
+    // html += '<th class="col-1">Acciones</th>';
+    html += "</tr>";
+    html += "</thead>";
+    html += '<tbody class="contenido" id="contenido">';
     if (documentos.length > 0) {
         documentos.forEach((documento, index) => {
-            html2 += "<tr>"
-            html2 += "<td>" + (parseInt(index) + 1) + "</td>"
-            html2 += "<td>" + documento.alias + "</td>"
-            html2 += "<td>" + documento.formulario + "</td>"
-            html2 += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
-            html2 += "<td>" + documento.responsable + "</td>"
-            html2 += '<td>' + documento.created_at.split(" ")[0] + '</td>'
-            html2 += '<td>'
-            if (documento.status == 0) {
-                html2 += '<span class="badge badge-pill bg-danger" style="margin-left:15px"><i class="fa-solid fa-circle-exclamation fa-lg"></i></span>'
-            } else {
-                html2 += '<span class="badge badge-pill bg-success" style="margin-left:15px"><i class="fa-solid fa-circle-check fa-lg"></i></span>'
+            console.log('codigo',documento);
+            html += "<tr>"
+            html += "<td>" + (parseInt(index) + 1) + "</td>"
+            if(documento.alias == ""){
+                html += "<td>" + documento.codigo + "</td>"
+            } else{
+                html += "<td>" + documento.alias + "</td>"
             }
-            html2 += '</td>'
-            html2 += '<td>'
+            html += "<td>" + documento.formulario + "</td>"
+            html += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
+            html += "<td>" + documento.responsable + "</td>"
+            html += '<td>' + documento.created_at.split(" ")[0] + '</td>'
+            // html += '<td>'
+            // if (documento.status == 0) {
+            //     html += '<span class="badge badge-pill bg-danger" style="margin-left:15px"><i class="fa-solid fa-circle-exclamation fa-lg"></i></span>'
+            // } else {
+            //     html += '<span class="badge badge-pill bg-success" style="margin-left:15px"><i class="fa-solid fa-circle-check fa-lg"></i></span>'
+            // }
+            // html += '</td>'
+            html += '<td>'
             const urlA = "'" + documento.path + "'";
             const nombreA = "'" + documento.codigo + "'"
-            html2 += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html2 += '<buttom title="Descargar Documento" class="btn btn-primary"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html2 += "</td>";
-            // html2 += "<td>";
-            // html2 += '<buttom class="btn btn-warning" style="margin-right:5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></buttom>';
-            // html2 +='<buttom class="btn btn-danger"><i class="fa-solid fa-trash-can fa-2x"></i></buttom>';
-            // html2 += "</td>";
-            html2 += "</tr>";
+            html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += '<buttom title="Descargar Documento" class="btn btn-primary"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += "</td>";
+            // html += "<td>";
+            // html += '<buttom class="btn btn-warning" style="margin-right:5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></buttom>';
+            // html +='<buttom class="btn btn-danger"><i class="fa-solid fa-trash-can fa-2x"></i></buttom>';
+            // html += "</td>";
+            html += "</tr>";
 
             // <!---------------------------------------------      Modal ---------------------------------->
-            html2 += '<div class="modal fade" id="exampleModalVer' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
-            html2 += ' <div class="modal-dialog modal-dialog-centered">';
-            html2 += ' <div class="modal-content">';
-            html2 += ' <div class="modal-header bg-black ">';
-            html2 += ' <h5 class="modal-title text-white" id="exampleModalLabel">Metadatos del Documento <strong>' + documento.codigo + '</strong></h5>';
-            html2 += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
-            html2 += ' </div>';
-            html2 += '  <div class="modal-body">';
+            html += '<div class="modal fade" id="exampleModalVer' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
+            html += ' <div class="modal-dialog modal-dialog-centered">';
+            html += ' <div class="modal-content">';
+            html += ' <div class="modal-header bg-black ">';
+            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Metadatos del Documento <strong>' + documento.codigo + '</strong></h5>';
+            html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+            html += ' </div>';
+            html += '  <div class="modal-body">';
 
             let claves = documento.keywords
             let datos = JSON.parse(documento.data)
-            html2 += "<p><strong>KEYWORDS</strong></p>";
-            html2 += "<p>" + claves + "</p>";
+            html += "<p><strong>KEYWORDS</strong></p>";
+            html += "<p>" + claves + "</p>";
             datos.forEach(dato => {
-                html2 += "<p><strong>" + dato.nombre.toUpperCase() + "</strong></p>";
-                html2 += "<p>" + dato.valor + "</p>";
+                html += "<p><strong>" + dato.nombre.toUpperCase() + "</strong></p>";
+                html += "<p>" + dato.valor + "</p>";
             })
-            html2 += "  </div>";
-            html2 += ' <div class="modal-footer">';
-            html2 +=
+            html += "  </div>";
+            html += ' <div class="modal-footer">';
+            html +=
                 ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-            html2 += "  </div>";
-            html2 += "</div>";
-            html2 += "</div>";
-            html2 += "</div>";
+            html += "  </div>";
+            html += "</div>";
+            html += "</div>";
+            html += "</div>";
         });
     }
-    html2 += "</tbody>";
-    html2 += "</table>";
+    html += "</tbody>";
+    html += "</table>";
+    html += '</tbody>';
 
-    html2 += '</tbody>';
-    document.getElementById("dibujar-tabla").innerHTML = html2;
+    //--------------------------------------------------------------------------------------------------
+    html += ' </div>'
+    html += ' </div>'
+    html += '</div>'
+    html += '</div>'
+    document.getElementById("dibujar-tabla").innerHTML = html;
     $("#tablaDocsUltimo").DataTable();
 }
 
-async function guardarFormulario(id) {
-    let formulario = document.getElementById('formularioSelected' + id).value
+async function agregarDocumento(padre) {
+    let secciones = await traerSecciones();
+    let formularios = await traerFormularios();
+    console.log('formularios', formularios);
+    let seccionActual = secciones.find(sec => sec.id == padre);
     var html = "";
-    if (formulario == "") {
-        document.getElementById('alertas' + id).classList.remove('apagar')
-        document.getElementById('btnSaveForm' + id).classList.add('apagar')
-        document.getElementById('formularioSelected' + id).classList.add('errorInput')
-        html += '<div class="d-flex justify-content-center align-items-center bg-danger mt-1 py-2 mx-3 text-white" style="font-size:14px;border:1px solid red;border-radius:5px">Debe seleccionar un Formulario</div>'
-        document.getElementById("alertas" + id).innerHTML = html;
-        setTimeout(() => {
-            document.getElementById('btnSaveForm' + id).classList.remove('apagar')
-            document.getElementById('formularioSelected' + id).classList.remove('errorInput')
-            document.getElementById('alertas' + id).classList.add('apagar')
-        }, 2000);
+    let tipo = 1;
+    document.getElementById("dibujar-tabla").innerHTML = "";
+    html += '<h1 class="text-black mb-3"><strong>Agregar Documentos en ' + seccionActual.seccion + '</strong></h1>';
+    html += '<div class="mb-3">';
+    html += '<div class="d-flex justify-content-start">';
+    html += '<a class=" btn btn-outline-danger " onclick="dibujarPadreAndCarpetas(' + padre + ')"><i class="fa-solid fa-arrow-left fa-2x"></i> <span class="span-boton">Regresar</span></a>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="contenedor-crearUsuario bg-light contenedor-carpetas px-3">';
+    if (tipo == "2") {
+        html += '<h3 class="text-black mt-2 mb-4">Edite los datos de ' + +"</h3>";
     } else {
-        const btnSave = 'btnSaveForm' + id
-        botonesGuardar(btnSave, 'px-0', 'py-0')
-        $('#exampleModalAddFormulario' + id).modal('hide')
-        const datos = new FormData()
-        const idFormulario = document.getElementById('formularioSelected' + id).value
+        html +=
+            '<h3 class="text-black mt-2 mb-4">Elija un Formulario para agregar el documento</h3>';
+    }
+    html += '<div class="mb-3">';
+    html +=
+        '<label for="exampleFormControlInput1" class="form-label"><strong>Formulario:</strong></label>';
+    html +=
+        '<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,'+padre+')">';
+    html +=
+        ' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
+    formularios.forEach((formulario) => {
+        html +=
+            ' <option value="' + formulario.id + '">' + formulario.nombre + "</option>";
+    });
+    html += "</select>";
+    html += "</div>";
+    html += "</div>";
 
+    html += "</div>";
+
+    document.getElementById("dibujar-js").innerHTML = html;
+}
+
+async function elegirSeccionAgregar(id,padre) {
+    console.log('id', id);
+    let tipo = "1";
+    var html = "";
+    let formulario = await traerFormulario(id)
+    console.log('formulario escogido');
+    html += '<div class="contenedor-crearUsuario bg-light px-3">';
+    if (tipo == 2) {
+        html += '<h3 class="text-black mt-2 mb-4">Edite los datos del documento</h3>';
+        html += ' <input type="hidden" id="idUser" name="id" value="" placeholder="" required>';
+    } else {
+        html += '<h3 class="text-black mt-2 mb-4">Ingrese los datos del documento</h3>';
+    }
+
+    let campos = JSON.parse(formulario.campos);
+    let keywords = JSON.parse(formulario.keywords);
+    let archivo = JSON.parse(formulario.archivo);
+    let tipoArchivos = archivo.map((tipo) => {
+        return "." + tipo;
+    });
+    html += '<div class="row">';
+    html += '<div class="mb-3 w-100" id="' + keywords.input + '" >';
+    html += '<label class="form-label"><strong>Ingrese ' + keywords.input + ':</strong></label>';
+    html += '<input type="' + keywords.type + '" class="form-control datos"  name="' + keywords.input + '" value="" placeholder="Agregue palabras clave del documento">';
+    html += "</div>";
+
+    campos.forEach((campo) => {
+        const { input, type } = campo;
+        html += '<div class="mb-3 w-100" id="' + input + '">';
+        html += '<label class="form-label"><strong>Ingrese ' + input[0].toUpperCase() + input.substring(1) + ":</strong></label>";
+        if (type == "text") {
+            html += '<textarea class="w-100 form-control datos" name="' + input + '" rows="5"></textarea>';
+        } else {
+            html += ' <input type="' + type + '" class="form-control datos"  name="' + input + '">';
+        }
+        html += "</div>";
+    });
+    html += "</div>";
+
+    html += '<div class="mb-3 w-100" id="archivo">';
+    html += '<label class="form-label"><strong>Cargar el archivo:</strong></label>';
+    html += ' <input type="file" class="form-control datos" name="archivo" accept="' + tipoArchivos + '">';
+    html += "</div>";
+    html += '<div class="w-100 mt-2" id="alertas">'
+    html += '</div>'
+    html += '<div class="my-5 d-flex justify-content-center align-items-center">';
+    html += '<a class="btn btn-success px-5 py-2" id="botonCrear" style="font-size:15px" onclick="saveArchivo(' + formulario.id + "," + padre + ')"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>';
+    html += "</div>";
+    document.getElementById("dibujar-tabla").innerHTML = html;
+}
+
+async function saveArchivo(idFormulario, padre) {
+    var html = "";
+    const inputs = document.querySelectorAll(".datos");
+    const nombres = Array.apply(null, inputs);
+    //ya tengo un array con los inputs, debo hacer la validacion  para agregar el rojo y el texto
+    //console.log(nombres);
+    const info = [];
+    let claves, documento;
+    nombres.forEach((nombre) => {
+        let nombreInput = nombre.name
+        let valorInput = nombre.value
+        if (nombre.value == "") {
+            nombre.classList.add("errorInput");
+            const div = document.createElement("div");
+            div.id = "divAlerta" + nombreInput;
+            div.textContent = "El campo " + nombreInput + " es OBLIGATORIO";
+            div.style.color = "red";
+            let padre = document.getElementById(nombreInput)
+            let hijo = document.getElementById('divAlerta' + nombreInput)
+            if (!hijo) {
+                padre.appendChild(div);
+            }
+        } else {
+            nombre.classList.remove("errorInput");
+            const alerta = document.getElementById("divAlerta" + nombreInput)
+            if (alerta) {
+                alerta.innerHTML = "";
+            }
+
+            if (nombreInput == 'keywords') {
+                claves = valorInput ;
+            } else if (nombreInput == 'archivo') {
+                documento = nombre.files[0];
+            } else {
+                info.push({
+                    'nombre': nombreInput,
+                    'valor': valorInput
+                })
+            }
+        }
+    });
+    if (info.length == nombres.length - 2) {
+        const datos = new FormData()
+        datos.append('idSeccion', padre);
         datos.append('idFormulario', idFormulario);
-        datos.append('idSeccion', id);
+        datos.append('keywords', JSON.stringify(claves))
+        datos.append('path', documento);
+        datos.append('data', JSON.stringify(info));
         console.log([...datos]);
-        let url = URL_BASE + '/seccion/formulario/agregar';
+
+        let url = URL_BASE + '/documentos/create';
         const request = await fetch(url, {
             method: 'POST',
             headers: {
@@ -800,8 +968,9 @@ async function guardarFormulario(id) {
             },
             body: datos
         });
-        //  respuesta de la peticion de arriba, me arroja true o false 
+        //  respuesta de la peticion de arriba, me arroja true o false
         const response = await request.json();
+        console.log(response);
         if (response.exito) {
             Swal.fire({
                 position: 'top-end',
@@ -810,18 +979,19 @@ async function guardarFormulario(id) {
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
-                dibujarSecciones();
-                $('#tablaSecciones').DataTable();
+                dibujarPadreAndCarpetas(padre);
             })
         } else if (response.error) {
             Swal.fire({
                 icon: 'error',
                 title: 'ERROR',
                 text: response.error
-            }).then(() => {
-                dibujarSecciones();
-                $('#tablaSecciones').DataTable();
-
+            })
+        } else if (response.archivo) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.archivo
             })
         } else if (response.exit) {
             Swal.fire({
@@ -845,6 +1015,7 @@ async function guardarFormulario(id) {
         }
         alertas();
     }
+
 }
 
 function botonesGuardar(boton, largo = "px-2", ancho = "py-3") {
@@ -877,7 +1048,7 @@ async function createSeccion(padre = 0) {
         },
         body: datos
     });
-    //  respuesta de la peticion de arriba, me arroja true o false 
+    //  respuesta de la peticion de arriba, me arroja true o false
     const response = await request.json();
     if (response.exito) {
         Swal.fire({
@@ -952,7 +1123,7 @@ async function updateSeccion(padre, hijo, tipo) {
         },
         body: datos
     });
-    //  respuesta de la peticion de arriba, me arroja true o false 
+    //  respuesta de la peticion de arriba, me arroja true o false
     const response = await request.json();
     if (response.exito) {
         Swal.fire({
@@ -1060,4 +1231,11 @@ async function deleteSeccion(hijo) {
             });
         }
     })
+}
+
+function abrirPdf(path, nombre) {
+    let carpeta = '/public/archivos';
+    window.open(URL_BASE+carpeta + path, nombre, "width=620,height=400,fullscreen=yes,scrollbars=NO")
+    parent.opener = top;
+    opener.close();
 }

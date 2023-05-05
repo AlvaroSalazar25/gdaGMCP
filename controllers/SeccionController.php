@@ -57,7 +57,7 @@ class SeccionController
                     break;
                 case 'documentos':
                     $id = $_POST['id'];
-                    $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario  WHERE d.idSeccion =  $id";
+                    $consulta = "SELECT d.id,u.nombre as responsable,s.seccion,f.nombre as formulario,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at from documento d INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion  INNER JOIN formulario f ON f.id = d.idFormulario  WHERE d.idSeccion =  $id";
                     $documentos = Seccion::consultaPlana($consulta);
                     echo json_encode($documentos);
                     break;
@@ -126,8 +126,7 @@ class SeccionController
                 $resultado = $seccion->guardar(); // metodo para guardar
                 if ($resultado['resultado'] != true) {
                     $resolve = ['error' => 'Ocurrió un problema al crear la Carpeta'];
-                    echo json_encode($resolve);
-                    return;
+                    echo json_encode($resolve);return;
                 }
                 $hijos = Seccion::wherePlano('idPadre', $_POST['idPadre']);
                 $resolve = [

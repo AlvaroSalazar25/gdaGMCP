@@ -134,7 +134,7 @@ async function dibujarFormulario(id, tipo = 1) {
     html += '<section>'
     html += '<div class="mb-3">'
     html += '<div class="d-flex justify-content-end">'
-    html += '<a class=" btn btn-secondary" style="margin-right:5px" onclick="agregarFormulario(1)"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton">Agregar Formulario</span></a>'
+    html += '<a class=" btn btn-secondary" style="margin-right:5px" onclick="agregarFormulario(1)"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton">Formulario</span></a>'
     html += '</div>'
     html += '</div>'
     html += '</section>'
@@ -226,7 +226,6 @@ async function dibujarFormulario(id, tipo = 1) {
 
 async function agregarFormulario(tipo = 1, id) {
     var html = '';
-    let seccionesActualizadas = await traerSecciones();
     let formulariosActualizados = await traerFormularios();
     if (tipo == '2') {
         var formulario = formulariosActualizados.find(form => form.id == id);

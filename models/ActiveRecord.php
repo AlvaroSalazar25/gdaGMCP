@@ -234,18 +234,6 @@ class ActiveRecord
                 return array_shift($valor);
         }
 
-        public function crearSeccionEmptyForm()
-        {
-                // Sanitizar los datos
-                $atributos = $this->sanitizarAtributos();
-                $query = "INSERT INTO " . static::$tabla . " ( seccion ) VALUES ('" . $atributos['seccion'] . "')";
-                $resultado = self::$db->query($query);
-                return [
-                        'resultado' =>  $resultado,
-                        'id' => self::$db->insert_id
-                ];
-        }
-
         // Actualizar el registro
         public function actualizar()
         {

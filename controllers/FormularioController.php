@@ -32,19 +32,14 @@ class FormularioController
             if ($validar['status'] == true) {
                 switch ($_POST['tipo']) {
                     case 'formularios':
-                        $consulta = "SELECT DISTINCT f.nombre,f.id,f.keywords,f.campos,f.version,f.archivo,s.id as idSeccion from formulario f LEFT OUTER JOIN seccion s on s.idFormulario = f.id";
-                        $formularios = Formulario::consultaPlana($consulta);
+                        $formularios = Formulario::all();
                         array_shift($formularios);
                         foreach($formularios as $formulario){
-                            if($formulario['id'] == 1 || $formulario['nombre'] == 'defecto'){
+                            if($formulario->id == 1 || $formulario->nombre == 'defecto'){
                             array_shift($formularios);
                             }
                         }
                         echo json_encode($formularios);
-                        break;
-                    case 'seccion':
-                        $secciones = Seccion::all();
-                        echo json_encode($secciones);
                         break;
                     default:
                         $resolve = [

@@ -289,7 +289,6 @@ async function agregarDocumento() {
         html +=
             '<h3 class="text-black mt-2 mb-4">Elija la Sección para ingresar el nuevo documento</h3>';
     }
-    html += "<form>";
     html += '<div class="mb-3">';
     html +=
         '<label for="exampleFormControlInput1" class="form-label"><strong>Seccion:</strong></label>';
@@ -303,7 +302,6 @@ async function agregarDocumento() {
     });
     html += "</select>";
     html += "</div>";
-    html += "</form>";
     html += "</div>";
     html += "</div>";
 
