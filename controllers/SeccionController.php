@@ -20,7 +20,7 @@ class SeccionController
     {
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $router->render('user/secciones', [
+            $router->render('user/carpetas', [
                 'alertas' => $alertas,
             ]);
         }
@@ -108,8 +108,7 @@ class SeccionController
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
             $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            echo json_encode($resolve);return;
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
@@ -117,24 +116,22 @@ class SeccionController
             $alertas = $seccion->validar();
             if (!empty($alertas)) {
                 $resolve = ['alertas' => $alertas];
-                echo json_encode($resolve);
-                return;
+                echo json_encode($resolve);return;
             }
             try {
                 $seccion->path = $seccion->getPath(); //crear el path
-                $seccion->crearCarpeta();
                 $resultado = $seccion->guardar(); // metodo para guardar
                 if ($resultado['resultado'] != true) {
                     $resolve = ['error' => 'Ocurrió un problema al crear la Carpeta'];
                     echo json_encode($resolve);return;
                 }
+                $seccion->crearCarpeta();
                 $hijos = Seccion::wherePlano('idPadre', $_POST['idPadre']);
                 $resolve = [
                     'hijos' => $hijos,
                     'exito' => 'Carpeta creada correctamente'
                 ];
-                echo json_encode($resolve);
-                return;
+                echo json_encode($resolve);return;
             } catch (Exception $e) {
                 Seccion::generarError($e->getMessage());
                 return ['error' => 'No se pudo crear la carpeta'];
@@ -147,8 +144,7 @@ class SeccionController
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
             $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            echo json_encode($resolve);return;
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
@@ -158,18 +154,14 @@ class SeccionController
                     $seccion = Seccion::find($id);
                     $padre = $seccion->id;
                     if (!$seccion) {
-                        $resolve = [
-                            'error' => 'La Sección no Existe'
-                        ];
-                        echo json_encode($resolve);
-                        return;
+                        $resolve = ['error' => 'La Sección no Existe'];
+                        echo json_encode($resolve);return;
                     }
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
                         $resolve = ['alertas' => $alertas];
-                        echo json_encode($resolve);
-                        return;
+                        echo json_encode($resolve);return;
                     }
                     $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
                     $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path

@@ -99,7 +99,8 @@ class Documento extends ActiveRecord
     {
         $idPadre = intval($this->idSeccion);
         // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
-        $pathBase = "/" . str_replace(" ", "_", $this->codigo);
+        $path = explode("/", $_FILES['path']['type']);
+        $pathBase = "/" . str_replace(" ", "_", $this->codigo).".".$path['1'];
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
             $nombreCarpeta = str_replace(" ", "_", $secPadre->seccion);
@@ -113,9 +114,9 @@ class Documento extends ActiveRecord
         $idSec = $this->idSeccion;
         $seccion = Seccion::where('id',$idSec);
         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
-        $idDoc = Documento::selectMax('id');
-        if ($idDoc == null){ $idDoc = 1;}
-        $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
+        $idDoc = Documento::countPadre($this->idSeccion);
+        $contador = intval($idDoc['contador']) + 1;
+        $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($contador, 9, 0, STR_PAD_LEFT);
         return $refDoc;
     }
 }

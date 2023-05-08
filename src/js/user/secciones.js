@@ -48,7 +48,7 @@ function traerSecciones() {
                 "tipo": 'seccion'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/seccion/datos',
+            url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -90,7 +90,7 @@ function traerFormularios() {
                 "tipo": 'formularios'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/documentos/datos',
+            url: URL_BASE + '/documento/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -131,7 +131,7 @@ function traerFormulario(id) {
                 "id": id
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/documentos/datos',
+            url: URL_BASE + '/documento/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -165,7 +165,7 @@ function traerDocs(id) {
                 tipo: "documentos",
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + "/seccion/datos",
+            url: URL_BASE + "/carpeta/datos",
             type: "POST",
             headers: {
                 token: token,
@@ -209,7 +209,7 @@ function traerHijos(id = 0) {
                 "tipo": 'hijos'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/seccion/datos',
+            url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -251,7 +251,7 @@ function moverCarpeta(id) {
                 "tipo": 'updateCarpetas'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/seccion/datos',
+            url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -316,7 +316,7 @@ function buscarCarpeta(seccionActual) {
 escucharCarpeta = (value, id) => {
     $.ajax({
         data: { "tipo": "buscarCarpetas", "value": value, "id": id },
-        url: URL_BASE + '/seccion/datos',
+        url: URL_BASE + '/carpeta/datos',
         type: 'POST',
         headers: {
             'token': token
@@ -351,7 +351,7 @@ async function dibujarPath(path) {
     if (path != 'base') {
         $.ajax({
             data: { "tipo": "buscarPath", "value": path.replace("_", " ") },
-            url: URL_BASE + '/seccion/datos',
+            url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -786,11 +786,9 @@ async function dibujarDocs(padre, nombreCarpeta) {
             html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
             html += ' </div>';
             html += '  <div class="modal-body">';
-
-            let claves = documento.keywords
             let datos = JSON.parse(documento.data)
             html += "<p><strong>KEYWORDS</strong></p>";
-            html += "<p>" + claves + "</p>";
+            html += "<p>" + documento.keywords + "</p>";
             datos.forEach(dato => {
                 html += "<p><strong>" + dato.nombre.toUpperCase() + "</strong></p>";
                 html += "<p>" + dato.valor + "</p>";
@@ -941,6 +939,7 @@ async function saveArchivo(idFormulario, padre) {
 
             if (nombreInput == 'keywords') {
                 claves = valorInput ;
+                console.log('claves',claves);
             } else if (nombreInput == 'archivo') {
                 documento = nombre.files[0];
             } else {
@@ -955,12 +954,12 @@ async function saveArchivo(idFormulario, padre) {
         const datos = new FormData()
         datos.append('idSeccion', padre);
         datos.append('idFormulario', idFormulario);
-        datos.append('keywords', JSON.stringify(claves))
+        datos.append('keywords', claves)
         datos.append('path', documento);
         datos.append('data', JSON.stringify(info));
         console.log([...datos]);
 
-        let url = URL_BASE + '/documentos/create';
+        let url = URL_BASE + '/documento/create';
         const request = await fetch(url, {
             method: 'POST',
             headers: {
@@ -1040,7 +1039,7 @@ async function createSeccion(padre = 0) {
     datos.append('descripcion', descripcion);
     datos.append('color', color);
     console.log([...datos]);
-    let url = URL_BASE + '/seccion/create';
+    let url = URL_BASE + '/carpeta/create';
     const request = await fetch(url, {
         method: 'POST',
         headers: {
@@ -1115,7 +1114,7 @@ async function updateSeccion(padre, hijo, tipo) {
         datos.append('tipo', 'updateHijo');
     }
     console.log([...datos]);
-    let url = URL_BASE + '/seccion/update';
+    let url = URL_BASE + '/carpeta/update';
     const request = await fetch(url, {
         method: 'POST',
         headers: {
@@ -1188,7 +1187,7 @@ async function deleteSeccion(hijo) {
                 data: {
                     "id": hijo
                 },
-                url: URL_BASE + '/seccion/delete',
+                url: URL_BASE + '/carpeta/delete',
                 type: 'POST',
                 headers: {
                     'token': token

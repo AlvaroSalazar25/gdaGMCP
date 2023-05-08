@@ -44,12 +44,12 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/unidad/create',[UnidadController::class,
 $router->post($_ENV['NOMBRE_CARPETA'].'/unidad/datos',[UnidadController::class,'datos']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/unidad/delete',[UnidadController::class,'delete']);
 
-//rutas para seccion
-$router->get($_ENV['NOMBRE_CARPETA'].'/seccion',[SeccionController::class,'index']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/seccion/create',[SeccionController::class,'create']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/seccion/update',[SeccionController::class,'update']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/seccion/datos',[SeccionController::class,'datos']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/seccion/delete',[SeccionController::class,'delete']);
+//rutas para las carpetas
+$router->get($_ENV['NOMBRE_CARPETA'].'/carpeta',[SeccionController::class,'index']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/create',[SeccionController::class,'create']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/update',[SeccionController::class,'update']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/datos',[SeccionController::class,'datos']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/delete',[SeccionController::class,'delete']);
 
 //rutas para formularios
 $router->get($_ENV['NOMBRE_CARPETA'].'/formulario',[FormularioController::class,'index']);
@@ -57,15 +57,16 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/formulario/datos',[FormularioController:
 $router->post($_ENV['NOMBRE_CARPETA'].'/formulario/create',[FormularioController::class,'create']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/formulario/update',[FormularioController::class,'update']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/formulario/delete',[FormularioController::class,'delete']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/seccion/formulario/agregar',[FormularioController::class,'agregar']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/formulario/agregar',[FormularioController::class,'agregar']);
 
+//rutas para documentos
+$router->get($_ENV['NOMBRE_CARPETA'].'/documento',[DocumentosController::class,'index']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/documento/datos',[DocumentosController::class,'datos']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/documento/create',[DocumentosController::class,'create']);
 
-$router->get($_ENV['NOMBRE_CARPETA'].'/documentos',[DocumentosController::class,'index']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/documentos/datos',[DocumentosController::class,'datos']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/documentos/create',[DocumentosController::class,'create']);
-
-$router->get($_ENV['NOMBRE_CARPETA'].'/errores',[ErrorController::class,'index']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/errores/datos',[ErrorController::class,'datos']);
+//rutas para erroores
+$router->get($_ENV['NOMBRE_CARPETA'].'/error',[ErrorController::class,'index']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/error/datos',[ErrorController::class,'datos']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();

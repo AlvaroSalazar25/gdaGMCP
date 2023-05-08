@@ -99,11 +99,12 @@ class Seccion extends ActiveRecord
     public function crearCarpeta(){
         $carpetaArchivos = '../public/archivos';
         $carpeta = $carpetaArchivos.$this->path;
-        if( !mkdir($carpeta, 0777, true)){
+        if(!mkdir($carpeta, 0777, true)){
             mkdir($carpeta, 0777, true);
             return true;
-        } 
-        return false;
+        } else{
+            return new Exception('No se pudo crear la carpeta');
+        }
     }
 
     public static function updatePathHijos($hijos){

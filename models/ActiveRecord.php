@@ -234,6 +234,13 @@ class ActiveRecord
                 return array_shift($valor);
         }
 
+        public static function countPadre($idSeccion)
+        {
+                $query = "SELECT count(*) as contador FROM " . static::$tabla ." WHERE idSeccion =".$idSeccion ;
+                $resultado = self::consultaPlana($query);
+                return array_shift($resultado);
+        }
+
         // Actualizar el registro
         public function actualizar()
         {
@@ -304,9 +311,10 @@ class ActiveRecord
                 $datosErrors = debug_backtrace()[1];
                 $controller = explode("\\", $datosErrors['class'])[1];
                 $data = $datosErrors['object'] ?? [];
-                if ($data != "") {
-                        $data->user = $_SESSION['nombre'] . " " . "(id: " . $_SESSION['id'] . ")";
+                if(!$_SESSION){
+                        session_start();
                 }
+
                 $errorGenerado = [
                         'tabla_error' => explode("\\", $datosErrors['class'])[1],
                         'controller_error' => $controller,
