@@ -176,26 +176,7 @@ class ActiveRecord
         public static function wherePlano($columna, $valor)
         {
                 $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor'";
-                $resultados = self::consultarSQL($query);
-                foreach ($resultados as $resultado) {
-                        $respuesta = getHijos(intval($resultado->id));
-                        $sql = "";
-                        foreach ($respuesta as $index => $resp) {
-                                if ($index != count($respuesta) - 1) {
-                                        $sql .= "'$resp',";
-                                } else {
-                                        $sql .= "'$resp'";
-                                }
-                        }
-                        $moverHijos = "";
-                        if (!empty($respuesta)) {
-                                $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
-                                $moverHijos = Seccion::consultaPlana($consulta);
-                        } else {
-                                $moverHijos =  Seccion::all();
-                        }
-                        $resultado->carpetas = json_encode($moverHijos);
-                }
+                $resultados = self::consultaPlana($query);
                 return  $resultados;
         }
 
@@ -236,7 +217,7 @@ class ActiveRecord
 
         public static function countPadre($idSeccion)
         {
-                $query = "SELECT count(*) as contador FROM " . static::$tabla ." WHERE idSeccion =".$idSeccion ;
+                $query = "SELECT count(*) as contador FROM " . static::$tabla . " WHERE idSeccion =" . $idSeccion;
                 $resultado = self::consultaPlana($query);
                 return array_shift($resultado);
         }
@@ -289,7 +270,6 @@ class ActiveRecord
                 return array_shift($array);
         }
 
-
         // Eliminar un Registro por su ID
         public function eliminar()
         {
@@ -302,7 +282,6 @@ class ActiveRecord
         {
                 $query = "DELETE FROM "  . static::$tabla . " WHERE ${columna} = " . self::$db->escape_string($valor);
                 $resultado = self::$db->query($query);
-                //dd($query);
                 return $resultado;
         }
 
@@ -311,7 +290,7 @@ class ActiveRecord
                 $datosErrors = debug_backtrace()[1];
                 $controller = explode("\\", $datosErrors['class'])[1];
                 $data = $datosErrors['object'] ?? [];
-                if(!$_SESSION){
+                if (!$_SESSION) {
                         session_start();
                 }
 

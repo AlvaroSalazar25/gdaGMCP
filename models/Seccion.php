@@ -36,7 +36,7 @@ class Seccion extends ActiveRecord
         }
 
         $texto = preg_match('([^A-Za-z0-9 ])', $this->seccion);
-        if($texto > 0){
+        if ($texto > 0) {
             self::$alertas['error'][] = 'El Nombre de la Sección no debe contener caracteres especiales';
         }
 
@@ -54,21 +54,23 @@ class Seccion extends ActiveRecord
         return self::$alertas;
     }
 
-    public static function obtenerSecRama($respuesta){
+    public static function obtenerSecRama($respuesta)
+    {
         $sql = "";
         $moverHijos = "";
-        foreach ($respuesta as $index => $resp) {
-            if ($index != count($respuesta) - 1) {
-                $sql .= "'$resp',";
-            } else {
-                $sql .= "'$resp'";
-            }
-        }
         if (!empty($respuesta)) {
-            $consulta = "SELECT * FROM seccion s WHERE s.id NOT IN ($sql)";
+            foreach ($respuesta as $index => $resp) {
+                if ($index != count($respuesta) - 1) {
+                    $sql .= "'$resp',";
+                } else {
+                    $sql .= "'$resp'";
+                }
+            }
+            $consulta = "SELECT s.id,s.idPadre,s.seccion,s.path FROM seccion s WHERE s.id NOT IN ($sql)";
             $moverHijos = Seccion::consultaPlana($consulta);
         } else {
-            $moverHijos =  Seccion::all();
+            $consulta = "SELECT s.id,s.idPadre,s.seccion,s.path FROM seccion s";
+            $moverHijos = Seccion::consultaPlana($consulta);
         }
         return json_encode($moverHijos);
     }
@@ -78,7 +80,7 @@ class Seccion extends ActiveRecord
         $idPadre = intval($this->idPadre);
         // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
         $pathBase = "/" . str_replace(" ", "_", $this->seccion);
-        
+
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
             $nombreCarpeta = str_replace(" ", "_", $secPadre->seccion);
@@ -88,37 +90,56 @@ class Seccion extends ActiveRecord
         return $pathBase;
     }
 
-    public function renameDir($oldPath){
+    public function renameDir($oldPath)
+    {
         $carpetaArchivos = '../public/archivos';
         $old = $carpetaArchivos.$oldPath;
         $new = $carpetaArchivos.$this->path;
         $resolve = rename($old, $new);
         return $resolve;
     }
-    
-    public function crearCarpeta(){
+
+    public function move_to($oldPath)
+    {
         $carpetaArchivos = '../public/archivos';
-        $carpeta = $carpetaArchivos.$this->path;
-        if(!mkdir($carpeta, 0777, true)){
+        $old = $carpetaArchivos . $oldPath;
+        $new = $carpetaArchivos . $this->path;
+        $res = copy($old, $new);
+        if ($res == true) {
+            unlink($old);
+        }
+    }
+
+    public function crearCarpeta()
+    {
+        $carpetaArchivos = '../public/archivos';
+        $carpeta = $carpetaArchivos . $this->path;
+        if (!mkdir($carpeta, 0777, true)) {
             mkdir($carpeta, 0777, true);
             return true;
-        } else{
+        } else {
             return new Exception('No se pudo crear la carpeta');
         }
     }
 
-    public static function updatePathHijos($hijos){
-        foreach ($hijos as $hijo){
+    public static function updatePathHijos($hijos)
+    {
+        foreach ($hijos as $hijo) {
             $seccion = Seccion::where('id', $hijo);
-            if($seccion){
+            if ($seccion) {
                 $seccion->path = $seccion->getPath();
                 $seccion->guardar();
-            } else{
+            } else {
                 throw new Exception('No se encuentran los hijos');
             }
         }
         return true;
-
     }
 
+    public static function getCarpetasHijos($id)
+    {
+        $GLOBALS['hijos'] = [];
+        $hijos = getHijos($id); // obtener hijos de carpeta padre
+        return $hijos;
+    }
 }

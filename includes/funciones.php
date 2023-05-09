@@ -73,7 +73,7 @@ function getHijos($padre)
     if (!empty($secciones)) {
         foreach ($secciones as $seccion) {
             array_push($GLOBALS['hijos'], $seccion['id']);
-            getHijos($seccion['id'], $GLOBALS['hijos']);
+            getHijos($seccion['id']);
         }
     }
     return $GLOBALS['hijos'];

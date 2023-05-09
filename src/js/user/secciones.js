@@ -439,17 +439,7 @@ async function dibujarPadre(padre) {
     //==============================================================================================================*/
     html += '<div class="contenedor-carpetas mt-3 mb-5" id="contenedorCarpetas" >'
 
-    html += '<div class="d-flex justify-content-center align-items-center" style="height:129.5px">'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += '</div>'
+
 
     html += '</div>'
     /*=============================================================================================================//
@@ -581,8 +571,9 @@ async function dibujarPadre(padre) {
     }
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
+    waitResponse('#contenedorCarpetas');
     if (padre > 0) {
-        await dibujarDocs(padre, seccionActual.seccion);
+        await dibujarDocs(padre);
     }
     $("#select" + padre).select2({
         dropdownParent: $("#exampleModalEditar" + padre)
@@ -590,9 +581,9 @@ async function dibujarPadre(padre) {
 
 }
 
-async function dibujarHijosPadre(padre, response = 0) {
+async function dibujarHijosPadre(padre, response = []) {
     let hijos = "";
-    if (response) {
+    if (response.length > 0) {
         hijos = response;
     } else {
         hijos = await traerHijos(padre);
@@ -680,6 +671,7 @@ async function dibujarHijosPadre(padre, response = 0) {
                 path: '/base',
             }
             let carpetas = JSON.parse(hijo.carpetas);
+            console.log('carpetas para mover', carpetas);
             carpetas.unshift(base);
             carpetas.forEach(seccion => {
                 if (seccion.id != hijo.id) {
@@ -714,18 +706,26 @@ async function dibujarHijosPadre(padre, response = 0) {
     })
 }
 
-async function dibujarDocs(padre, nombreCarpeta) {
-    let documentos = await traerDocs(padre)
+async function dibujarDocs(padre, docs = []) {
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
+    let documentos;
+    if (docs.length == 0) {
+        documentos = await traerDocs(padre);
+    } else {
+        documentos = docs
+    }
     var html = "";
     html += '<div class="accordion" id="accordionExample">'
     html += '<div class="accordion-item ">'
     html += '<h2 class="accordion-header" id="headingOne">'
-    html += '<button class="accordion-button '+(documentos.length > 0 ? '' : 'collapsed')+' contenedor-carpetas" type="button"  style="height:55px" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"><div class="d-flex w-100 justify-content-center"><h4 style="color:black">Documentos de<strong>' + ' ' + nombreCarpeta + '</strong></h4></div></button>'
+    html += '<button class="accordion-button ' + (documentos.length > 0 ? '' : 'collapsed') + ' contenedor-carpetas" type="button"  style="height:55px" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"><div class="d-flex w-100 justify-content-center"><h4 style="color:black">Documentos de<strong>' + ' ' + seccionActual.seccion + '</strong></h4></div></button>'
     html += ' </h2>'
     html += '<div id="collapseOne" class="accordion-collapse collapse ' + (documentos.length > 0 ? 'show' : '') + '" data-bs-parent="#accordionExample">'
     html += ' <div class="accordion-body px-0">'
     //--------------------------------------------------------------------------------------------------
     html += '<div class="d-flex mb-3 justify-content-end ">'
+    html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:5px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
     html += '<a class="btn btn-warning"  onclick="agregarDocumento(' + padre + ')"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Documento</span></a>'
     html += "</div>";
 
@@ -734,30 +734,32 @@ async function dibujarDocs(padre, nombreCarpeta) {
     html += '<tr class="" style="text-transform:uppercase">';
     html += "<th>N°</th>";
     html += '<th class="">Nombre</th>';
-    html += '<th class="">Formulario</th>';
+    html += '<th class="">Carpeta</th>';
+    html += '<th class="">Form</th>';
     html += '<th class="">Datos</th>';
     html += '<th class="">Responsable</th>';
     html += '<th class="">Fecha</th>';
     // html += '<th class="">Estado</th>';
-    html += '<th class="">Archivo</th>';
+    html += '<th class="">Acciones</th>';
     // html += '<th class="col-1">Acciones</th>';
     html += "</tr>";
     html += "</thead>";
     html += '<tbody class="contenido" id="contenido">';
     if (documentos.length > 0) {
         documentos.forEach((documento, index) => {
-            console.log('codigo',documento);
+            console.log('documento', documento);
             html += "<tr>"
             html += "<td>" + (parseInt(index) + 1) + "</td>"
-            if(documento.alias == ""){
+            if (documento.alias == "") {
                 html += "<td>" + documento.codigo + "</td>"
-            } else{
+            } else {
                 html += "<td>" + documento.alias + "</td>"
             }
+            html += "<td>" + documento.seccion+"</td>"
             html += "<td>" + documento.formulario + "</td>"
             html += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
             html += "<td>" + documento.responsable + "</td>"
-            html += '<td>' + documento.created_at.split(" ")[0] + '</td>'
+            html += '<td class="col-2"><div class="row"><p>' + documento.created_at.split(" ")[0] + '</p><p>' + documento.created_at.split(" ")[1] + '</p></div></td>'
             // html += '<td>'
             // if (documento.status == 0) {
             //     html += '<span class="badge badge-pill bg-danger" style="margin-left:15px"><i class="fa-solid fa-circle-exclamation fa-lg"></i></span>'
@@ -765,11 +767,13 @@ async function dibujarDocs(padre, nombreCarpeta) {
             //     html += '<span class="badge badge-pill bg-success" style="margin-left:15px"><i class="fa-solid fa-circle-check fa-lg"></i></span>'
             // }
             // html += '</td>'
-            html += '<td>'
+            html += '<td class="col-2">'
             const urlA = "'" + documento.path + "'";
             const nombreA = "'" + documento.codigo + "'"
-            html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html += '<buttom title="Descargar Documento" class="btn btn-primary"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px;height:30px;width:32px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += '<buttom title="Editar" class="btn btn-warning" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-pen-to-square fa-2x"></i></i></buttom>';
+            html += '<buttom title="Eliminar" class="btn btn-outline-danger" style=";height:30px;width:32px"><i class="fa-solid fa-trash fa-2x"></i></buttom>';
             html += "</td>";
             // html += "<td>";
             // html += '<buttom class="btn btn-warning" style="margin-right:5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></buttom>';
@@ -813,7 +817,67 @@ async function dibujarDocs(padre, nombreCarpeta) {
     html += '</div>'
     html += '</div>'
     document.getElementById("dibujar-tabla").innerHTML = html;
+    if (docs.length !== 0) {
+        document.getElementById('mostrarDocs').classList.add('disabledButtom')
+    }
     $("#tablaDocsUltimo").DataTable();
+}
+
+async function waitResponse(contenedor, altura = '129.5px') {
+    var html = "";
+    html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
+    html += ' <div class="spinner-grow" role="status">'
+    html += '<span class="visually-hidden">Loading...</span>'
+    html += '</div>'
+    html += ' <div class="spinner-grow" role="status">'
+    html += '<span class="visually-hidden">Loading...</span>'
+    html += '</div>'
+    html += ' <div class="spinner-grow" role="status">'
+    html += '<span class="visually-hidden">Loading...</span>'
+    html += '</div>'
+    html += '</div>'
+    console.log('adfads',document.querySelector(contenedor));
+    contenedor.insertBefore(html, contenedor)
+}
+
+async function mostrarDocsPro(padre) {
+    $.ajax({
+        data: { "tipo": "allDocs", "id": padre },
+        url: URL_BASE + '/carpeta/datos',
+        type: 'POST',
+        headers: {
+            'token': token
+        },
+        dataType: 'json'
+    }).done((response) => {
+        if (response.exit) {
+            Swal.fire({
+                icon: 'warning',
+                title: response.exit,
+                showConfirmButton: false,
+                text: 'Sesión expirada, vuelva a iniciar sesión',
+                timer: 3000
+            }).then(() => {
+                window.location.href = URL_BASE + "/?r=8";
+            })
+        }
+        waitResponse('.dataTables_info', '50px');
+        setTimeout(() => {
+            if (response.length == 0) {
+                var html = "";
+                html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
+                html += '<div class="d-flex justify-content-center align-items-center">';
+                html += '<h4 class="" style="color:red">No Existen Documentos</h4>';
+                html += "</div>";
+                html += "</div>";
+                document.querySelector('.dataTables_empty').innerHTML = html;
+            } else {
+                dibujarDocs(padre, response);
+            }
+        }, 105000);
+    }).fail((err) => {
+        console.log(err);
+    });
 }
 
 async function agregarDocumento(padre) {
@@ -841,7 +905,7 @@ async function agregarDocumento(padre) {
     html +=
         '<label for="exampleFormControlInput1" class="form-label"><strong>Formulario:</strong></label>';
     html +=
-        '<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,'+padre+')">';
+        '<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,' + padre + ')">';
     html +=
         ' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
     formularios.forEach((formulario) => {
@@ -857,7 +921,7 @@ async function agregarDocumento(padre) {
     document.getElementById("dibujar-js").innerHTML = html;
 }
 
-async function elegirSeccionAgregar(id,padre) {
+async function elegirSeccionAgregar(id, padre) {
     console.log('id', id);
     let tipo = "1";
     var html = "";
@@ -938,8 +1002,8 @@ async function saveArchivo(idFormulario, padre) {
             }
 
             if (nombreInput == 'keywords') {
-                claves = valorInput ;
-                console.log('claves',claves);
+                claves = valorInput;
+                console.log('claves', claves);
             } else if (nombreInput == 'archivo') {
                 documento = nombre.files[0];
             } else {
@@ -1234,7 +1298,7 @@ async function deleteSeccion(hijo) {
 
 function abrirPdf(path, nombre) {
     let carpeta = '/public/archivos';
-    window.open(URL_BASE+carpeta + path, nombre, "width=620,height=400,fullscreen=yes,scrollbars=NO")
+    window.open(URL_BASE + carpeta + path, nombre, "width=620,height=400,fullscreen=yes,scrollbars=NO")
     parent.opener = top;
     opener.close();
 }

@@ -94,13 +94,18 @@ class Documento extends ActiveRecord
     //         return ['error' => 'No se pudo guardar el documento'];
     //     }
     // }
-    
+
     public function getPath()
     {
         $idPadre = intval($this->idSeccion);
         // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
-        $path = explode("/", $_FILES['path']['type']);
-        $pathBase = "/" . str_replace(" ", "_", $this->codigo).".".$path['1'];
+        if ($_FILES) {
+            $path = explode("/", $_FILES['path']['type']);
+            $pathBase = "/" . str_replace(" ", "_", $this->codigo) . "." . $path['1'];
+        } else {
+            $path = explode('.', $this->path);
+            $pathBase = "/" . str_replace(" ", "_", $this->codigo) . "." . $path['1'];
+        }
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
             $nombreCarpeta = str_replace(" ", "_", $secPadre->seccion);
@@ -110,13 +115,66 @@ class Documento extends ActiveRecord
         return $pathBase;
     }
 
-    public function getCodigo(){
+    public function getCodigo()
+    {
         $idSec = $this->idSeccion;
-        $seccion = Seccion::where('id',$idSec);
+        $seccion = Seccion::where('id', $idSec);
         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
         $idDoc = Documento::countPadre($this->idSeccion);
         $contador = intval($idDoc['contador']) + 1;
         $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($contador, 9, 0, STR_PAD_LEFT);
         return $refDoc;
+    }
+
+    public static function obtenerAllDocs($respuesta)
+    {
+        $sql = "";
+        $allDocs = "";
+        if (!empty($respuesta)) {
+            foreach ($respuesta as $index => $resp) {
+                if ($index != count($respuesta) - 1) {$sql .= "'$resp',";} else {$sql .= "'$resp'";}
+            }
+            $consulta = "SELECT d.id,d.idSeccion,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion WHERE d.idSeccion IN ($sql) ORDER BY d.codigo ASC";
+            $allDocs = Documento::consultaPlana($consulta);
+        } else {
+            $consulta = "SELECT d.id,d.idSeccion,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion ORDER BY d.codigo ASC";
+            $allDocs = Documento::consultaPlana($consulta);
+        }
+
+        return $allDocs;
+    }
+    public static function updateCodDoc($id)
+    {
+        $documentos = Documento::whereTodos('idSeccion', $id);
+        self::$db->autocommit(FALSE);
+        self::$db->begin_transaction();
+        foreach ($documentos as $doc) {
+            $doc->codigo = $doc->getCodigo();
+            $resultado = $doc->guardar();
+            if ($resultado != true) {
+                self::$db->rollback();
+                return false;
+            }
+        }
+        self::$db->commit();
+        return true;
+    }
+
+    public static function updatePathDoc($id)
+    {
+        $carpetaArchivos = '../public/archivos';
+        $documentos = Documento::whereTodos('idSeccion', $id);
+        self::$db->autocommit(FALSE);
+        self::$db->begin_transaction();
+        foreach ($documentos as $doc) {
+            $doc->path = $doc->getPath();
+            $resultado = $doc->guardar();
+            if ($resultado != true) {
+                self::$db->rollback();
+                return false;
+            }
+        }
+        self::$db->commit();
+        return true;
     }
 }
