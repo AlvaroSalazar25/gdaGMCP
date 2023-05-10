@@ -170,6 +170,7 @@ class SeccionController
                         echo json_encode($resolve);
                         return;
                     }
+                    $oldName = $seccion->seccion;
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
@@ -179,13 +180,14 @@ class SeccionController
                     }
                     $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
                     $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path
+                    if($oldName !== $_POST['seccion'] ){
+                        Documento::updateCodDoc($seccion->id);
+                    }
                     $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
                     $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
                     $hijos = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
                     Seccion::updatePathHijos($hijos); // cambiar el path de los hijos en caso de tener
-                    if ($_POST['idPadre']) {
-                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                    }
+                    $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);
                         $resolve = [
@@ -213,6 +215,7 @@ class SeccionController
                         $resolve = ['error' => 'La Sección no Existe'];
                         echo json_encode($resolve);return;
                     }
+                    $oldName = $seccion->seccion;
                     $seccion->sincronizar($_POST);
                     $alertas = $seccion->validar();
                     if (!empty($alertas)) {
@@ -223,9 +226,11 @@ class SeccionController
                     $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
                     $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
                     $seccion->guardar();
+                    if($oldName !== $_POST['seccion'] ){
+                        Documento::updateCodDoc($seccion->id);
+                    }
                     //$seccion->move_to($oldPath); // cambiar la direccion fisica del padre con el nuevo path
                     $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-
                     $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);
@@ -234,9 +239,6 @@ class SeccionController
                             'error' => 'Ocurrió un problema al guardar la Sección'
                         ];
                         echo json_encode($resolve);return;
-                    }
-                    if($_POST['seccion'] != $seccion->seccion ){
-                        $rename = Documento::updateCodDoc($seccion->id);
                     }
                     $carpetas = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
                     Seccion::updatePathHijos($carpetas); // cambiar el path de los hijos en caso de tener

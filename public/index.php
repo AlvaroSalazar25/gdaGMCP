@@ -63,6 +63,8 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/formulario/agregar',[FormularioC
 $router->get($_ENV['NOMBRE_CARPETA'].'/documento',[DocumentosController::class,'index']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/documento/datos',[DocumentosController::class,'datos']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/documento/create',[DocumentosController::class,'create']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/documento/update',[DocumentosController::class,'update']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/documento/delete',[DocumentosController::class,'delete']);
 
 //rutas para erroores
 $router->get($_ENV['NOMBRE_CARPETA'].'/error',[ErrorController::class,'index']);

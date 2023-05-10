@@ -120,10 +120,20 @@ class Documento extends ActiveRecord
         $idSec = $this->idSeccion;
         $seccion = Seccion::where('id', $idSec);
         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
-        $idDoc = Documento::countPadre($this->idSeccion);
+        $idDoc = Documento::countPadre($this->idFormulario);
         $contador = intval($idDoc['contador']) + 1;
         $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($contador, 9, 0, STR_PAD_LEFT);
         return $refDoc;
+    }
+
+    public function updateCodigo()
+    {
+        $idSec = $this->idSeccion;
+        $seccion = Seccion::where('id', $idSec);
+        $new = strtoupper(substr($seccion->seccion,0,3));
+        $old = explode('-',$this->codigo);
+        $changed = $new."-".$old[1]."-".$old[2];
+        return $changed;
     }
 
     public static function obtenerAllDocs($respuesta)
@@ -143,26 +153,43 @@ class Documento extends ActiveRecord
 
         return $allDocs;
     }
+
+    // public static function updateCodDoc($id)
+    // {
+    //     $documentos = Documento::whereTodos('idSeccion', $id);
+    //     self::$db->autocommit(FALSE);
+    //     self::$db->begin_transaction();
+    //     foreach ($documentos as $doc) {
+    //         $doc->codigo = $doc->getCodigo();
+    //         $resultado = $doc->guardar();
+    //         if ($resultado != true) {
+    //             self::$db->rollback();
+    //             return false;
+    //         }
+    //     }
+    //     self::$db->commit();
+    //     return true;
+    // }
+
     public static function updateCodDoc($id)
     {
         $documentos = Documento::whereTodos('idSeccion', $id);
         self::$db->autocommit(FALSE);
         self::$db->begin_transaction();
         foreach ($documentos as $doc) {
-            $doc->codigo = $doc->getCodigo();
+            $doc->codigo = $doc->updateCodigo();
             $resultado = $doc->guardar();
             if ($resultado != true) {
                 self::$db->rollback();
                 return false;
             }
+            self::$db->commit();
         }
-        self::$db->commit();
         return true;
     }
 
     public static function updatePathDoc($id)
     {
-        $carpetaArchivos = '../public/archivos';
         $documentos = Documento::whereTodos('idSeccion', $id);
         self::$db->autocommit(FALSE);
         self::$db->begin_transaction();
@@ -173,8 +200,15 @@ class Documento extends ActiveRecord
                 self::$db->rollback();
                 return false;
             }
+            self::$db->commit();
         }
-        self::$db->commit();
         return true;
+    }
+
+    public function deleteDoc()
+    {
+        $carpetaArchivos = '../public/archivos/';
+        $resultado = unlink($carpetaArchivos.$this->path);
+        return $resultado;
     }
 }

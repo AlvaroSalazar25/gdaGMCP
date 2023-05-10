@@ -215,9 +215,16 @@ class ActiveRecord
                 return array_shift($valor);
         }
 
-        public static function countPadre($idSeccion)
+        // public static function countPadre($idSeccion)
+        // {
+        //         $query = "SELECT count(*) as contador FROM " . static::$tabla . " WHERE idSeccion =" . $idSeccion;
+        //         $resultado = self::consultaPlana($query);
+        //         return array_shift($resultado);
+        // }
+
+        public static function countPadre($idFormulario)
         {
-                $query = "SELECT count(*) as contador FROM " . static::$tabla . " WHERE idSeccion =" . $idSeccion;
+                $query = "SELECT count(*) as contador FROM " . static::$tabla . " WHERE idFormulario = " . $idFormulario;
                 $resultado = self::consultaPlana($query);
                 return array_shift($resultado);
         }

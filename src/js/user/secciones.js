@@ -200,6 +200,45 @@ function traerDocs(id) {
     });
 }
 
+function traerDocumento(id) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                id: id,
+                tipo: "documento",
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + "/documento/datos",
+            type: "POST",
+            headers: {
+                token: token,
+            },
+            dataType: "json",
+        })
+            .done((response) => {
+                if (response.exit) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: "Sesión expirada, vuelva a iniciar sesión",
+                        timer: 3000,
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    });
+                }
+                if (response.length == 0) {
+                    resolve(0);
+                } 
+                $.each(response, (index, doc) => {
+                        resolve(doc);
+                });
+            }).fail((err) => {
+                reject(err);
+            });
+    });
+}
+
 function traerHijos(id = 0) {
     return new Promise((resolve, reject) => {
         let hijos = []
@@ -725,7 +764,7 @@ async function dibujarDocs(padre, docs = []) {
     html += ' <div class="accordion-body px-0">'
     //--------------------------------------------------------------------------------------------------
     html += '<div class="d-flex mb-3 justify-content-end ">'
-    html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:5px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
+    html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:3px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
     html += '<a class="btn btn-warning"  onclick="agregarDocumento(' + padre + ')"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Documento</span></a>'
     html += "</div>";
 
@@ -755,7 +794,7 @@ async function dibujarDocs(padre, docs = []) {
             } else {
                 html += "<td>" + documento.alias + "</td>"
             }
-            html += "<td>" + documento.seccion+"</td>"
+            html += "<td>" + documento.seccion + "</td>"
             html += "<td>" + documento.formulario + "</td>"
             html += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
             html += "<td>" + documento.responsable + "</td>"
@@ -772,16 +811,19 @@ async function dibujarDocs(padre, docs = []) {
             const nombreA = "'" + documento.codigo + "'"
             html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px;height:30px;width:32px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
             html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html += '<buttom title="Editar" class="btn btn-warning" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-pen-to-square fa-2x"></i></i></buttom>';
-            html += '<buttom title="Eliminar" class="btn btn-outline-danger" style=";height:30px;width:32px"><i class="fa-solid fa-trash fa-2x"></i></buttom>';
-            html += "</td>";
+            html += '<buttom title="Editar" class="btn btn-warning"  data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + documento.id + '" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-pen-to-square fa-2x"></i></i></buttom>';
+            html += '<buttom title="Eliminar" class="btn btn-outline-danger" style=";height:30px;width:32px" onclick="deleteDoc(' + documento.id + ')"><i class="fa-solid fa-trash fa-2x"></i></buttom>';
+            html += '</td>';
             // html += "<td>";
             // html += '<buttom class="btn btn-warning" style="margin-right:5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></buttom>';
             // html +='<buttom class="btn btn-danger"><i class="fa-solid fa-trash-can fa-2x"></i></buttom>';
             // html += "</td>";
-            html += "</tr>";
+            html += '</tr>';
 
-            // <!---------------------------------------------      Modal ---------------------------------->
+            /* ================================================================================================================
+                                                    Modal Metadatos del documento
+            ==================================================================================================================*/
+
             html += '<div class="modal fade" id="exampleModalVer' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
             html += ' <div class="modal-dialog modal-dialog-centered">';
             html += ' <div class="modal-content">';
@@ -805,6 +847,39 @@ async function dibujarDocs(padre, docs = []) {
             html += "</div>";
             html += "</div>";
             html += "</div>";
+
+            /* ================================================================================================================
+                                                    Modal Editar datos del documento
+            ==================================================================================================================*/
+            html += '<div class="modal fade" id="exampleModalEditar' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
+            html += ' <div class="modal-dialog modal-dialog-centered">';
+            html += ' <div class="modal-content">';
+            html += ' <div class="modal-header bg-black ">';
+            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Editar Metadados <strong>' + documento.codigo + '</strong></h5>';
+            html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+            html += ' </div>';
+            html += '  <div class="modal-body">';
+            let data = JSON.parse(documento.data)
+            html += '<div class="mb-4" id="keywords">';
+            html += '<label class="form-label"><strong>KEYWORDS</strong></label>';
+            html += '<input class="form-control edit-campos' + documento.id + '" name="keywords"  value="' + documento.keywords + '">';
+            html += '</div>';
+
+            data.forEach(dato => {
+                html += '<div class="mb-4" id="' + dato.nombre.trim() + '">';
+                html += '<label class="form-label"><strong>' + dato.nombre.toUpperCase() + '</strong></label>';
+                html += '<input class="form-control edit-campos' + documento.id + '" name="' + dato.nombre.trim() + '"  value="' + dato.valor + '">';
+                html += '</div>';
+
+            })
+            html += "  </div>";
+            html += ' <div class="modal-footer mt-3">';
+            html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+            html += ' <button type="button" class="btn btn-success" onclick="saveEditDoc(' + documento.id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+            html += "  </div>";
+            html += "</div>";
+            html += "</div>";
+            html += "</div>";
         });
     }
     html += "</tbody>";
@@ -823,21 +898,131 @@ async function dibujarDocs(padre, docs = []) {
     $("#tablaDocsUltimo").DataTable();
 }
 
-async function waitResponse(contenedor, altura = '129.5px') {
+async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
     var html = "";
-    html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += ' <div class="spinner-grow" role="status">'
-    html += '<span class="visually-hidden">Loading...</span>'
-    html += '</div>'
-    html += '</div>'
-    console.log('adfads',document.querySelector(contenedor));
-    contenedor.insertBefore(html, contenedor)
+    if (tipo == 1) {
+        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += '</div>'
+    } else {
+        html += '<td colspan="8" valign="top">'
+        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += ' <div class="spinner-grow" role="status">'
+        html += '<span class="visually-hidden">Loading...</span>'
+        html += '</div>'
+        html += '</div>'
+        html += '</td>'
+    }
+    document.querySelector(contenedor).innerHTML = html;
+}
+
+async function saveEditDoc(id) {
+    const inputs = document.querySelectorAll('.edit-campos' + id)
+    const nombres = Array.apply(null, inputs);
+    const info = [];
+    let claves;
+    nombres.forEach((nombre) => {
+        let nombreInput = nombre.name
+        let valorInput = nombre.value
+        if (nombre.value == "") {
+            nombre.classList.add("errorInput");
+            const div = document.createElement("div");
+            div.id = "divAlerta" + nombreInput;
+            div.textContent = "El campo " + nombreInput + " es OBLIGATORIO";
+            div.style.color = "red";
+            let padre = document.getElementById(nombreInput)
+            let hijo = document.getElementById('divAlerta' + nombreInput)
+            if (!hijo) { padre.appendChild(div); }
+        } else {
+            nombre.classList.remove("errorInput");
+            const alerta = document.getElementById("divAlerta" + nombreInput)
+            if (alerta) { alerta.innerHTML = ""; }
+            if (nombreInput == 'keywords') {
+                claves = valorInput;
+            } else {
+                info.push({
+                    'nombre': nombreInput,
+                    'valor': valorInput
+                })
+            }
+        }
+    })
+    if (nombres.length == (info.length+1)) {
+        const datos = new FormData()
+        datos.append('id', id);
+        datos.append('keywords', claves)
+        datos.append('data', JSON.stringify(info));
+        console.log([...datos]);
+        let url = URL_BASE + '/documento/update';
+        const request = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'token': token
+            },
+            body: datos
+        });
+        //  respuesta de la peticion de arriba, me arroja true o false
+        const response = await request.json();
+        console.log(response);
+        if (response.exito) {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: response.exito,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                $('#exampleModalEditar'+id).modal('hide')
+                dibujarPadreAndCarpetas(response.padre);
+            })
+        } else if (response.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.error
+            })
+        } else if (response.archivo) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.archivo
+            })
+        } else if (response.exit) {
+            Swal.fire({
+                icon: 'warning',
+                title: response.exit,
+                showConfirmButton: false,
+                text: 'Sesión expirada, vuelva a iniciar sesión',
+                timer: 3000
+            }).then(() => {
+                window.location.href = URL_BASE + "/?r=8";
+            })
+        } else {
+            html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+            response.alertas.error.forEach(alerta => {
+                html += '<li class="text-danger"  >'
+                html += alerta
+                html += '</li>'
+            })
+            html += '</ul>'
+            document.getElementById('alertas').innerHTML = html;
+        }
+        alertas();
+    }
 }
 
 async function mostrarDocsPro(padre) {
@@ -861,20 +1046,22 @@ async function mostrarDocsPro(padre) {
                 window.location.href = URL_BASE + "/?r=8";
             })
         }
-        waitResponse('.dataTables_info', '50px');
+        waitResponse('.odd', '50px', 2);
         setTimeout(() => {
             if (response.length == 0) {
                 var html = "";
+                html += '<td colspan="8" valign="top">'
                 html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
                 html += '<div class="d-flex justify-content-center align-items-center">';
                 html += '<h4 class="" style="color:red">No Existen Documentos</h4>';
                 html += "</div>";
                 html += "</div>";
-                document.querySelector('.dataTables_empty').innerHTML = html;
+                html += '</td>'
+                document.querySelector('.odd').innerHTML = html;
             } else {
                 dibujarDocs(padre, response);
             }
-        }, 105000);
+        }, 500);
     }).fail((err) => {
         console.log(err);
     });
@@ -976,8 +1163,6 @@ async function saveArchivo(idFormulario, padre) {
     var html = "";
     const inputs = document.querySelectorAll(".datos");
     const nombres = Array.apply(null, inputs);
-    //ya tengo un array con los inputs, debo hacer la validacion  para agregar el rojo y el texto
-    //console.log(nombres);
     const info = [];
     let claves, documento;
     nombres.forEach((nombre) => {
@@ -991,19 +1176,13 @@ async function saveArchivo(idFormulario, padre) {
             div.style.color = "red";
             let padre = document.getElementById(nombreInput)
             let hijo = document.getElementById('divAlerta' + nombreInput)
-            if (!hijo) {
-                padre.appendChild(div);
-            }
+            if (!hijo) { padre.appendChild(div); }
         } else {
             nombre.classList.remove("errorInput");
             const alerta = document.getElementById("divAlerta" + nombreInput)
-            if (alerta) {
-                alerta.innerHTML = "";
-            }
-
+            if (alerta) { alerta.innerHTML = ""; }
             if (nombreInput == 'keywords') {
                 claves = valorInput;
-                console.log('claves', claves);
             } else if (nombreInput == 'archivo') {
                 documento = nombre.files[0];
             } else {
@@ -1079,6 +1258,74 @@ async function saveArchivo(idFormulario, padre) {
         alertas();
     }
 
+}
+
+async function deleteDoc(id) {
+    let doc = await traerDocumento(id);
+    let nombre;
+    if(doc.alias == ""){
+        nombre = doc.codigo
+    } else{
+        nombre = doc.alias
+    }
+    console.log('documento a eliminar',doc);
+    Swal.fire({
+        title: 'ELIMINAR',
+        html: ' Estas seguro de Eliminar de forma permamente el documento <strong>' + nombre + '</strong> ?',
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#dc3545',
+    }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            $.ajax({
+                data: {
+                    "id": id
+                },
+                url: URL_BASE + '/documento/delete',
+                type: 'POST',
+                headers: {
+                    'token': token
+                },
+                dataType: 'json'
+            }).done((response) => {
+                console.log('response Eliminar', response);
+                if (response.exito) {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'success',
+                        title: response.exito,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        dibujarPadreAndCarpetas(response.padre)
+                    })
+                } else if (response.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ERROR',
+                        html: '<strong>' + response.carpeta + '</strong> ' + response.error
+                    }).then(() => {
+                        dibujarPadreAndCarpetas(response.padre)
+
+                    })
+                } else if (response.exit) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: 'Sesión expirada, vuelva a iniciar sesión',
+                        timer: 3000
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    })
+                }
+            }).fail((err) => {
+                console.log(err);
+            });
+        }
+    })
 }
 
 function botonesGuardar(boton, largo = "px-2", ancho = "py-3") {
