@@ -230,6 +230,7 @@ class SeccionController
                         Documento::updateCodDoc($seccion->id);
                     }
                     //$seccion->move_to($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                    Documento::updatePathDoc($seccion->id,$oldName);
                     $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
                     $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
                     if ($resultado != true) {
@@ -242,7 +243,6 @@ class SeccionController
                     }
                     $carpetas = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
                     Seccion::updatePathHijos($carpetas); // cambiar el path de los hijos en caso de tener
-                    Documento::updatePathDoc($seccion->id);
 
                     $hijos = Seccion::wherePlano('idPadre', $seccion->idPadre);
                     $resolve = [

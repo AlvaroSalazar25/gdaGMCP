@@ -119,7 +119,7 @@ class Documento extends ActiveRecord
     {
         $idSec = $this->idSeccion;
         $seccion = Seccion::where('id', $idSec);
-        $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
+        $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 4));
         $idDoc = Documento::countPadre($this->idFormulario);
         $contador = intval($idDoc['contador']) + 1;
         $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($contador, 9, 0, STR_PAD_LEFT);
@@ -130,7 +130,7 @@ class Documento extends ActiveRecord
     {
         $idSec = $this->idSeccion;
         $seccion = Seccion::where('id', $idSec);
-        $new = strtoupper(substr($seccion->seccion,0,3));
+        $new = strtoupper(substr($seccion->seccion,0,4));
         $old = explode('-',$this->codigo);
         $changed = $new."-".$old[1]."-".$old[2];
         return $changed;
@@ -154,23 +154,6 @@ class Documento extends ActiveRecord
         return $allDocs;
     }
 
-    // public static function updateCodDoc($id)
-    // {
-    //     $documentos = Documento::whereTodos('idSeccion', $id);
-    //     self::$db->autocommit(FALSE);
-    //     self::$db->begin_transaction();
-    //     foreach ($documentos as $doc) {
-    //         $doc->codigo = $doc->getCodigo();
-    //         $resultado = $doc->guardar();
-    //         if ($resultado != true) {
-    //             self::$db->rollback();
-    //             return false;
-    //         }
-    //     }
-    //     self::$db->commit();
-    //     return true;
-    // }
-
     public static function updateCodDoc($id)
     {
         $documentos = Documento::whereTodos('idSeccion', $id);
@@ -188,14 +171,20 @@ class Documento extends ActiveRecord
         return true;
     }
 
-    public static function updatePathDoc($id)
+    public static function updatePathDoc($id,$oldName)
     {
+        $seccion = Seccion::find($id);
         $documentos = Documento::whereTodos('idSeccion', $id);
         self::$db->autocommit(FALSE);
         self::$db->begin_transaction();
         foreach ($documentos as $doc) {
+            $carpetaArchivos = '../public/archivos/';
+            // echo $doc->path."<br>";
             $doc->path = $doc->getPath();
+            // echo $doc->path."<br>";
+            // echo $oldName."<br>";
             $resultado = $doc->guardar();
+            rename($carpetaArchivos.$oldName,$carpetaArchivos.$doc->path);
             if ($resultado != true) {
                 self::$db->rollback();
                 return false;
