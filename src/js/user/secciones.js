@@ -617,7 +617,6 @@ async function dibujarPadre(padre) {
     $("#select" + padre).select2({
         dropdownParent: $("#exampleModalEditar" + padre)
     });
-
 }
 
 async function dibujarHijosPadre(padre, response = []) {
