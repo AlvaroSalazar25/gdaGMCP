@@ -22,9 +22,8 @@ class DocumentosController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-        }   
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
         
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -35,7 +34,12 @@ class DocumentosController
     }
 
     public static function visualizar(Router $router)
-    {
+    {        
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $router->render('user/documentos', [
@@ -46,13 +50,11 @@ class DocumentosController
 
     public static function datos(Router $router)
     {
-        $alertas = [];
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
+        $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             switch ($_POST['tipo']) {
                 case 'documentos':
@@ -101,14 +103,12 @@ class DocumentosController
 
     public static function create(Router $router)
     {
-        $alertas = [];
         $validar = JsonWT::validateJwt(token);
-        if ($validar['status'] !== true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
-
+        
+        $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset($_SESSION)) {
                 session_start();
@@ -148,9 +148,7 @@ class DocumentosController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $documento = Documento::find($_POST['id']);
@@ -180,9 +178,7 @@ class DocumentosController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];

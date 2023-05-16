@@ -14,15 +14,16 @@ use Model\SeccionUser;
 use Model\SeccionUnidad;
 
 define('token', $_SESSION['token'] ?? '');
+if (!isset($_SESSION)) {
+    session_start();
+};
 class SeccionController
 {
     public static function index(Router $router)
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -36,9 +37,7 @@ class SeccionController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
@@ -124,9 +123,7 @@ class SeccionController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
@@ -164,9 +161,7 @@ class SeccionController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
@@ -280,9 +275,7 @@ class SeccionController
     {
         $validar = JsonWT::validateJwt(token);
         if ($validar['status'] != true) {
-            $resolve = ['exit' => $validar['error']];
-            echo json_encode($resolve);
-            return;
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];

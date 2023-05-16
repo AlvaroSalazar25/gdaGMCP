@@ -1,6 +1,10 @@
 <div class="mt-3 mb-4 px-2" id="padre">
     <?php
     $mensaje = $_GET['r'] ?? null;
+    $validar = $_GET['c'] ?? null;
+    if($validar != null){
+        $cifrado = base64_decode($_GET['c']);
+    }
     if ($mensaje == 1) {
     ?>
         <div class="alerta exito " style="width:100%;">
@@ -33,6 +37,10 @@
     <?php } else if ($mensaje == 8) { ?>
         <div class="alerta bg-warning " style="width:100%;">
             <?php echo "Sesión Expirada, Vuelva a iniciar Sesión" ?>
+        </div>
+    <?php } else if ($mensaje == 9) { ?>
+        <div class="alerta bg-warning " style="width:100%;">
+            <?php echo $cifrado ?>
         </div>
     <?php } ?>
 
