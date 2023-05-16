@@ -826,7 +826,7 @@ async function dibujarDocs(padre, docs = []) {
             html += ' <div class="modal-dialog modal-dialog-centered">';
             html += ' <div class="modal-content">';
             html += ' <div class="modal-header bg-black ">';
-            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Metadatos del Documento <strong>' + documento.codigo + '</strong></h5>';
+            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Metadatos Documento <strong>' + documento.codigo + '</strong></h5>';
             html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
             html += ' </div>';
             html += '  <div class="modal-body">';
@@ -838,9 +838,10 @@ async function dibujarDocs(padre, docs = []) {
                 html += "<p>" + dato.valor + "</p>";
             })
             html += "  </div>";
-            html += ' <div class="modal-footer">';
-            html +=
-                ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+            html += ' <div class="modal-footer d-flex justify-content-between">';
+            html += ' <p class=""> Ultima modificación: <strong>'+documento.updated_at+'</strong></p>';
+            html +=' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+
             html += "  </div>";
             html += "</div>";
             html += "</div>";
@@ -871,9 +872,12 @@ async function dibujarDocs(padre, docs = []) {
 
             })
             html += "  </div>";
-            html += ' <div class="modal-footer mt-3">';
+            html += ' <div class="modal-footer mt-3 d-flex justify-content-between">';
+            html += ' <p class="modal-footer"> Ultima modificación: <strong>'+documento.updated_at+'</strong></p>';
+            html += '<div class="">';
             html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
             html += ' <button type="button" class="btn btn-success" onclick="saveEditDoc(' + documento.id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+            html += "  </div>";
             html += "  </div>";
             html += "</div>";
             html += "</div>";
@@ -1147,14 +1151,32 @@ async function elegirSeccionAgregar(id, padre) {
 
     html += '<div class="mb-3 w-100" id="archivo">';
     html += '<label class="form-label"><strong>Cargar el archivo:</strong></label>';
-    html += ' <input type="file" class="form-control datos" name="archivo" accept="' + tipoArchivos + '">';
-    html += "</div>";
+    html += '<div class="d-flex justify-content-between">';
+    html += ' <input type="file" class="form-control datos" style="width:96.3%" name="archivo" accept="' + tipoArchivos + '">';
+    html += '<buttom type="buttom" title="Editar Nombre de archivo" class="btn btn-warning " onclick="inputAlias()" id="buttomAlias" ><i class="fa-solid fa-pen fa-2x"></i></buttom>'
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<div class="mb-3 w-100" id="alias">';
+    html += '</div>'
+    
+    
     html += '<div class="w-100 mt-2" id="alertas">'
     html += '</div>'
+
     html += '<div class="my-5 d-flex justify-content-center align-items-center">';
     html += '<a class="btn btn-success px-5 py-2" id="botonCrear" style="font-size:15px" onclick="saveArchivo(' + formulario.id + "," + padre + ')"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>';
     html += "</div>";
     document.getElementById("dibujar-tabla").innerHTML = html;
+}
+
+function inputAlias() {
+    var html = ""
+    html += '<label class="form-label"><strong>Ingrese el alias:</strong></label>';
+    html += ' <input type="text" class="form-control datos alias" id="valorAlias"  name="alias">';
+    html += '<div class="d-flex justify-content-between">';
+    html += '</div>';
+    document.getElementById('alias').innerHTML = html;
 }
 
 async function saveArchivo(idFormulario, padre) {
@@ -1170,7 +1192,7 @@ async function saveArchivo(idFormulario, padre) {
             nombre.classList.add("errorInput");
             const div = document.createElement("div");
             div.id = "divAlerta" + nombreInput;
-            div.textContent = "El campo " + nombreInput + " es OBLIGATORIO";
+            div.textContent = "El campo " + nombreInput.toUpperCase() + " es OBLIGATORIO";
             div.style.color = "red";
             let padre = document.getElementById(nombreInput)
             let hijo = document.getElementById('divAlerta' + nombreInput)
@@ -1198,6 +1220,9 @@ async function saveArchivo(idFormulario, padre) {
         datos.append('keywords', claves)
         datos.append('path', documento);
         datos.append('data', JSON.stringify(info));
+        if(document.getElementById('valorAlias')){
+        datos.append('alias', document.getElementById('valorAlias').value);
+        }
         console.log([...datos]);
 
         let url = URL_BASE + '/documento/create';
@@ -1542,18 +1567,18 @@ async function deleteSeccion(hijo) {
 }
 
 async function abrirPdf(path, nombre) {
-    $.ajax({
-        data: { "tipo": "allDocs", "id": padre },
-        url: URL_BASE + '/documento/visualizar',
-        type: 'POST',
-        headers: {
-            'token': token
-        },
-        dataType: 'json'
-    }).done((response) => {
-        console.log('response',response);
+    // $.ajax({
+    //     data: { "tipo": "allDocs", "id": padre },
+    //     url: URL_BASE + '/documento/visualizar',
+    //     type: 'POST',
+    //     headers: {
+    //         'token': token
+    //     },
+    //     dataType: 'json'
+    // }).done((response) => {
+    //     console.log('response',response);
     
-    })
-    // let carpeta = '/public/archivos';
-    // window.open(URL_BASE + carpeta + path);
+    // })
+    let carpeta = '/public/archivos';
+    window.open(URL_BASE + carpeta + path);
 }

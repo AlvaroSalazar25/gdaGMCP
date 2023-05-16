@@ -188,6 +188,11 @@ class SeccionController
                     $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path
                     if ($oldName !== $_POST['seccion']) {
                         Documento::updateCodDoc($seccion->id);
+                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                        $respuesta = Seccion::getCarpetasHijos(intval($id));
+                        array_push($respuesta, $id);
+                        $documentos = Documento::obtenerAllDocs($respuesta);
+                        Documento::updatePathDoc($documentos);
                     }
                         $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
                         Documento::updatePathDoc($seccion->id);
