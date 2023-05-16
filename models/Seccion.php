@@ -124,16 +124,11 @@ class Seccion extends ActiveRecord
 
     public static function updatePathHijos($hijos)
     {
-        $carpetaArchivos = '../public/archivos';
         foreach ($hijos as $hijo) {
             $seccion = Seccion::where('id', $hijo);
             if ($seccion) {
-                $old = $seccion->path;
                 $seccion->path = $seccion->getPath();
-                $resultado = $seccion->guardar();
-                if($resultado == true){
-                    rename($old,$carpetaArchivos.$seccion->path);
-                }
+                $seccion->guardar();
             } else {
                 throw new Exception('No se encuentran los hijos');
             }

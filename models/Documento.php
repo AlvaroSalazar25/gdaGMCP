@@ -3,6 +3,7 @@
 namespace Model;
 
 use Exception;
+use Model\Formulario;
 
 
 class Documento extends ActiveRecord
@@ -120,8 +121,8 @@ class Documento extends ActiveRecord
         $idSec = $this->idSeccion;
         $seccion = Seccion::where('id', $idSec);
         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 4));
-        $idDoc = Documento::countPadre($this->idFormulario);
-        $contador = intval($idDoc['contador']) + 1;
+        $cantidad = Documento::countPadre($this->idFormulario);
+        $contador = intval($cantidad['contador']) + 1;
         $refDoc = $recorteNSeccion . "-" . $this->idFormulario . "-" . str_pad($contador, 9, 0, STR_PAD_LEFT);
         return $refDoc;
     }
@@ -144,10 +145,10 @@ class Documento extends ActiveRecord
             foreach ($respuesta as $index => $resp) {
                 if ($index != count($respuesta) - 1) {$sql .= "'$resp',";} else {$sql .= "'$resp'";}
             }
-            $consulta = "SELECT d.id,d.idSeccion,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion WHERE d.idSeccion IN ($sql) ORDER BY d.codigo ASC";
+            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion WHERE d.idSeccion IN ($sql) ORDER BY d.codigo ASC";
             $allDocs = Documento::consultaPlana($consulta);
         } else {
-            $consulta = "SELECT d.id,d.idSeccion,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion ORDER BY d.codigo ASC";
+            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion ORDER BY d.codigo ASC";
             $allDocs = Documento::consultaPlana($consulta);
         }
 
@@ -157,41 +158,42 @@ class Documento extends ActiveRecord
     public static function updateCodDoc($id)
     {
         $documentos = Documento::whereTodos('idSeccion', $id);
-        self::$db->autocommit(FALSE);
-        self::$db->begin_transaction();
         foreach ($documentos as $doc) {
             $doc->codigo = $doc->updateCodigo();
             $resultado = $doc->guardar();
-            if ($resultado != true) {
-                self::$db->rollback();
-                return false;
-            }
-            self::$db->commit();
         }
         return true;
     }
 
-    public static function updatePathDoc($id,$oldName)
+    public static function updatePathDoc($documentos)
     {
-        $seccion = Seccion::find($id);
-        $documentos = Documento::whereTodos('idSeccion', $id);
-        self::$db->autocommit(FALSE);
-        self::$db->begin_transaction();
-        foreach ($documentos as $doc) {
-            $carpetaArchivos = '../public/archivos/';
-            // echo $doc->path."<br>";
+        $carpetaArchivos = '../public/archivos';
+        foreach ($documentos as $documento) {
+            $doc = new Documento($documento);
+            $pathEdited = Documento::editNameDoc($doc);
+            $old = $carpetaArchivos.$pathEdited;
+            $new = $carpetaArchivos.$doc->getPath();
             $doc->path = $doc->getPath();
-            // echo $doc->path."<br>";
-            // echo $oldName."<br>";
-            $resultado = $doc->guardar();
-            rename($carpetaArchivos.$oldName,$carpetaArchivos.$doc->path);
-            if ($resultado != true) {
-                self::$db->rollback();
-                return false;
-            }
-            self::$db->commit();
+            $doc->codigo = $doc->updateCodigo();
+            //echo json_encode($doc).'<br>';
+            $doc->guardar();
+            // echo $resultado. '<br>';
+            rename($old,$new);
+ 
         }
         return true;
+    }
+
+    public static function editNameDoc($doc){
+        $oldPath = $doc->path;
+        $arrayOldPath = explode('/',$oldPath);
+        $lastOldPath = end($arrayOldPath);
+        $doc->path = $doc->getPath();
+        $partes = explode('/',$doc->path);
+        end($partes); // Coloca el puntero interno al último elemento del array
+        $ultimoElemento = key($partes); // Obtiene la clave del último elemento
+        $partes[$ultimoElemento] = $lastOldPath; // Cambia el valor del último elemento
+        return implode("/",$partes); // Devuelve el array modificado
     }
 
     public function deleteDoc()

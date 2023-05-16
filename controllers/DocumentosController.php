@@ -15,13 +15,29 @@ use Model\SeccionUser;
 use Model\SeccionUnidad;
 use Exception;
 
-define('token', $_SERVER['HTTP_TOKEN'] ?? '');
+define('token', $_SESSION['token'] ?? '');
 class DocumentosController
 {
     public static function index(Router $router)
     {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            $resolve = ['exit' => $validar['error']];
+            echo json_encode($resolve);
+        }   
+        
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $router->render('user/documentos', [
+                'alertas' => $alertas,
+            ]);
+        }
+    }
+
+    public static function visualizar(Router $router)
+    {
+        $alertas = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $router->render('user/documentos', [
                 'alertas' => $alertas,
             ]);

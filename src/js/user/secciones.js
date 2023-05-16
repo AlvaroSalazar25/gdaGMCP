@@ -383,7 +383,6 @@ escucharCarpeta = (value, id) => {
 async function dibujarPadreAndCarpetas(padre) {
     await dibujarPadre(padre);
     await dibujarHijosPadre(padre);
-
 }
 
 async function dibujarPath(path) {
@@ -1542,9 +1541,19 @@ async function deleteSeccion(hijo) {
     })
 }
 
-function abrirPdf(path, nombre) {
-    let carpeta = '/public/archivos';
-    window.open(URL_BASE + carpeta + path, nombre, "width=620,height=400,fullscreen=yes,scrollbars=NO")
-    parent.opener = top;
-    opener.close();
+async function abrirPdf(path, nombre) {
+    $.ajax({
+        data: { "tipo": "allDocs", "id": padre },
+        url: URL_BASE + '/documento/visualizar',
+        type: 'POST',
+        headers: {
+            'token': token
+        },
+        dataType: 'json'
+    }).done((response) => {
+        console.log('response',response);
+    
+    })
+    // let carpeta = '/public/archivos';
+    // window.open(URL_BASE + carpeta + path);
 }

@@ -65,6 +65,8 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/documento/datos',[DocumentosController::
 $router->post($_ENV['NOMBRE_CARPETA'].'/documento/create',[DocumentosController::class,'create']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/documento/update',[DocumentosController::class,'update']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/documento/delete',[DocumentosController::class,'delete']);
+$router->get($_ENV['NOMBRE_CARPETA'].'/documento/visualizar',[DocumentosController::class,'visualizar']);
+
 
 //rutas para erroores
 $router->get($_ENV['NOMBRE_CARPETA'].'/error',[ErrorController::class,'index']);
