@@ -145,10 +145,10 @@ class Documento extends ActiveRecord
             foreach ($respuesta as $index => $resp) {
                 if ($index != count($respuesta) - 1) {$sql .= "'$resp',";} else {$sql .= "'$resp'";}
             }
-            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion WHERE d.idSeccion IN ($sql) ORDER BY d.codigo ASC";
+            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion WHERE d.idSeccion IN ($sql) ORDER BY d.codigo ASC";
             $allDocs = Documento::consultaPlana($consulta);
         } else {
-            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion ORDER BY d.codigo ASC";
+            $consulta = "SELECT d.id,d.idSeccion,d.idUser,d.idFormulario,s.seccion,d.alias,d.codigo,d.data,d.keywords,d.path,d.status,d.created_at,d.updated_at,f.nombre as formulario,u.nombre as responsable FROM documento d  INNER JOIN formulario f ON f.id = d.idFormulario INNER JOIN user u ON u.id = d.idUser INNER JOIN seccion s ON s.id = d.idSeccion ORDER BY d.codigo ASC";
             $allDocs = Documento::consultaPlana($consulta);
         }
 

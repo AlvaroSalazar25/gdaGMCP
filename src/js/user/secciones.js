@@ -229,9 +229,9 @@ function traerDocumento(id) {
                 }
                 if (response.length == 0) {
                     resolve(0);
-                } 
+                }
                 $.each(response, (index, doc) => {
-                        resolve(doc);
+                    resolve(doc);
                 });
             }).fail((err) => {
                 reject(err);
@@ -457,7 +457,7 @@ async function dibujarPadre(padre) {
     html += '<a class="btn btn-outline-primary" onclick="buscarCarpeta(' + (seccionActual != undefined ? seccionActual.id : 0) + ')"><i class="fa-solid fa-magnifying-glass fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '<div>'
-    html += '<a class=" btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
+    html += '<a class=" btn btn-primary"  data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '</div>';
     html += '<div class="w-100 mt-2">';
@@ -743,6 +743,7 @@ async function dibujarHijosPadre(padre, response = []) {
     })
 }
 
+
 async function dibujarDocs(padre, docs = []) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
@@ -752,6 +753,9 @@ async function dibujarDocs(padre, docs = []) {
     } else {
         documentos = docs
     }
+    /*=============================================================================================================//
+                                               Acordeón para documentos
+    //==============================================================================================================*/
     var html = "";
     html += '<div class="accordion" id="accordionExample">'
     html += '<div class="accordion-item ">'
@@ -760,31 +764,42 @@ async function dibujarDocs(padre, docs = []) {
     html += ' </h2>'
     html += '<div id="collapseOne" class="accordion-collapse collapse ' + (documentos.length > 0 ? 'show' : '') + '" data-bs-parent="#accordionExample">'
     html += ' <div class="accordion-body px-0">'
-    //--------------------------------------------------------------------------------------------------
-    html += '<div class="d-flex mb-3 justify-content-end ">'
-    html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:3px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
+    /*=============================================================================================================//
+                                                Contenedor de tabla de documentos
+    //==============================================================================================================*/
+    html += '<div class="" id="botonesDoc">';
+    html += '<div class="d-flex mb-3 justify-content-end">'
+    html += '<a title="Mover Documentos" class="btn btn-outline-primary" style="margin-right:4px" id="moverDocs"  onclick="moverDocumentos(' + padre + ')"><i class="fa-solid fa-square-check fa-2x"></i></a>'
+    html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:4px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
     html += '<a class="btn btn-warning"  onclick="agregarDocumento(' + padre + ')"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Documento</span></a>'
     html += "</div>";
+    html += "</div>";
+
+    html += '<div class="apagar" id="botonesMover">';
+    html += '<div class="d-flex mb-3 justify-content-end">'
+    html += '<a title="Cancelar" class="btn btn-outline-danger" style="margin-right:4px" id="mostrarDocs"  onclick="moverDocumentos(' + padre + ')"><i class="fa-solid fa-ban fa-2x"></i></a>'
+    html += '<buttom title="Mover Seleccionados" class="btn btn-success" onclick="inputsValue(' + padre + ')"  id="moverSelect" ><i class="fa-solid fa-folder-tree fa-2x" style="margin-right:4px"></i><span class="span-boton"> Mover a:</span></buttom>'
+    html += '</div>';
+    html += '</div>';
 
     html += '<table class="table" style="min-width:1000px" id="tablaDocsUltimo">';
     html += '<thead class="table-dark">';
     html += '<tr class="" style="text-transform:uppercase">';
     html += "<th>N°</th>";
-    html += '<th class="">Nombre</th>';
+    html += '<th class="col-2">Nombre</th>';
     html += '<th class="">Carpeta</th>';
     html += '<th class="">Form</th>';
-    html += '<th class="">Datos</th>';
+    html += '<th class="col-1">Datos</th>';
     html += '<th class="">Responsable</th>';
-    html += '<th class="">Fecha</th>';
+    html += '<th class="col-1">Fecha</th>';
     // html += '<th class="">Estado</th>';
-    html += '<th class="">Acciones</th>';
+    html += '<th class="col">Acciones</th>';
     // html += '<th class="col-1">Acciones</th>';
     html += "</tr>";
     html += "</thead>";
     html += '<tbody class="contenido" id="contenido">';
     if (documentos.length > 0) {
         documentos.forEach((documento, index) => {
-            console.log('documento', documento);
             html += "<tr>"
             html += "<td>" + (parseInt(index) + 1) + "</td>"
             if (documento.alias == "") {
@@ -796,7 +811,7 @@ async function dibujarDocs(padre, docs = []) {
             html += "<td>" + documento.formulario + "</td>"
             html += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
             html += "<td>" + documento.responsable + "</td>"
-            html += '<td class="col-2"><div class="row"><p>' + documento.created_at.split(" ")[0] + '</p><p>' + documento.created_at.split(" ")[1] + '</p></div></td>'
+            html += '<td><div class="row"  style="font-size:14px"><p>' + documento.created_at.split(" ")[0] + '</p><p>' + documento.created_at.split(" ")[1] + '</p></div></td>'
             // html += '<td>'
             // if (documento.status == 0) {
             //     html += '<span class="badge badge-pill bg-danger" style="margin-left:15px"><i class="fa-solid fa-circle-exclamation fa-lg"></i></span>'
@@ -804,18 +819,26 @@ async function dibujarDocs(padre, docs = []) {
             //     html += '<span class="badge badge-pill bg-success" style="margin-left:15px"><i class="fa-solid fa-circle-check fa-lg"></i></span>'
             // }
             // html += '</td>'
-            html += '<td class="col-2">'
+            html += '<td >' // -------------------------------------------------------    ACCIONES    -------------------------------------------------------------
+            html += ' <div class="contenedor-opciones">';
+            html += '<div class="d-flex justify-content-center">';
             const urlA = "'" + documento.path + "'";
             const nombreA = "'" + documento.codigo + "'"
             html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px;height:30px;width:32px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            // html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
             html += '<buttom title="Editar" class="btn btn-warning"  data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + documento.id + '" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-pen-to-square fa-2x"></i></i></buttom>';
             html += '<buttom title="Eliminar" class="btn btn-outline-danger" style=";height:30px;width:32px" onclick="deleteDoc(' + documento.id + ')"><i class="fa-solid fa-trash fa-2x"></i></buttom>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div class="apagar  contenedor-check">'
+            html += '<div class=" d-flex justify-content-center">'
+            let doc = "'" + JSON.stringify(documento) + "'"
+            html += '<input class="form-check-input mover" style="margin:0px;margin-left:15px;width:30px;height:30px;border:2px solid #0D6EFD" type="checkbox" value=' + doc + '>'
+            html += '</div>'
+            html += '</div>'
             html += '</td>';
-            // html += "<td>";
-            // html += '<buttom class="btn btn-warning" style="margin-right:5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></buttom>';
-            // html +='<buttom class="btn btn-danger"><i class="fa-solid fa-trash-can fa-2x"></i></buttom>';
-            // html += "</td>";
+
             html += '</tr>';
 
             /* ================================================================================================================
@@ -839,8 +862,8 @@ async function dibujarDocs(padre, docs = []) {
             })
             html += "  </div>";
             html += ' <div class="modal-footer d-flex justify-content-between">';
-            html += ' <p class=""> Ultima modificación: <strong>'+documento.updated_at+'</strong></p>';
-            html +=' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+            html += ' <p class=""> Ultima modificación: <strong>' + documento.updated_at + '</strong></p>';
+            html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
 
             html += "  </div>";
             html += "</div>";
@@ -871,23 +894,22 @@ async function dibujarDocs(padre, docs = []) {
                 html += '</div>';
 
             })
-            html += "  </div>";
-            html += ' <div class="modal-footer mt-3 d-flex justify-content-between">';
-            html += ' <p class="modal-footer"> Ultima modificación: <strong>'+documento.updated_at+'</strong></p>';
+            html += '</div>';
+            html += '<div class="modal-footer mt-3 d-flex justify-content-between">';
+            html += '<p class=""> Ultima modificación: <strong>' + documento.updated_at + '</strong></p>';
             html += '<div class="">';
-            html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-            html += ' <button type="button" class="btn btn-success" onclick="saveEditDoc(' + documento.id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
-            html += "  </div>";
-            html += "  </div>";
-            html += "</div>";
-            html += "</div>";
-            html += "</div>";
+            html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+            html += '<button type="button" class="btn btn-success" onclick="saveEditDoc(' + documento.id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
         });
     }
     html += "</tbody>";
     html += "</table>";
     html += '</tbody>';
-
     //--------------------------------------------------------------------------------------------------
     html += ' </div>'
     html += ' </div>'
@@ -898,6 +920,113 @@ async function dibujarDocs(padre, docs = []) {
         document.getElementById('mostrarDocs').classList.add('disabledButtom')
     }
     $("#tablaDocsUltimo").DataTable();
+}
+var contInputs = 0;
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('form-check-input')) {
+        if (e.target.checked == true) {
+            contInputs++
+        } else {
+            contInputs--
+        }
+        if (contInputs > 0) {
+            document.getElementById('moverSelect').style = ""
+            document.getElementById('moverSelect').title = "Click para elegir carpeta a mover"
+        } else {
+            document.getElementById('moverSelect').style = "cursor:not-allowed;background-color:#6C757D"
+            document.getElementById('moverSelect').title = "Debe marcar documentos para poder mover"
+        }
+    }
+})
+
+async function inputsValue(id) {
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == id);
+    let valuesInputMover = [];
+    let inputsMover = document.querySelectorAll('.mover')
+    const inputsM = Array.apply(null, inputsMover);
+    inputsM.forEach(input => {
+        if (input.checked == true) {
+            valuesInputMover.push(input.value);
+        }
+    })
+
+    /*=============================================================================================================//
+                                                Modal mover documentos
+    //==============================================================================================================*/
+    var html = "";
+    html += '<div class="modal fade" id="exampleModalMover" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
+    html += '<div class="modal-dialog modal-lg">'
+    html += '<div class="modal-content">'
+    html += '<div class="modal-header bg-black">'
+    html += '<h5 class="modal-title text-white">Mover Documentos</h5>'
+    html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+    html += '</div>'
+    html += '<div class="modal-body">'
+    html += '<h3 class="text-black mt-2 mb-4"><strong>' + valuesInputMover.length + '</strong> Documentos Seleccionados de <strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong>:</h3>'
+    html += '<div class="my-3 d-flex justify-content-center">'
+    html += '<ul class="list-group w-75">'
+    valuesInputMover.forEach(value => {
+        let doc = JSON.parse(value);
+        console.log('docc', doc);
+        html += '<li class="list-group-item">* ' + (doc.alias != "" ? doc.alias : doc.codigo) + '</li>'
+    })
+    html += '<ul>'
+    html += '</div>'
+    html += '<h4 class="text-black mt-3 mb-4 text-center">Enviar a:</h4>'
+
+    html += '<div style="height:35px">'
+    html += '<select style="width:100%;height:100% !important" id="selectMover" class="js-example-basic-single2" >'
+    seccionesActualizadas.forEach(seccion => {
+        html += '<optgroup label="' + seccion.seccion + '">'
+        html += '<option value="' + seccion.id + '" ' + (seccion.id == id ? 'selected disabled' : '') + '><strong><i class="fa-solid fa-folder-open"></i></strong>' + seccion.path + '</option>'
+        html += '</optgroup>'
+    })
+    html += ' </select>'
+    html += '</div>'
+    html += '</div>'
+    html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
+    html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+    let docs = + JSON.stringify(valuesInputMover)
+    html += '<button type="button" class="btn btn-success" onclick="saveMoverDocs(\''+ docs+'\')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+    html += '</div>';
+    html += '</div>'
+    document.getElementById('modales').innerHTML = html;
+    $("#selectMover").select2({
+        dropdownParent: $("#exampleModalMover")
+    });
+    if (valuesInputMover.length > 0) {
+        $('#exampleModalMover').modal('show');
+    }
+}
+
+async function saveMoverDocs(array){
+    console.log('arrayt del guardar',array);
+}
+
+
+async function moverDocumentos(id) {
+    document.getElementById('moverSelect').style = "cursor:not-allowed;background-color:#6C757D"
+
+    document.getElementById('botonesDoc').classList.toggle('apagar')
+    document.getElementById('botonesMover').classList.toggle('apagar')
+    const checkboxs = document.querySelectorAll('.contenedor-opciones')
+    const checks = Array.apply(null, checkboxs);
+    const conteBox = document.querySelectorAll('.contenedor-check')
+    const boxs = Array.apply(null, conteBox);
+    for (let i = 0; i < checks.length; i++) {
+        boxs[i].classList.toggle('apagar')
+        checks[i].classList.toggle('apagar')
+    }
+
+    let inputsMover = document.querySelectorAll('.mover')
+    const inputsM = Array.apply(null, inputsMover);
+    inputsM.forEach(input => {
+        if (input.checked == true) {
+            input.checked = false;
+        }
+    })
+    contInputs = 0
 }
 
 async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
@@ -915,6 +1044,7 @@ async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
         html += '</div>'
         html += '</div>'
     } else {
+        contenedor.innerHTML = ""
         html += '<td colspan="8" valign="top">'
         html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
         html += ' <div class="spinner-grow" role="status">'
@@ -963,7 +1093,7 @@ async function saveEditDoc(id) {
             }
         }
     })
-    if (nombres.length == (info.length+1)) {
+    if (nombres.length == (info.length + 1)) {
         const datos = new FormData()
         datos.append('id', id);
         datos.append('keywords', claves)
@@ -988,7 +1118,7 @@ async function saveEditDoc(id) {
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
-                $('#exampleModalEditar'+id).modal('hide')
+                $('#exampleModalEditar' + id).modal('hide')
                 dibujarPadreAndCarpetas(response.padre);
             })
         } else if (response.error) {
@@ -1048,7 +1178,7 @@ async function mostrarDocsPro(padre) {
                 window.location.href = URL_BASE + "/?r=8";
             })
         }
-        waitResponse('.odd', '50px', 2);
+        waitResponse('.contenido', '50px', 2);
         setTimeout(() => {
             if (response.length == 0) {
                 var html = "";
@@ -1072,7 +1202,6 @@ async function mostrarDocsPro(padre) {
 async function agregarDocumento(padre) {
     let secciones = await traerSecciones();
     let formularios = await traerFormularios();
-    console.log('formularios', formularios);
     let seccionActual = secciones.find(sec => sec.id == padre);
     var html = "";
     let tipo = 1;
@@ -1156,11 +1285,11 @@ async function elegirSeccionAgregar(id, padre) {
     html += '<buttom type="buttom" title="Editar Nombre de archivo" class="btn btn-warning " onclick="inputAlias()" id="buttomAlias" ><i class="fa-solid fa-pen fa-2x"></i></buttom>'
     html += '</div>';
     html += '</div>';
-    
+
     html += '<div class="mb-3 w-100" id="alias">';
     html += '</div>'
-    
-    
+
+
     html += '<div class="w-100 mt-2" id="alertas">'
     html += '</div>'
 
@@ -1220,8 +1349,8 @@ async function saveArchivo(idFormulario, padre) {
         datos.append('keywords', claves)
         datos.append('path', documento);
         datos.append('data', JSON.stringify(info));
-        if(document.getElementById('valorAlias')){
-        datos.append('alias', document.getElementById('valorAlias').value);
+        if (document.getElementById('valorAlias')) {
+            datos.append('alias', document.getElementById('valorAlias').value);
         }
         console.log([...datos]);
 
@@ -1286,12 +1415,12 @@ async function saveArchivo(idFormulario, padre) {
 async function deleteDoc(id) {
     let doc = await traerDocumento(id);
     let nombre;
-    if(doc.alias == ""){
+    if (doc.alias == "") {
         nombre = doc.codigo
-    } else{
+    } else {
         nombre = doc.alias
     }
-    console.log('documento a eliminar',doc);
+    console.log('documento a eliminar', doc);
     Swal.fire({
         title: 'ELIMINAR',
         html: ' Estas seguro de Eliminar de forma permamente el documento <strong>' + nombre + '</strong> ?',
@@ -1577,7 +1706,7 @@ async function abrirPdf(path, nombre) {
     //     dataType: 'json'
     // }).done((response) => {
     //     console.log('response',response);
-    
+
     // })
     let carpeta = '/public/archivos';
     window.open(URL_BASE + carpeta + path);

@@ -1,5 +1,10 @@
 @use "base/mixins" as m;
 
+.disaButtom{
+  background-color: #a4a6a8 !important;
+}
+
+
 .widthCarpeta {
   min-width: 100px;
   height: 100px;
@@ -23,7 +28,6 @@
 .dropdown-toggle:after {
   display: none !important;
 }
-
 
 .noVisible {
   visibility: hidden;
