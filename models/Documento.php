@@ -179,7 +179,6 @@ class Documento extends ActiveRecord
             $doc->guardar();
             // echo $resultado. '<br>';
             rename($old,$new);
- 
         }
         return true;
     }

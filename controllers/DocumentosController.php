@@ -174,6 +174,44 @@ class DocumentosController
         }
     }
 
+    public static function mover(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        
+        $alertas = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['idSeccion'];
+            $idDocs = json_decode($_POST['documentos']);
+            foreach ($idDocs as $idDoc){
+                $documento = Documento::find($idDoc);
+                $documento->idSeccion = $id;
+                $oldPath = $documento->path;
+                $documento->guardar();
+                $documento->path = $documento->getPath();
+                $resultado = $documento->guardar();
+               if($resultado == true){
+                $carpetaArchivos = '../public/archivos';
+                rename($carpetaArchivos.$oldPath,$carpetaArchivos.$documento->path);
+               } 
+            }
+            if(count($idDocs)> 1){
+                $respuesta = 'Documentos Movidos Correctamente';
+            } else{
+                $respuesta = 'Documento Movido Correctamente';
+            }
+            $resolve = [
+                'padre' => $id,
+                'exito' => $respuesta
+            ];
+            echo json_encode($resolve);
+            return;
+
+        }
+    }
+
     public static function delete()
     {
         $validar = JsonWT::validateJwt(token);

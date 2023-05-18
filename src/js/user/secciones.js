@@ -383,6 +383,7 @@ escucharCarpeta = (value, id) => {
 async function dibujarPadreAndCarpetas(padre) {
     await dibujarPadre(padre);
     await dibujarHijosPadre(padre);
+
 }
 
 async function dibujarPath(path) {
@@ -753,6 +754,12 @@ async function dibujarDocs(padre, docs = []) {
     } else {
         documentos = docs
     }
+
+    configDocs = {
+        "saveBoton": false,
+        "valuesInputMover": [],
+        "checks": []
+    }
     /*=============================================================================================================//
                                                Acordeón para documentos
     //==============================================================================================================*/
@@ -769,7 +776,7 @@ async function dibujarDocs(padre, docs = []) {
     //==============================================================================================================*/
     html += '<div class="" id="botonesDoc">';
     html += '<div class="d-flex mb-3 justify-content-end">'
-    html += '<a title="Mover Documentos" class="btn btn-outline-primary" style="margin-right:4px" id="moverDocs"  onclick="moverDocumentos(' + padre + ')"><i class="fa-solid fa-square-check fa-2x"></i></a>'
+    html += '<a title="Mover Documentos" class="btn btn-outline-primary" style="margin-right:4px" id="moverDocs"  onclick="moverDocumentos(' + padre + ',0)"><i class="fa-solid fa-square-check fa-2x"></i></a>'
     html += '<a title="Ver todos los Documentos" class="btn btn-primary" style="margin-right:4px" id="mostrarDocs"  onclick="mostrarDocsPro(' + padre + ')"><i class="fa-regular fa-eye fa-2x"></i></a>'
     html += '<a class="btn btn-warning"  onclick="agregarDocumento(' + padre + ')"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Documento</span></a>'
     html += "</div>";
@@ -777,7 +784,7 @@ async function dibujarDocs(padre, docs = []) {
 
     html += '<div class="apagar" id="botonesMover">';
     html += '<div class="d-flex mb-3 justify-content-end">'
-    html += '<a title="Cancelar" class="btn btn-outline-danger" style="margin-right:4px" id="mostrarDocs"  onclick="moverDocumentos(' + padre + ')"><i class="fa-solid fa-ban fa-2x"></i></a>'
+    html += '<a title="Cancelar" class="btn btn-outline-danger" style="margin-right:4px" id="mostrarDocs"  onclick="moverDocumentos(' + padre + ',0)"><i class="fa-solid fa-ban fa-2x"></i></a>'
     html += '<buttom title="Mover Seleccionados" class="btn btn-success" onclick="inputsValue(' + padre + ')"  id="moverSelect" ><i class="fa-solid fa-folder-tree fa-2x" style="margin-right:4px"></i><span class="span-boton"> Mover a:</span></buttom>'
     html += '</div>';
     html += '</div>';
@@ -833,8 +840,7 @@ async function dibujarDocs(padre, docs = []) {
 
             html += '<div class="apagar  contenedor-check">'
             html += '<div class=" d-flex justify-content-center">'
-            let doc = "'" + JSON.stringify(documento) + "'"
-            html += '<input class="form-check-input mover" style="margin:0px;margin-left:15px;width:30px;height:30px;border:2px solid #0D6EFD" type="checkbox" value=' + doc + '>'
+            html += '<input class="form-check-input mover" style="margin:0px;margin-left:15px;width:30px;height:30px;border:2px solid #0D6EFD" type="checkbox" value=' + documento.id + '>'
             html += '</div>'
             html += '</div>'
             html += '</td>';
@@ -854,14 +860,27 @@ async function dibujarDocs(padre, docs = []) {
             html += ' </div>';
             html += '  <div class="modal-body">';
             let datos = JSON.parse(documento.data)
-            html += "<p><strong>KEYWORDS</strong></p>";
-            html += "<p>" + documento.keywords + "</p>";
+            let cont = 1;
+            html += '<ol class="list-group list-group-numbered" style="font-size:12px">'
+            html += '<li class="list-group-item  d-flex justify-content-between align-items-start">'
+            html += '<div class="ms-2 me-auto">'
+            html += ' <div class="fw-bold mb-2">KEYWORDS</div>'
+            html += documento.keywords
+            html += ' </div>'
+            html += '</li>'
+    
             datos.forEach(dato => {
-                html += "<p><strong>" + dato.nombre.toUpperCase() + "</strong></p>";
-                html += "<p>" + dato.valor + "</p>";
+                html += '<li class="list-group-item  d-flex justify-content-between align-items-start">'
+                html += '<div class="ms-2 me-auto">'
+                html += ' <div class="fw-bold mb-2">'+ dato.nombre.toUpperCase() + '</div>'
+                html +=  dato.valor 
+                html += ' </div>'
+                cont++;
+                
             })
-            html += "  </div>";
-            html += ' <div class="modal-footer d-flex justify-content-between">';
+            html += '</ol>';
+            html += '</div>';
+            html += ' <div class="modal-footer d-flex justify-content-between mt-3">';
             html += ' <p class=""> Ultima modificación: <strong>' + documento.updated_at + '</strong></p>';
             html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
 
@@ -921,6 +940,8 @@ async function dibujarDocs(padre, docs = []) {
     }
     $("#tablaDocsUltimo").DataTable();
 }
+
+
 var contInputs = 0;
 document.addEventListener('click', e => {
     if (e.target.classList.contains('form-check-input')) {
@@ -939,17 +960,19 @@ document.addEventListener('click', e => {
     }
 })
 
+var configDocs = {
+    "saveBoton": false,
+    "valuesInputMover": [],
+}
+
+
 async function inputsValue(id) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == id);
-    let valuesInputMover = [];
-    let inputsMover = document.querySelectorAll('.mover')
-    const inputsM = Array.apply(null, inputsMover);
-    inputsM.forEach(input => {
-        if (input.checked == true) {
-            valuesInputMover.push(input.value);
-        }
-    })
+    let docsActualizados = await traerDocs(id);
+    let docsSeleccionados = configDocs.valuesInputMover.map((doc) => {
+        return docsActualizados.find(docs => docs.id == doc);
+    });
 
     /*=============================================================================================================//
                                                 Modal mover documentos
@@ -963,12 +986,10 @@ async function inputsValue(id) {
     html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
     html += '</div>'
     html += '<div class="modal-body">'
-    html += '<h3 class="text-black mt-2 mb-4"><strong>' + valuesInputMover.length + '</strong> Documentos Seleccionados de <strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong>:</h3>'
+    html += '<h3 class="text-black mt-2 mb-4"><strong>' + docsSeleccionados.length + '</strong> Documentos Seleccionados de <strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong>:</h3>'
     html += '<div class="my-3 d-flex justify-content-center">'
-    html += '<ul class="list-group w-75">'
-    valuesInputMover.forEach(value => {
-        let doc = JSON.parse(value);
-        console.log('docc', doc);
+    html += '<ul class="list-group w-75" style="font-size:12px">'
+    docsSeleccionados.forEach(doc => {
         html += '<li class="list-group-item">* ' + (doc.alias != "" ? doc.alias : doc.codigo) + '</li>'
     })
     html += '<ul>'
@@ -987,38 +1008,127 @@ async function inputsValue(id) {
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    let docs = + JSON.stringify(valuesInputMover)
-    html += '<button type="button" class="btn btn-success" onclick="saveMoverDocs(\''+ docs+'\')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+    let docs = + JSON.stringify(docsSeleccionados)
+    html += '<button type="button" class="btn btn-success" onclick="saveMoverDocs(\'' + configDocs.valuesInputMover + '\')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
     html += '</div>';
     html += '</div>'
     document.getElementById('modales').innerHTML = html;
     $("#selectMover").select2({
         dropdownParent: $("#exampleModalMover")
     });
-    if (valuesInputMover.length > 0) {
+    if (docsSeleccionados.length > 0) {
         $('#exampleModalMover').modal('show');
     }
 }
 
-async function saveMoverDocs(array){
-    console.log('arrayt del guardar',array);
+async function saveMoverDocs(array) {
+    const seccion = document.getElementById('selectMover').value
+    const datos = new FormData()
+    datos.append('idSeccion', seccion);
+    datos.append('documentos', JSON.stringify(configDocs.valuesInputMover));
+    console.log([...datos]);
+
+    let url = URL_BASE + '/documento/mover';
+    const request = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'token': token
+        },
+        body: datos
+    });
+    //  respuesta de la peticion de arriba, me arroja true o false
+    const response = await request.json();
+    console.log(response);
+    if (response.exito) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: response.exito,
+            showConfirmButton: false,
+            timer: 1500
+        }).then(() => {
+            $('#exampleModalMover').modal('hide')
+            dibujarPadreAndCarpetas(response.padre);
+        })
+    } else if (response.error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ERROR',
+            text: response.error
+        })
+    } else if (response.archivo) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ERROR',
+            text: response.archivo
+        })
+    } else if (response.exit) {
+        Swal.fire({
+            icon: 'warning',
+            title: response.exit,
+            showConfirmButton: false,
+            text: 'Sesión expirada, vuelva a iniciar sesión',
+            timer: 3000
+        }).then(() => {
+            window.location.href = URL_BASE + "/?r=8";
+        })
+    } else {
+        html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+        response.alertas.error.forEach(alerta => {
+            html += '<li class="text-danger"  >'
+            html += alerta
+            html += '</li>'
+        })
+        html += '</ul>'
+        document.getElementById('alertas').innerHTML = html;
+    }
+    alertas();
 }
 
+// crear un objeto con el boton del check, poner un true o false cuando se presione y tambien agregar los checks true y los mover
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('paginate_button')) {
+        if (configDocs.saveBoton == true) {
+            document.getElementById('botonesDoc').classList.add('apagar')
+            document.getElementById('botonesMover').classList.remove('apagar')
+            const checkboxs = document.querySelectorAll('.contenedor-opciones')
+            const conteBox = document.querySelectorAll('.contenedor-check')
+            const checks = Array.apply(null, checkboxs);
+            const boxs = Array.apply(null, conteBox);
+            for (let i = 0; i < checks.length; i++) {
+                boxs[i].classList.remove('apagar')
+                checks[i].classList.add('apagar')
+            }
+        }
+    }
 
-async function moverDocumentos(id) {
-    document.getElementById('moverSelect').style = "cursor:not-allowed;background-color:#6C757D"
+    if (e.target.classList.contains('mover')) {
+        if (e.target.checked == true) {
+            configDocs.valuesInputMover.push(e.target.value);
+        } else {
+            configDocs.valuesInputMover = configDocs.valuesInputMover.filter(check => check != e.target.value)
+        }
+    }
+})
 
+async function moverDocumentos(id = 0, tipo) {
+    configDocs.saveBoton = true;
+    if (tipo == 0) {
+        document.getElementById('moverSelect').style = "cursor:not-allowed;background-color:#6C757D"
+    } else {
+        document.getElementById('moverSelect').style = ""
+    }
     document.getElementById('botonesDoc').classList.toggle('apagar')
     document.getElementById('botonesMover').classList.toggle('apagar')
     const checkboxs = document.querySelectorAll('.contenedor-opciones')
-    const checks = Array.apply(null, checkboxs);
+    console.log('checkboxs', checkboxs);
     const conteBox = document.querySelectorAll('.contenedor-check')
+    const checks = Array.apply(null, checkboxs);
     const boxs = Array.apply(null, conteBox);
     for (let i = 0; i < checks.length; i++) {
         boxs[i].classList.toggle('apagar')
         checks[i].classList.toggle('apagar')
     }
-
     let inputsMover = document.querySelectorAll('.mover')
     const inputsM = Array.apply(null, inputsMover);
     inputsM.forEach(input => {
