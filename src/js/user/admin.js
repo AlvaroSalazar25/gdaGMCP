@@ -26,14 +26,16 @@ let permisosDefault = [{
 
 const token = JSON.parse(localStorage.getItem('token'))
 document.addEventListener('DOMContentLoaded', iniciarApp())
+
 async function iniciarApp() {
-    usuarios = await ver();
+    usuarios = await traerUsers();
     usuariosSeccion = await buscarSeccion();
     secciones = await traerSeccion();
     unidades = await traerUnidades();
     roles = await traerRoles();
-    dibujarUsuarios(usuarios, "dibujar-js", 1)
-    crearModales(); 
+    await dibujarBotones()
+    dibujarUsuarios("dibujar-js", 1,usuarios)
+    crearModales();
 }
 
 function alertas() {
@@ -57,29 +59,25 @@ function alertas() {
 
 async function traerUser(tipo) {
     let usuariosBuscar = JSON.parse(localStorage.getItem('buscarUser'));
-    let usuariosActualizados = await ver();
-    let users = []
-    if (usuariosBuscar && usuariosBuscar.length >= 0) {
-        usuariosBuscar.forEach(userBuscar => {
-            let buscar = usuariosActualizados.find(usuario => usuario.id === userBuscar.id)
-            if (buscar != undefined) {
-                users.push(buscar)
-            }
+    let usuariosActualizados = await traerUsers();
+    if (usuariosBuscar && usuariosBuscar.length > 0) {
+        let users = usuariosBuscar.map(user => {
+            return usuariosActualizados.find(usuario => usuario.id === user.id)
         })
         localStorage.setItem('buscarUser', JSON.stringify(users));
     }
 
     if (tipo == '1') {
-        dibujarUsuarios(usuariosActualizados, 'dibujar-js', 1)
+        dibujarUsuarios('dibujar-js', 1,usuariosActualizados)
     } else if (tipo == '2') {
         console.log('debe entrar aqui por el tipo 2');
         const user = JSON.parse(localStorage.getItem('buscarUser'));
         console.log('user del local antes de dibujar, debo estar solo yo', user);
-        dibujarUsuarios(user, 'tablaBuscar', 2);
+        dibujarUsuarios('tablaBuscar', 2,user);
     }
 }
 
-function ver() {
+function traerUsers() {
     return new Promise((resolve, reject) => {
         let usuarios = []
         $.ajax({
@@ -106,7 +104,7 @@ function ver() {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-            if(response.length == 0){
+            if (response.length == 0) {
                 resolve(usuarios)
             }
             $.each(response, (index, usuario) => {
@@ -121,8 +119,38 @@ function ver() {
     })
 }
 
-function verUsuarios() {
-    dibujarUsuarios(usuarios, "dibujar-js", 1)
+function findUserById(id) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                "id": id,
+                "tipo": 'usuario'
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/user/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            //console.log(response);
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+             resolve(response)
+        }).fail((err) => {
+            reject(err);
+        });
+    })
 }
 
 function traerUnidades() {
@@ -151,7 +179,7 @@ function traerUnidades() {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-            if(response.length == 0){
+            if (response.length == 0) {
                 resolve(unidades)
             }
             $.each(response, (index, unidad) => {
@@ -192,7 +220,7 @@ function traerSeccion() {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-            if(response.length == 0){
+            if (response.length == 0) {
                 resolve(secciones)
             }
             $.each(response, (index, seccion) => {
@@ -233,7 +261,7 @@ function traerRoles() {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-            if(response.length == 0){
+            if (response.length == 0) {
                 resolve(roles)
             }
             $.each(response, (index, rol) => {
@@ -248,7 +276,33 @@ function traerRoles() {
     })
 }
 
-function dibujarUsuarios(usuarios, contenedor, tipo = 1) {
+async function dibujarBotones() {
+    var html = "";
+    html += ' <h1 class="text-black"><strong>Administrar Usuarios</strong></h1>'
+    html += ' <section>'
+    html += ' <div class="contenedor-acciones bg-light">'
+    html += ' <div class="barra-acciones">'
+    html += ' <div class=" contenedor-boton">'
+    let contenedor = "\'dibujar-js\'"
+    html += ' <a class="cboton btn btn-warning w-100" onclick="dibujarUsuarios('+contenedor+',1)"><i class="fa-solid fa-users fa-2x"></i> <span class="span-boton">Ver usuarios</span></a>'
+    html += ' </div>'
+    html += ' <div class="contenedor-boton">'
+    html += ' <a class="cboton btn btn-success w-100" id="crear" onclick="crearUsuario()"><i class="fa-solid fa-user-plus fa-2x"></i> <span class="span-boton">Crear usuarios</span></a>'
+    html += ' </div>'
+    html += ' <div class=" contenedor-boton">'
+    html += ' <a class="cboton btn btn-primary w-100" onclick="buscarUsuario()"><i class="fa-solid fa-magnifying-glass fa-2x"></i> <span class="span-boton">Buscar usuarios</span></a>'
+    html += ' </div>'
+    html += ' </div>'
+    html += ' </div>'
+    html += '</section>'
+    document.getElementById('dibujar-botones').innerHTML = html;
+}
+
+async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
+    console.log('usuarios del dibujar directo del localS',usuarios);
+    if(usuarios.length == 0){
+        usuarios = await traerUsers();
+    }
     console.log('usuarios del dibujar', usuarios);
     var html = '';
     html += '<table class="table" style="min-width:900px" id="tablaUsuarios">'
@@ -276,7 +330,9 @@ function dibujarUsuarios(usuarios, contenedor, tipo = 1) {
         html += '<td class="col-1"><a class=" btn btn-rounded ' + estado + '" onclick="estado(' + usuario.id + ',' + tipo + ')"  >' + usuario.estado + '</a></p></td>'
         html += '<td class="col-2">'
         html += '<div class="acciones-user">'
-        html += '<a class="btn btn-primary  botonPermiso" id="' + tipo + '" data-bs-toggle="modal" data-bs-target="#exampleModalPermisos' + usuario.id + '">Permisos</a>'
+        // html += '<a class="btn btn-primary  botonPermiso" id="' + tipo + '" data-bs-toggle="modal" data-bs-target="#exampleModalPermisos' + usuario.id + '">Permisos</a>'
+        html += '<a class="btn btn-primary" id="' + tipo + '" onclick="permisosUser(' + usuario.id + ')" style="margin:0px 0px 0px 5px">Permisos</a>'
+
         html += '<a class="btn btn-warning " id="' + tipo + '" onclick="crearUsuario(' + 2 + ',' + usuario.id + ')" style="margin:0px 5px 0px 5px"><i class="fa-regular fa-pen-to-square fa-2x"></i></a>'
         html += '<a class="btn btn-danger " onclick="eliminarUsuario(' + usuario.id + ')"><i class="fa-solid fa-trash fa-2x"></i></a>'
         html += '</div>'
@@ -290,12 +346,66 @@ function dibujarUsuarios(usuarios, contenedor, tipo = 1) {
     $('#tablaUsuarios').DataTable();
 }
 
+async function permisosUser(id) {
+    console.log('object');
+    let user = await findUserById(id)
+    console.log('user',user);
+    var html = "";
+    html += '<h1 class="text-black"><strong>Administrar Permisos</strong></h1>'
+    html += '<div class="contenedor-crearUsuario bg-light my-4">'
+    html += '<h3 class="text-black">Permisos de '+user.nombre+'</h3>'
+
+    html += '<div class="mb-3">'
+    html += '<label for="exampleFormControlInput1" class="form-label"><strong>Buscar por:</strong></label>'
+    html += '<select class="form-select selectDocumentos" name="tipo" id="tipo" onchange="elegirTipo()">'
+    html += '<option value="" selected disabled> --  Seleccione una opción -- </option>'
+    html += '<option value="1">Nombre</option>'
+    html += '<option value="2">Rol</option>'
+    html += '<option value="3">Unidad</option>'
+    html += '</select>'
+
+    html += '</div>'
+    html += '<div id="elegir">'
+    html += '</div>'
+    html += '</div>'
+    html += '<div id="tablaBuscar">'
+    html += '</div>'
+    html += '</div>'
+    document.getElementById("dibujar-botones").innerHTML = "";
+
+    document.getElementById("dibujar-js").innerHTML = html;
+}
+
+function generarCarpetas(nombre, nivel, maxNivel, maxHijos) {
+    const carpeta = {
+      nombre: nombre,
+      hijos: []
+    };
+  
+    if (nivel < maxNivel) {
+      const numHijos = Math.floor(Math.random() * maxHijos) + 1;
+  
+      for (let i = 0; i < numHijos; i++) {
+        const nombreHijo = `${nombre}-${i + 1}`;
+        const hijo = generarCarpetas(nombreHijo, nivel + 1, maxNivel, maxHijos);
+        carpeta.hijos.push(hijo);
+      }
+    }
+  
+    return carpeta;
+  }
+  
+  // Ejemplo de uso: generar una estructura de carpetas con 3 niveles y máximo 4 hijos por carpeta
+  const estructuraCarpetas = generarCarpetas('Carpeta', 1, 3, 4);
+  
+  console.log(estructuraCarpetas);
+
 async function crearModales(tipo = 1) {
     let usuariosActualizados = await buscarSeccion();
     var html = ''
     usuariosActualizados.forEach(usuario => {
         let seccionUser = JSON.parse(usuario.seccion);
-        console.log('permiso de cada user',seccionUser);
+        console.log('permiso de cada user', seccionUser);
         html += '<div class="modal fade" id="exampleModalPermisos' + usuario.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
         html += '<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">'
         html += ' <div class="modal-content">'
@@ -345,9 +455,9 @@ async function crearModales(tipo = 1) {
         html += '</div>'
         html += '<div class="modal-footer ">'
         html += '<div class="d-flex justify-content-between w-100">'
-        if(usuario.permisosWhere){
-            html += '<div class="form-text" id="seccionHelp">* Este usuario tiene los permisos de <strong>'+ usuario.permisosWhere +'</strong></div>'
-        } else{
+        if (usuario.permisosWhere) {
+            html += '<div class="form-text" id="seccionHelp">* Este usuario tiene los permisos de <strong>' + usuario.permisosWhere + '</strong></div>'
+        } else {
             html += '<div class="form-text" id="seccionHelp"><strong>* Permisos personalizados</strong></div>'
 
         }
@@ -997,7 +1107,7 @@ escucharNombre = (value) => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios(response, 'tablaBuscar', 2)
+        dibujarUsuarios('tablaBuscar', 2,response)
 
     }).fail((err) => {
         console.log(err);
@@ -1036,7 +1146,7 @@ escucharRol = () => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios(response, 'tablaBuscar', 2)
+        dibujarUsuarios('tablaBuscar', 2,response)
 
 
     }).fail((err) => {
@@ -1077,7 +1187,7 @@ escucharUnidad = () => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios(response, 'tablaBuscar', 2)
+        dibujarUsuarios('tablaBuscar', 2,response)
 
 
     }).fail((err) => {

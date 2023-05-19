@@ -35,6 +35,19 @@ class UserController
         }
     }
 
+    public static function permisos(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        $alertas = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $router->render('user/permisos', [
+                'alertas' => $alertas,
+            ]);
+        }
+    }
 
     public static function editor(Router $router)
     {
@@ -338,6 +351,10 @@ class UserController
                     $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,e.estado FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad INNER JOIN estado e ON e.id = u.idEstado ORDER BY u.id ASC";
                     $todos = User::consultaPlana($consulta);
                     echo json_encode($todos);
+                    break;
+                case 'usuario':
+                    $user = User::find($_POST['id']);
+                    echo json_encode($user);
                     break;
                 case 'unidades':
                     $unidades = Unidad::all();

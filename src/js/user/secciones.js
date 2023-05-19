@@ -15,6 +15,12 @@ let permisosDefault = [{
     "status": "false"
 }]
 
+var configDocs = {
+    "saveBoton": false,
+    "mostrarAllDocs": false,
+    "valuesInputMover": [],
+}
+
 document.addEventListener('DOMContentLoaded', iniciarApp())
 
 async function iniciarApp() {
@@ -323,6 +329,47 @@ function moverCarpeta(id) {
     })
 }
 
+function traerDocsMover(id) {
+    return new Promise((resolve, reject) => {
+        let documentos = [];
+        $.ajax({
+            data: {
+                id: id,
+                tipo: "allDocs",
+            },
+            url: URL_BASE + "/carpeta/datos",
+            type: "POST",
+            headers: {
+                token: token,
+            },
+            dataType: "json",
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: "warning",
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: "Sesión expirada, vuelva a iniciar sesión",
+                    timer: 3000,
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                });
+            }
+            if (response.length == 0) {
+                resolve(0);
+            }
+            $.each(response, (index, doc) => {
+                documentos.push(doc);
+                if (response.length == index + 1) {
+                    resolve(documentos);
+                }
+            });
+        }).fail((err) => {
+            reject(err);
+        });
+    });
+}
+
 async function dibujarAtras(padre) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
@@ -384,6 +431,11 @@ async function dibujarPadreAndCarpetas(padre) {
     await dibujarPadre(padre);
     await dibujarHijosPadre(padre);
 
+    configDocs = {
+        "saveBoton": false,
+        "mostrarAllDocs": false,
+        "valuesInputMover": [],
+    }
 }
 
 async function dibujarPath(path) {
@@ -721,6 +773,9 @@ async function dibujarHijosPadre(padre, response = []) {
             html += '</select>'
             html += '</div>' /// fin del contenedor del select
 
+            /* ======================================================================================================
+                                            contenedor alertas Modal
+            ========================================================================================================*/
             html += '<div class="w-100 mt-4" id="alertas' + hijo.id + '">'
             html += '</div>'
 
@@ -753,12 +808,6 @@ async function dibujarDocs(padre, docs = []) {
         documentos = await traerDocs(padre);
     } else {
         documentos = docs
-    }
-
-    configDocs = {
-        "saveBoton": false,
-        "valuesInputMover": [],
-        "checks": []
     }
     /*=============================================================================================================//
                                                Acordeón para documentos
@@ -868,15 +917,15 @@ async function dibujarDocs(padre, docs = []) {
             html += documento.keywords
             html += ' </div>'
             html += '</li>'
-    
+
             datos.forEach(dato => {
                 html += '<li class="list-group-item  d-flex justify-content-between align-items-start">'
                 html += '<div class="ms-2 me-auto">'
-                html += ' <div class="fw-bold mb-2">'+ dato.nombre.toUpperCase() + '</div>'
-                html +=  dato.valor 
+                html += ' <div class="fw-bold mb-2">' + dato.nombre.toUpperCase() + '</div>'
+                html += dato.valor
                 html += ' </div>'
                 cont++;
-                
+
             })
             html += '</ol>';
             html += '</div>';
@@ -896,28 +945,34 @@ async function dibujarDocs(padre, docs = []) {
             html += ' <div class="modal-dialog modal-dialog-centered">';
             html += ' <div class="modal-content">';
             html += ' <div class="modal-header bg-black ">';
-            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Editar Metadados <strong>' + documento.codigo + '</strong></h5>';
+            html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Editar Metadatos <strong>' + documento.codigo + '</strong></h5>';
             html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
             html += ' </div>';
             html += '  <div class="modal-body">';
             let data = JSON.parse(documento.data)
             html += '<div class="mb-4" id="keywords">';
             html += '<label class="form-label"><strong>KEYWORDS</strong></label>';
-            html += '<input class="form-control edit-campos' + documento.id + '" name="keywords"  value="' + documento.keywords + '">';
+            html += '<textarea class="form-control edit-campos' + documento.id + '" rows="3" name="keywords" placeholder="Documento sin palabras claves">' + documento.keywords + '</textarea>';
             html += '</div>';
 
             data.forEach(dato => {
                 html += '<div class="mb-4" id="' + dato.nombre.trim() + '">';
                 html += '<label class="form-label"><strong>' + dato.nombre.toUpperCase() + '</strong></label>';
-                html += '<input class="form-control edit-campos' + documento.id + '" name="' + dato.nombre.trim() + '"  value="' + dato.valor + '">';
+                html += '<textarea class="form-control edit-campos' + documento.id + '"  rows="4" name="' + dato.nombre.trim() + '" placeholder="Sin datos">' + dato.valor + '</textarea>';
                 html += '</div>';
 
             })
+
+            html += '<div class="mb-4" id="alias">';
+            html += '<label class="form-label"><strong>ALIAS</strong></label>';
+            html += '<textarea class="form-control edit-campos' + documento.id + '" rows="2" name="alias" placeholder="Documento sin alias">' + documento.alias + '</textarea>';
+            html += '</div>';
+
             html += '</div>';
             html += '<div class="modal-footer mt-3 d-flex justify-content-between">';
             html += '<p class=""> Ultima modificación: <strong>' + documento.updated_at + '</strong></p>';
             html += '<div class="">';
-            html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+            html += '<button type="button" style="margin-right:4px" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
             html += '<button type="button" class="btn btn-success" onclick="saveEditDoc(' + documento.id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
             html += '</div>';
             html += '</div>';
@@ -960,16 +1015,13 @@ document.addEventListener('click', e => {
     }
 })
 
-var configDocs = {
-    "saveBoton": false,
-    "valuesInputMover": [],
-}
 
 
 async function inputsValue(id) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == id);
     let docsActualizados = await traerDocs(id);
+    if (configDocs.mostrarAllDocs == true) { docsActualizados = await traerDocsMover(id);}
     let docsSeleccionados = configDocs.valuesInputMover.map((doc) => {
         return docsActualizados.find(docs => docs.id == doc);
     });
@@ -986,7 +1038,7 @@ async function inputsValue(id) {
     html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
     html += '</div>'
     html += '<div class="modal-body">'
-    html += '<h3 class="text-black mt-2 mb-4"><strong>' + docsSeleccionados.length + '</strong> Documentos Seleccionados de <strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong>:</h3>'
+    html += '<h3 class="text-black mt-2 mb-4">Seleccionados <strong>' + docsSeleccionados.length + '</strong> ' + (docsSeleccionados.length > 1 ? 'Documentos ' : 'Documento ') + 'de <strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong>:</h3>'
     html += '<div class="my-3 d-flex justify-content-center">'
     html += '<ul class="list-group w-75" style="font-size:12px">'
     docsSeleccionados.forEach(doc => {
@@ -996,8 +1048,8 @@ async function inputsValue(id) {
     html += '</div>'
     html += '<h4 class="text-black mt-3 mb-4 text-center">Enviar a:</h4>'
 
-    html += '<div style="height:35px">'
-    html += '<select style="width:100%;height:100% !important" id="selectMover" class="js-example-basic-single2" >'
+    html += '<div style="height:35px" id="contenedorSelectMover">'
+    html += '<select style="width:100%;height:100% !important" id="selectMover" class="js-example-basic-single" >'
     seccionesActualizadas.forEach(seccion => {
         html += '<optgroup label="' + seccion.seccion + '">'
         html += '<option value="' + seccion.id + '" ' + (seccion.id == id ? 'selected disabled' : '') + '><strong><i class="fa-solid fa-folder-open"></i></strong>' + seccion.path + '</option>'
@@ -1005,11 +1057,12 @@ async function inputsValue(id) {
     })
     html += ' </select>'
     html += '</div>'
+    html += '<div class="w-100"  id="alertasMoverDoc">'
+    html += '</div>'
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    let docs = + JSON.stringify(docsSeleccionados)
-    html += '<button type="button" class="btn btn-success" onclick="saveMoverDocs(\'' + configDocs.valuesInputMover + '\')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
+    html += '<button type="button" class="btn btn-success" onclick="saveMoverDocs(' + id + ')"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>';
     html += '</div>';
     html += '</div>'
     document.getElementById('modales').innerHTML = html;
@@ -1021,9 +1074,20 @@ async function inputsValue(id) {
     }
 }
 
-async function saveMoverDocs(array) {
+async function saveMoverDocs(id) {
     const seccion = document.getElementById('selectMover').value
     const datos = new FormData()
+    var html = "";
+    if (seccion == id) {
+        document.getElementById('contenedorSelectMover').style = "border:0.3px solid red !important;border-radius:5px"
+        html += '<p class="text-danger">No se a elegido una carpeta</p>'
+        document.getElementById('alertasMoverDoc').innerHTML = html;
+        setTimeout(() => {
+            document.getElementById('contenedorSelectMover').style = ""
+            document.getElementById('alertasMoverDoc').innerHTML = "";
+        }, 3000);
+        return;
+    }
     datos.append('idSeccion', seccion);
     datos.append('documentos', JSON.stringify(configDocs.valuesInputMover));
     console.log([...datos]);
@@ -1083,6 +1147,7 @@ async function saveMoverDocs(array) {
         document.getElementById('alertas').innerHTML = html;
     }
     alertas();
+
 }
 
 // crear un objeto con el boton del check, poner un true o false cuando se presione y tambien agregar los checks true y los mover
@@ -1113,6 +1178,7 @@ document.addEventListener('click', e => {
 
 async function moverDocumentos(id = 0, tipo) {
     configDocs.saveBoton = true;
+    configDocs.valuesInputMover = [];
     if (tipo == 0) {
         document.getElementById('moverSelect').style = "cursor:not-allowed;background-color:#6C757D"
     } else {
@@ -1121,7 +1187,6 @@ async function moverDocumentos(id = 0, tipo) {
     document.getElementById('botonesDoc').classList.toggle('apagar')
     document.getElementById('botonesMover').classList.toggle('apagar')
     const checkboxs = document.querySelectorAll('.contenedor-opciones')
-    console.log('checkboxs', checkboxs);
     const conteBox = document.querySelectorAll('.contenedor-check')
     const checks = Array.apply(null, checkboxs);
     const boxs = Array.apply(null, conteBox);
@@ -1267,7 +1332,10 @@ async function saveEditDoc(id) {
     }
 }
 
+console.log('mostrarAllDocs',configDocs.mostrarAllDocs);
 async function mostrarDocsPro(padre) {
+    configDocs.mostrarAllDocs = true;
+    console.log('mostrarAllDocs luego de aplastar el boton',configDocs.mostrarAllDocs);
     $.ajax({
         data: { "tipo": "allDocs", "id": padre },
         url: URL_BASE + '/carpeta/datos',
@@ -1350,7 +1418,6 @@ async function agregarDocumento(padre) {
 }
 
 async function elegirSeccionAgregar(id, padre) {
-    console.log('id', id);
     let tipo = "1";
     var html = "";
     let formulario = await traerFormulario(id)
@@ -1423,7 +1490,7 @@ async function saveArchivo(idFormulario, padre) {
     const inputs = document.querySelectorAll(".datos");
     const nombres = Array.apply(null, inputs);
     const info = [];
-    let claves, documento;
+    let claves, documento, alias;
     nombres.forEach((nombre) => {
         let nombreInput = nombre.name
         let valorInput = nombre.value
@@ -1440,19 +1507,30 @@ async function saveArchivo(idFormulario, padre) {
             nombre.classList.remove("errorInput");
             const alerta = document.getElementById("divAlerta" + nombreInput)
             if (alerta) { alerta.innerHTML = ""; }
-            if (nombreInput == 'keywords') {
-                claves = valorInput;
-            } else if (nombreInput == 'archivo') {
-                documento = nombre.files[0];
-            } else {
-                info.push({
-                    'nombre': nombreInput,
-                    'valor': valorInput
-                })
+
+            switch (nombreInput) {
+                case 'keywords':
+                    claves = valorInput;
+                    break;
+                case 'archivo':
+                    documento = nombre.files[0];
+                    break;
+                case 'alias':
+                    alias = valorInput;
+                    break;
+                default:
+                    info.push({
+                        'nombre': nombreInput,
+                        'valor': valorInput
+                    })
+                    break;
             }
         }
     });
-    if (info.length == nombres.length - 2) {
+    let cont = 2;
+    if (alias != undefined || alias != null) { cont = 3; }
+    if (info.length == nombres.length - cont) {
+        console.log('alias', alias);
         const datos = new FormData()
         datos.append('idSeccion', padre);
         datos.append('idFormulario', idFormulario);
