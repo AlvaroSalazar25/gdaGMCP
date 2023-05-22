@@ -50,10 +50,19 @@ class SeccionController
                     }
                     echo json_encode($secciones);
                     break;
+                case 'seccionByIdPadre':
+                    $id = $_POST['id'];
+                    $hijos = Seccion::getCarpetasHijosAllData($id);
+                    echo json_encode($hijos);
+                    break;
                 case 'formularios':
                     $formularios = Formulario::all();
                     array_shift($formularios);
                     echo json_encode($formularios);
+                    break;
+                case 'findCarpeta':
+                    $carpeta = Seccion::where('id',$_POST['id']);
+                    echo json_encode($carpeta);
                     break;
                 case 'hijos':
                     $id = $_POST['id'];
@@ -194,8 +203,8 @@ class SeccionController
                         $documentos = Documento::obtenerAllDocs($respuesta);
                         Documento::updatePathDoc($documentos);
                     }
-                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                        Documento::updatePathDoc($seccion->id);
+                    $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                    Documento::updatePathDoc($seccion->id);
                     $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);
@@ -245,7 +254,7 @@ class SeccionController
                         array_push($respuesta, $id);
                         $documentos = Documento::obtenerAllDocs($respuesta);
                         Documento::updatePathDoc($documentos);
-                    }    
+                    }
                     $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
                     if ($resultado != true) {
                         $hijos = Seccion::wherePlano('idPadre', $padre);

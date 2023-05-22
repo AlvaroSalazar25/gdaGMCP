@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', iniciarApp())
 async function iniciarApp() {
     usuarios = await traerUsers();
     usuariosSeccion = await buscarSeccion();
-    secciones = await traerSeccion();
+    secciones = await traerSecciones();
     unidades = await traerUnidades();
     roles = await traerRoles();
     await dibujarBotones()
@@ -194,7 +194,7 @@ function traerUnidades() {
     })
 }
 
-function traerSeccion() {
+function traerSecciones() {
     return new Promise((resolve, reject) => {
         let secciones = []
         $.ajax({
@@ -276,6 +276,82 @@ function traerRoles() {
     })
 }
 
+function carpetaById(id) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                "tipo": 'findCarpeta',
+                "id": id
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/carpeta/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+                resolve(response)
+
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}
+
+function traerSeccionesHijos() {
+    return new Promise((resolve, reject) => {
+        let secciones = []
+        $.ajax({
+            data: {
+                "tipo": 'hijos',
+                "id": id
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/carpeta/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+            if (response.length == 0) {
+                resolve(secciones)
+            }
+            $.each(response, (index, seccion) => {
+                secciones.push(seccion);
+                if (response.length == index + 1) {
+                    resolve(secciones)
+                }
+            })
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}
+
 async function dibujarBotones() {
     var html = "";
     html += ' <h1 class="text-black"><strong>Administrar Usuarios</strong></h1>'
@@ -347,7 +423,6 @@ async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
 }
 
 async function permisosUser(id) {
-    console.log('object');
     let user = await findUserById(id)
     console.log('user',user);
     var html = "";
@@ -372,33 +447,36 @@ async function permisosUser(id) {
     html += '</div>'
     html += '</div>'
     document.getElementById("dibujar-botones").innerHTML = "";
-
     document.getElementById("dibujar-js").innerHTML = html;
+    let hola =  await generarCarpetas(0)
+    console.log('hola',hola);
 }
 
-function generarCarpetas(nombre, nivel, maxNivel, maxHijos) {
-    const carpeta = {
-      nombre: nombre,
-      hijos: []
-    };
-  
-    if (nivel < maxNivel) {
-      const numHijos = Math.floor(Math.random() * maxHijos) + 1;
-  
-      for (let i = 0; i < numHijos; i++) {
-        const nombreHijo = `${nombre}-${i + 1}`;
-        const hijo = generarCarpetas(nombreHijo, nivel + 1, maxNivel, maxHijos);
-        carpeta.hijos.push(hijo);
-      }
+
+
+
+async function generarCarpetas(id){
+    let seccion;
+    if(id == 0){
+        seccion = 'Base'
+    } else{
+        let nombre = await carpetaById(id);
+        console.log('nombre de la carpeta',nombre);
+        seccion = nombre.seccion; 
     }
-  
-    return carpeta;
-  }
-  
-  // Ejemplo de uso: generar una estructura de carpetas con 3 niveles y máximo 4 hijos por carpeta
-  const estructuraCarpetas = generarCarpetas('Carpeta', 1, 3, 4);
-  
-  console.log(estructuraCarpetas);
+    console.log('seccion',seccion);
+    let carpeta = {'nombre':seccion, 'hijos': []}
+    let carpetas =  await traerSeccionesHijos(id);
+    console.log('carpetas',carpetas);
+    carpetas.forEach(folder =>{
+        const hijo = generarCarpetas(folder.id)
+        carpeta.hijos.push(hijo);
+
+    })
+    return carpeta
+}
+
+
 
 async function crearModales(tipo = 1) {
     let usuariosActualizados = await buscarSeccion();

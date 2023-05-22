@@ -78,3 +78,22 @@ function getHijos($padre)
     }
     return $GLOBALS['hijos'];
 }
+
+function getHijosAllData($padre)
+{
+    $consulta = "SELECT s.seccion FROM seccion s WHERE s.id = '$padre'";
+    $nombre = Seccion::consultaPlana($consulta);
+    if($padre == 0){
+        $nombre = 'Base';
+    } 
+    $carpeta = ['nombre' => $nombre, 'hijos' => []];
+    $consulta = "SELECT * FROM seccion s WHERE s.idPadre = '$padre'";
+    $secciones = Seccion::consultaPlana($consulta);
+    if (!empty($secciones)) {
+        foreach ($secciones as $seccion) {
+            $hijo = getHijosAllData($seccion['id']);
+            $carpeta['hijos'][] = $hijo; // Agregar el objeto $sec al arreglo 'hijos' del objeto $carpeta
+        }
+    }
+    return $carpeta;
+}

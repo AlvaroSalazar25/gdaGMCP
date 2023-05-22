@@ -105,9 +105,7 @@ class Seccion extends ActiveRecord
         $old = $carpetaArchivos . $oldPath;
         $new = $carpetaArchivos . $this->path;
         $res = copy($old, $new);
-        if ($res == true) {
-            unlink($old);
-        }
+        if ($res == true) {unlink($old);}
     }
 
     public function crearCarpeta()
@@ -140,6 +138,11 @@ class Seccion extends ActiveRecord
     {
         $GLOBALS['hijos'] = [];
         $hijos = getHijos($id); // obtener hijos de carpeta padre
+        return $hijos;
+    }
+
+    public static function getCarpetasHijosAllData($id){
+        $hijos = getHijosAllData($id); // obtener hijos de carpeta padre
         return $hijos;
     }
 }
