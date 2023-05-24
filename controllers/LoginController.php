@@ -35,7 +35,7 @@ class LoginController
                         $resolve = $jwt->createJwt();
                         $user->token = $resolve['jwt'];
                         $user->guardar();
-                        $consulta = "SELECT r.rol FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad INNER JOIN estado e ON e.id = u.idEstado WHERE u.id = '{$user->id}'";
+                        $consulta = "SELECT r.rol FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad  WHERE u.id = '{$user->id}'";
                         $respuesta =  User::consultaPlana($consulta);
                         $rolUser = (object) array_shift( $respuesta);
                         if (!isset($_SESSION)) {

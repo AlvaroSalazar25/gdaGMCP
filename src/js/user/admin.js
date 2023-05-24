@@ -14,15 +14,7 @@ const user = {
     idUnidad: '',
     idRol: '',
 }
-let permisosDefault = [{
-    "id": "1",
-    "nombre": "Leer",
-    "status": "false"
-}, {
-    "id": "2",
-    "nombre": "Escribir",
-    "status": "false"
-}]
+
 
 const token = JSON.parse(localStorage.getItem('token'))
 document.addEventListener('DOMContentLoaded', iniciarApp())
@@ -34,7 +26,7 @@ async function iniciarApp() {
     unidades = await traerUnidades();
     roles = await traerRoles();
     await dibujarBotones()
-    dibujarUsuarios("dibujar-js", 1,usuarios)
+    dibujarUsuarios("dibujar-js", 1, usuarios)
     crearModales();
 }
 
@@ -68,12 +60,12 @@ async function traerUser(tipo) {
     }
 
     if (tipo == '1') {
-        dibujarUsuarios('dibujar-js', 1,usuariosActualizados)
+        dibujarUsuarios('dibujar-js', 1, usuariosActualizados)
     } else if (tipo == '2') {
         console.log('debe entrar aqui por el tipo 2');
         const user = JSON.parse(localStorage.getItem('buscarUser'));
         console.log('user del local antes de dibujar, debo estar solo yo', user);
-        dibujarUsuarios('tablaBuscar', 2,user);
+        dibujarUsuarios('tablaBuscar', 2, user);
     }
 }
 
@@ -146,7 +138,7 @@ function findUserById(id) {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-             resolve(response)
+            resolve(response)
         }).fail((err) => {
             reject(err);
         });
@@ -302,7 +294,7 @@ function carpetaById(id) {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-                resolve(response)
+            resolve(response)
 
         }).fail((err) => {
             reject(err);
@@ -310,7 +302,7 @@ function carpetaById(id) {
     })
 }
 
-function traerSeccionesHijos() {
+function traerSeccionesHijos(id) {
     return new Promise((resolve, reject) => {
         let secciones = []
         $.ajax({
@@ -360,7 +352,7 @@ async function dibujarBotones() {
     html += ' <div class="barra-acciones">'
     html += ' <div class=" contenedor-boton">'
     let contenedor = "\'dibujar-js\'"
-    html += ' <a class="cboton btn btn-warning w-100" onclick="dibujarUsuarios('+contenedor+',1)"><i class="fa-solid fa-users fa-2x"></i> <span class="span-boton">Ver usuarios</span></a>'
+    html += ' <a class="cboton btn btn-warning w-100" onclick="dibujarUsuarios(' + contenedor + ',1)"><i class="fa-solid fa-users fa-2x"></i> <span class="span-boton">Ver usuarios</span></a>'
     html += ' </div>'
     html += ' <div class="contenedor-boton">'
     html += ' <a class="cboton btn btn-success w-100" id="crear" onclick="crearUsuario()"><i class="fa-solid fa-user-plus fa-2x"></i> <span class="span-boton">Crear usuarios</span></a>'
@@ -375,8 +367,8 @@ async function dibujarBotones() {
 }
 
 async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
-    console.log('usuarios del dibujar directo del localS',usuarios);
-    if(usuarios.length == 0){
+    console.log('usuarios del dibujar directo del localS', usuarios);
+    if (usuarios.length == 0) {
         usuarios = await traerUsers();
     }
     console.log('usuarios del dibujar', usuarios);
@@ -395,7 +387,7 @@ async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
     html += '</thead>'
     html += '<tbody class="contenido" id="contenido">'
     usuarios.forEach((usuario, index) => {
-        let estado = usuario.estado == 'activo' ? 'btn-outline-success' : 'btn-outline-danger'
+        let estado = usuario.estado == '1' ? 'btn-outline-success' : 'btn-outline-danger'
         //console.log(usuario);
         html += '<tr class="">'
         html += '<td>' + (parseInt(index) + 1) + '</p></td>'
@@ -403,7 +395,7 @@ async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
         html += '<td class="col-3">' + usuario.email + '</p></td>'
         html += '<td class="col-1">' + usuario.rol + '</p></td>'
         html += '<td class="col-2">' + usuario.unidad + '</p></td>'
-        html += '<td class="col-1"><a class=" btn btn-rounded ' + estado + '" onclick="estado(' + usuario.id + ',' + tipo + ')"  >' + usuario.estado + '</a></p></td>'
+        html += '<td class="col-1"><a class=" btn btn-rounded ' + estado + '" onclick="estado(' + usuario.id + ',' + tipo + ')"  >' + (usuario.estado == '1' ? 'Activo' : 'Inactivo') + '</a></p></td>'
         html += '<td class="col-2">'
         html += '<div class="acciones-user">'
         // html += '<a class="btn btn-primary  botonPermiso" id="' + tipo + '" data-bs-toggle="modal" data-bs-target="#exampleModalPermisos' + usuario.id + '">Permisos</a>'
@@ -424,52 +416,225 @@ async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
 
 async function permisosUser(id) {
     let user = await findUserById(id)
-    console.log('user',user);
+    console.log('user', user);
     var html = "";
     html += '<h1 class="text-black"><strong>Administrar Permisos</strong></h1>'
     html += '<div class="contenedor-crearUsuario bg-light my-4">'
-    html += '<h3 class="text-black">Permisos de '+user.nombre+'</h3>'
-
-    html += '<div class="mb-3">'
-    html += '<label for="exampleFormControlInput1" class="form-label"><strong>Buscar por:</strong></label>'
-    html += '<select class="form-select selectDocumentos" name="tipo" id="tipo" onchange="elegirTipo()">'
-    html += '<option value="" selected disabled> --  Seleccione una opción -- </option>'
-    html += '<option value="1">Nombre</option>'
-    html += '<option value="2">Rol</option>'
-    html += '<option value="3">Unidad</option>'
-    html += '</select>'
-
+    html += '<div class="" style="font-size:15px">'
+    html += '<div class="d-flex">'
+    html += '<p class="text-black"><strong>Usuario:</strong>  ' + user.nombre + '</p>'
+    html += '<div class="' + (user.estado == 1 ? 'bg-success' : 'bg-danger') + '" style="width:8px;height:8px;border-radius: 50%;margin-left:3px"></div>'
     html += '</div>'
-    html += '<div id="elegir">'
-    html += '</div>'
-    html += '</div>'
-    html += '<div id="tablaBuscar">'
+    html += '<p class="text-black"><strong>Rol:</strong>  ' + user.rol + '</p>'
+    html += '<p class="text-black"><strong>Unidad:</strong>  ' + user.unidad + '</p>'
+    html += '<p class="text-black"><strong>Última Modificación:</strong>  ' + user.created_at.split(' ')[0] + ' Arrelgar bien la fecha</p>'
     html += '</div>'
     html += '</div>'
     document.getElementById("dibujar-botones").innerHTML = "";
     document.getElementById("dibujar-js").innerHTML = html;
-    let hola =  await generarCarpetas(0)
-    console.log('hola',hola);
+    var html2 = ""
+    html2 += '<div class="w-100 d-flex justify-content-end mb-0 mt-2">'
+    html2 += '<div class="d-flex justify-content-around mb-1 mt-2" style="width:260px">'
+    html2 += '<p><strong>CARPETA</strong></p>'
+    html2 += '<p><strong>DOCUMENTO</strong></p>'
+    html2 += '</div>'
+    html2 += '</div>'
+    html2 += '<div class="w-100 d-flex justify-content-end mb-3 mt-1">'
+    html2 += '<div class="d-flex justify-content-around" style="width:98px;margin-right:5px">'
+    html2 += '<i class="fa-solid fa-eye fa-xl"></i>' //ver
+    html2 += '<i class="fa-solid fa-plus fa-xl"></i>' //crear
+    html2 += '<i class="fa-solid fa-edit fa-xl"></i>' //editar
+    html2 += '</div>'
+    html2 += '<div class="d-flex justify-content-around" style="width:157px">'
+    html2 += '<i class="fa-solid fa-eye fa-xl"></i>' // ver
+    html2 += '<i class="fa-solid fa-plus fa-xl"></i>' //crear
+    html2 += '<i class="fa-solid fa-edit fa-xl"></i>' //editar
+    html2 += '<i class="fa-solid fa-folder-tree fa-xl"></i>' //mover
+    html2 += '<i class="fa-solid fa-trash fa-xl"></i>' //eliminar
+    html2 += '</div>'
+    html2 += '</div>'
+    document.getElementById('dibujar-tabla').innerHTML = html2;
+    let secs = await traerSecciones();
+    let carpetas = generarCarpetas(0, secs)
+    let dibujos = dibujarArbolCarpetas(carpetas)
+    document.getElementById('dibujar-tabla').appendChild(dibujos);
+}
+
+let permisosDefault = [
+    {
+        "id": 1,
+        "nombre": "Ver_Carpeta",
+        "type": 'carpeta',
+        "descripcion": "Permiso para visualizar la carpeta",
+        "status": false
+    },
+    {
+        "id": 2,
+        "nombre": "Crear_Carpeta",
+        "type": 'carpeta',
+        "descripcion": "Permiso para crear carpetas",
+        "status": false
+    },
+    {
+        "id": 3,
+        "nombre": "Editar_Carpeta",
+        "type": 'carpeta',
+        "descripcion": "Permiso para Editar,Mover,Eliminar la carpeta",
+        "status": false
+    },
+    {
+        "id": 4,
+        "nombre": "Ver_Documento",
+        "type": 'documento',
+        "descripcion": "Permiso para visualizar el documento",
+        "status": false
+    },
+    {
+        "id": 5,
+        "nombre": "Crear_Documento",
+        "type": 'documento',
+        "descripcion": "Permiso para Crear un documento",
+        "status": false
+    },
+    {
+        "id": 6,
+        "nombre": "Editar_Documento",
+        "type": 'documento',
+        "descripcion": "Permiso para Editar la metadata del documento",
+        "status": false
+    },
+    {
+        "id": 7,
+        "nombre": "Mover_Documentos",
+        "type": 'documento',
+        "descripcion": "Permiso para mover de carpeta los documentos",
+        "status": false
+    },
+    {
+        "id": 8,
+        "nombre": "Eliminar_Documento",
+        "type": 'documento',
+        "descripcion": "Permiso para Eliminar el documento",
+        "status": false
+    },
+]
+
+function traerSeccionesCheck(id) {
+    var hijos = [];
+    var secs = secciones.filter(sec => sec.idPadre == id)
+    if (secs != null) {
+        secs.forEach(seccion => {
+            hijos.push(seccion.id)
+            hijos = hijos.concat(traerSeccionesCheck(seccion.id))
+        })
+    }
+    return hijos;
 }
 
 
+document.addEventListener('click', function (e) {
+    permisosDefault.forEach(permiso => {
+        if (e.target.classList.contains(`${permiso.nombre}`)) {
+            let hijos = [];
+            var id = e.target.id.split("p")[0]
+            console.log('id', id);
+            console.log(e.target.checked);
+            if (e.target.checked == true) {
+                hijos = traerSeccionesCheck(id);
+                let seccionCheck = secciones.find(sec => sec.id == id);
+                if (seccionCheck != undefined) {
+                    let idPa = seccionCheck.idPadre;
+                    while (idPa != '0') {
+                        let atras = secciones.find(secc => secc.id == idPa);
+                        idPa = atras.idPadre;
+                        hijos.push(atras.id)
+                    }
+                }
 
+            } else if (e.target.checked == false) {
+                hijos = traerSeccionesCheck(id);
+                
+            }
+            console.log('hijos', hijos);
+            hijos.forEach(hijo => {
+                var checksTrue = document.getElementById(`${hijo}p${permiso.id}`)
+                if (checksTrue.checked == false) {
+                    checksTrue.checked = true;
+                    hijos = hijos.filter(hijoFilter => hijoFilter != hijo)
+                    //aqui se apaga porque estaban true y les estas diciendo que se pongan true
+                    //hacer una funcion que te cambie a true los que no estan en la lista de trues OJO
+                } else {
+                    checksTrue.checked = true;
+                }
+            })
+        }
+    })
+})
 
-async function generarCarpetas(id){
-    let seccion;
-    if(id == 0){
-        seccion = 'Base'
-    } else{
-        let nombre = await carpetaById(id);
-        console.log('nombre de la carpeta',nombre);
-        seccion = nombre.seccion; 
+function dibujarArbolCarpetas(carpeta) {
+    // console.log('carpeta datos', carpeta);
+    const ul = document.createElement('ul');
+    ul.style = "font-size:15px"
+    const li = document.createElement('li');
+    const contenedorLiChecks = document.createElement('div');
+    contenedorLiChecks.classList.add('w-100', 'd-flex', 'justify-content-between')
+    const textoLi = document.createElement('p');
+    textoLi.textContent = carpeta.nombre
+    if (carpeta.id == 0) {
+        contenedorLiChecks.classList.add('bg-black')
+        textoLi.style = "color:white;font-weight:bold"
     }
-    console.log('seccion',seccion);
-    let carpeta = {'nombre':seccion, 'hijos': []}
-    let carpetas =  await traerSeccionesHijos(id);
-    console.log('carpetas',carpetas);
-    carpetas.forEach(folder =>{
-        const hijo = generarCarpetas(folder.id)
+    if (carpeta.hijos.length > 0) {
+        contenedorLiChecks.style = "border-bottom:1px dashed #707071;background-color:#DEE2E6"
+    } else {
+        contenedorLiChecks.style = "border-bottom:1px dashed #707071 !important"
+    }
+    li.appendChild(contenedorLiChecks);
+
+    contenedorLiChecks.appendChild(textoLi);
+    const contenedorChecks = document.createElement('div');
+    contenedorChecks.classList.add('d-flex')
+    var typePermisoCarpeta = document.createElement('div');
+    typePermisoCarpeta.style = "padding: 0px 3px;border-right:1px solid;border-left:1px solid;margin-right:5px"
+    var typePermisoFolder = document.createElement('div');
+    typePermisoFolder.style = "padding: 2px 3px;border-right:1px solid"
+    permisosDefault.forEach(permiso => {
+        const check = document.createElement('input');
+        check.classList.add('form-check-input', `${permiso.nombre}`, `${carpeta.id}`)
+        check.style = "margin:5px;border:1px solid #1a1b15"
+        check.type = 'checkbox'
+        check.id = carpeta.id + "p" + permiso.id;
+        if (permiso.type == 'carpeta') {
+            typePermisoCarpeta.appendChild(check)
+        } else {
+            typePermisoFolder.appendChild(check)
+        }
+    })
+    contenedorChecks.appendChild(typePermisoCarpeta);
+    contenedorChecks.appendChild(typePermisoFolder);
+    contenedorLiChecks.appendChild(contenedorChecks);
+    ul.appendChild(li);
+
+    if (carpeta.hijos.length > 0) {
+        carpeta.hijos.forEach(hijo => {
+            const hijoUl = dibujarArbolCarpetas(hijo);
+            li.appendChild(hijoUl);
+        });
+    }
+    return ul;
+}
+
+
+function generarCarpetas(id, secs) {
+    let seccion = secs.find(sec => sec.id == id);
+    if (seccion == undefined) {
+        var carpeta = { 'nombre': 'MARQUE PARA SELECCIONAR TODOS', 'id': '0', 'hijos': [] };
+    } else {
+        var carpeta = { 'nombre': seccion.seccion, 'id': seccion.id, 'hijos': [] }
+    }
+    let carpetas = secs.filter(sec => sec.idPadre == id);
+    carpetas.forEach(folder => {
+        let hijo = generarCarpetas(folder.id, secs)
         carpeta.hijos.push(hijo);
 
     })
@@ -1185,7 +1350,7 @@ escucharNombre = (value) => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios('tablaBuscar', 2,response)
+        dibujarUsuarios('tablaBuscar', 2, response)
 
     }).fail((err) => {
         console.log(err);
@@ -1224,7 +1389,7 @@ escucharRol = () => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios('tablaBuscar', 2,response)
+        dibujarUsuarios('tablaBuscar', 2, response)
 
 
     }).fail((err) => {
@@ -1265,7 +1430,7 @@ escucharUnidad = () => {
             })
         }
         localStorage.setItem('buscarUser', JSON.stringify(response));
-        dibujarUsuarios('tablaBuscar', 2,response)
+        dibujarUsuarios('tablaBuscar', 2, response)
 
 
     }).fail((err) => {

@@ -1207,7 +1207,7 @@ async function moverDocumentos(id = 0, tipo) {
 async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
     var html = "";
     if (tipo == 1) {
-        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
+        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '" width:100% !important;height:50px" id="contenedorWait">'
         html += ' <div class="spinner-grow" role="status">'
         html += '<span class="visually-hidden">Loading...</span>'
         html += '</div>'
@@ -1221,7 +1221,7 @@ async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
     } else {
         contenedor.innerHTML = ""
         html += '<td colspan="8" valign="top">'
-        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '">'
+        html += '<div class="d-flex justify-content-center align-items-center w-100" style="width:100% !important;height:' + altura + '" id="contenedorWait">'
         html += ' <div class="spinner-grow" role="status">'
         html += '<span class="visually-hidden">Loading...</span>'
         html += '</div>'
@@ -1367,7 +1367,7 @@ async function mostrarDocsPro(padre) {
                 html += "</div>";
                 html += "</div>";
                 html += '</td>'
-                document.querySelector('.odd').innerHTML = html;
+                document.querySelector('#contenedorWait').innerHTML = html;
             } else {
                 dibujarDocs(padre, response);
             }

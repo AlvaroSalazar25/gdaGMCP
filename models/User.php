@@ -6,11 +6,11 @@ namespace Model;
 class User extends ActiveRecord
 {
     protected static $tabla = 'user';
-    protected static $columnasDB = ['id', 'idRol', 'idEstado', 'idUnidad', 'nombre', 'cedula', 'celular', 'email', 'password', 'confirmado', 'token'];
+    protected static $columnasDB = ['id', 'idRol', 'estado', 'idUnidad', 'nombre', 'cedula', 'celular', 'email', 'password', 'confirmado', 'token'];
 
     public $id;
     public $idRol;
-    public $idEstado;
+    public $estado;
     public $idUnidad;
     public $nombre;
     public $cedula;
@@ -33,7 +33,7 @@ class User extends ActiveRecord
         $this->confirmado = $args['confirmado'] ?? '0';
         $this->token = $args['token'] ?? '';
         $this->idRol = $args['idRol'] ?? '';
-        $this->idEstado = $args['idEstado'] ?? '1';
+        $this->estado = $args['estado'] ?? '1';
         $this->idUnidad = $args['idUnidad'] ?? '';
     }
 

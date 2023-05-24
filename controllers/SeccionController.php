@@ -300,9 +300,6 @@ class SeccionController
                 return;
             }
             try {
-                SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
-                SeccionUser::eliminarTodos('idSeccion', $seccion->id);
-                Documento::eliminarTodos('idSeccion', $seccion->id);
                 $carpetas = Seccion::whereTodos('idPadre', $seccion->id);
                 if (count($carpetas) != 0) {
                     $resolve = [
@@ -312,6 +309,10 @@ class SeccionController
                     echo json_encode($resolve);
                     return;
                 }
+                
+                SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
+                SeccionUser::eliminarTodos('idSeccion', $seccion->id);
+                Documento::eliminarTodos('idSeccion', $seccion->id);
 
                 if (is_dir('../public/archivos' . $seccion->path)) {
                     rmDir_rf('../public/archivos' . $seccion->path);

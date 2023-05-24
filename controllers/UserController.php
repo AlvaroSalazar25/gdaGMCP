@@ -7,7 +7,6 @@ use MVC\Router;
 use Model\Roles;
 use Model\Errors;
 use Model\Unidad;
-use Model\Estados;
 use Model\Seccion;
 use Classes\JsonWT;
 use Model\SeccionUser;
@@ -348,13 +347,15 @@ class UserController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             switch ($_POST['tipo']) {
                 case 'usuarios':
-                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,e.estado FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad INNER JOIN estado e ON e.id = u.idEstado ORDER BY u.id ASC";
+                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,u.estado,u.created_at,u.updated_at FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad  ORDER BY u.id ASC";
                     $todos = User::consultaPlana($consulta);
                     echo json_encode($todos);
                     break;
                 case 'usuario':
-                    $user = User::find($_POST['id']);
-                    echo json_encode($user);
+                    $id = $_POST['id'];
+                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,u.estado,u.created_at,u.updated_at FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad WHERE u.id = $id";
+                    $user = User::consultaPlana($consulta);
+                    echo json_encode(array_shift($user));
                     break;
                 case 'unidades':
                     $unidades = Unidad::all();
@@ -363,10 +364,6 @@ class UserController
                 case 'roles':
                     $roles = Roles::all();
                     echo json_encode($roles);
-                    break;
-                case 'estados':
-                    $estados = Estados::all();
-                    echo json_encode($estados);
                     break;
                 case 'seccion':
                     $seccion = Seccion::all();
@@ -391,7 +388,7 @@ class UserController
         }
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
-            $consulta = "SELECT u.* FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad INNER JOIN estado e ON e.id = u.idEstado";
+            $consulta = "SELECT u.* FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad";
             $todos = User::consultaPlana($consulta);
             $usuarios = [];
             foreach ($todos as $user) {
