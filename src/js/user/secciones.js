@@ -438,10 +438,14 @@ async function dibujarPadreAndCarpetas(padre) {
     }
 }
 
-async function dibujarPath(path) {
+async function dibujarPath(path,id) {
     if (path != 'base') {
         $.ajax({
-            data: { "tipo": "buscarPath", "value": path.replace("_", " ") },
+            data: {
+                "tipo": "buscarPath",
+                "value": path.replace("_", " "),
+                "id": id
+            },
             url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
@@ -469,7 +473,6 @@ async function dibujarPath(path) {
     } else {
         dibujarPadreAndCarpetas(0);
     }
-
 }
 
 async function dibujarPadre(padre) {
@@ -518,8 +521,9 @@ async function dibujarPadre(padre) {
         let paths = (CARPETA_BASE + seccionActual.path).split('/')
         let removes = paths.shift();
         paths.forEach(path => {
-            var nombre = path.replace('_', ' ');
-            html += '<a class="puntero" style="text-decoration: none !important;" onclick="dibujarPath(\'' + nombre + '\')"><strong>' + (nombre[0].toUpperCase() + nombre.substring(1)) + '</strong></a> / ' + " " + '';
+            var nombre = path.replaceAll('_', ' ');
+            console.log('nombre',nombre);
+            html += `<a class="puntero" style="text-decoration: none !important;" onclick="dibujarPath('${nombre}','${seccionActual.id}')"><strong>` + (nombre[0].toUpperCase() + nombre.substring(1)) + '</strong></a> / ' + " " + '';
         })
 
     }
@@ -1021,7 +1025,7 @@ async function inputsValue(id) {
     let seccionesActualizadas = await traerSecciones();
     let seccionActual = seccionesActualizadas.find(sec => sec.id == id);
     let docsActualizados = await traerDocs(id);
-    if (configDocs.mostrarAllDocs == true) { docsActualizados = await traerDocsMover(id);}
+    if (configDocs.mostrarAllDocs == true) { docsActualizados = await traerDocsMover(id); }
     let docsSeleccionados = configDocs.valuesInputMover.map((doc) => {
         return docsActualizados.find(docs => docs.id == doc);
     });
@@ -1332,10 +1336,9 @@ async function saveEditDoc(id) {
     }
 }
 
-console.log('mostrarAllDocs',configDocs.mostrarAllDocs);
 async function mostrarDocsPro(padre) {
     configDocs.mostrarAllDocs = true;
-    console.log('mostrarAllDocs luego de aplastar el boton',configDocs.mostrarAllDocs);
+    console.log('mostrarAllDocs luego de aplastar el boton', configDocs.mostrarAllDocs);
     $.ajax({
         data: { "tipo": "allDocs", "id": padre },
         url: URL_BASE + '/carpeta/datos',
@@ -1394,19 +1397,15 @@ async function agregarDocumento(padre) {
     if (tipo == "2") {
         html += '<h3 class="text-black mt-2 mb-4">Edite los datos de ' + +"</h3>";
     } else {
-        html +=
-            '<h3 class="text-black mt-2 mb-4">Elija un Formulario para agregar el documento</h3>';
+        html +='<h3 class="text-black mt-2 mb-4">Elija un Formulario para agregar el documento</h3>';
     }
     html += '<div class="mb-3">';
     html +=
         '<label for="exampleFormControlInput1" class="form-label"><strong>Formulario:</strong></label>';
-    html +=
-        '<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,' + padre + ')">';
-    html +=
-        ' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
+    html +='<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,' + padre + ')">';
+    html +=' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
     formularios.forEach((formulario) => {
-        html +=
-            ' <option value="' + formulario.id + '">' + formulario.nombre + "</option>";
+        html +=' <option value="' + formulario.id + '">' + formulario.nombre + "</option>";
     });
     html += "</select>";
     html += "</div>";

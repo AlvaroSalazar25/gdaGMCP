@@ -539,7 +539,7 @@ document.addEventListener('click', function (e) {
             var id = e.target.id.split("p")[0]
             console.log('id', id);
             console.log(e.target.checked);
-            if (e.target.checked == true) {
+            // if (e.target.checked == true) {
                 hijos = traerSeccionesCheck(id);
                 let seccionCheck = secciones.find(sec => sec.id == id);
                 if (seccionCheck != undefined) {
@@ -550,17 +550,15 @@ document.addEventListener('click', function (e) {
                         hijos.push(atras.id)
                     }
                 }
-
-            } else if (e.target.checked == false) {
-                hijos = traerSeccionesCheck(id);
-                
-            }
+            // } else if (e.target.checked == false) {
+            //     hijos = traerSeccionesCheck(id);
+            // }
             console.log('hijos', hijos);
             hijos.forEach(hijo => {
                 var checksTrue = document.getElementById(`${hijo}p${permiso.id}`)
                 if (checksTrue.checked == false) {
                     checksTrue.checked = true;
-                    hijos = hijos.filter(hijoFilter => hijoFilter != hijo)
+                    // hijos = hijos.filter(hijoFilter => hijoFilter != hijo)
                     //aqui se apaga porque estaban true y les estas diciendo que se pongan true
                     //hacer una funcion que te cambie a true los que no estan en la lista de trues OJO
                 } else {

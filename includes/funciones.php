@@ -79,6 +79,19 @@ function getHijos($padre)
     return $GLOBALS['hijos'];
 }
 
+function getHijosDatos($padre,$dato)
+{
+    $consulta = "SELECT s.$dato FROM seccion s WHERE s.idPadre = '$padre'";
+    $secciones = Seccion::consultaPlana($consulta);
+    if (!empty($secciones)) {
+        foreach ($secciones as $seccion) {
+            array_push($GLOBALS['hijos'], $seccion['id']);
+            getHijos($seccion['id']);
+        }
+    }
+    return $GLOBALS['hijos'];
+}
+
 function getHijosAllData($padre)
 {
     $consulta = "SELECT s.seccion FROM seccion s WHERE s.id = '$padre'";

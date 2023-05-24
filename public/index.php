@@ -50,6 +50,7 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/create',[SeccionController::clas
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/update',[SeccionController::class,'update']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/datos',[SeccionController::class,'datos']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/delete',[SeccionController::class,'delete']);
+$router->get($_ENV['NOMBRE_CARPETA'].'/carpeta/permisos',[SeccionController::class,'permisos']);
 
 //rutas para formularios
 $router->get($_ENV['NOMBRE_CARPETA'].'/formulario',[FormularioController::class,'index']);

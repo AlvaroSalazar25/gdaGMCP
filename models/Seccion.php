@@ -134,10 +134,32 @@ class Seccion extends ActiveRecord
         return true;
     }
 
+    public static function getIdFolderPath($idPadre,$idSeccion)
+    {
+        $idCarpetas = [];
+        array_push($idCarpetas, $idSeccion,0);
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id', $idPadre);
+            array_push($idCarpetas, $secPadre->id);
+            $idPadre = $secPadre->idPadre;
+        }
+        $sql = "";
+        foreach ($idCarpetas as $index => $idCarpeta) {
+            if ($index != count($idCarpetas) - 1) { $sql .=  "'$idCarpeta',"; } else{$sql .=  "'$idCarpeta'";}
+        }
+        return $sql;
+    }
+
     public static function getCarpetasHijos($id)
     {
         $GLOBALS['hijos'] = [];
         $hijos = getHijos($id); // obtener hijos de carpeta padre
+        return $hijos;
+    }
+
+    public static function getCarpetasHijosDatos($id,$dato){
+        $GLOBALS['hijos'] = [];
+        $hijos = getHijosDatos($id,$dato); // obtener hijos de carpeta padre
         return $hijos;
     }
 

@@ -61,7 +61,7 @@ class SeccionController
                     echo json_encode($formularios);
                     break;
                 case 'findCarpeta':
-                    $carpeta = Seccion::where('id',$_POST['id']);
+                    $carpeta = Seccion::where('id', $_POST['id']);
                     echo json_encode($carpeta);
                     break;
                 case 'hijos':
@@ -100,8 +100,11 @@ class SeccionController
                     echo json_encode($documentos);
                     break;
                 case 'buscarPath':
+                    $seccion = Seccion::where('id', intval($_POST['id']));
+                    $idPadre = $seccion->idPadre;
                     $value = $_POST['value'];
-                    $consulta = "SELECT * FROM seccion s WHERE s.seccion like '%$value%' LIMIT 1";
+                    $sql = Seccion::getIdFolderPath($idPadre,$seccion->id);
+                    $consulta = "SELECT * FROM seccion s WHERE s.idPadre IN ($sql) AND s.seccion = '$value' LIMIT 1";
                     $secciones = Seccion::consultaPlana($consulta);
                     $carpetas = [];
                     foreach ($secciones as $seccion) {
@@ -309,7 +312,7 @@ class SeccionController
                     echo json_encode($resolve);
                     return;
                 }
-                
+
                 SeccionUnidad::eliminarTodos('idSeccion', $seccion->id);
                 SeccionUser::eliminarTodos('idSeccion', $seccion->id);
                 Documento::eliminarTodos('idSeccion', $seccion->id);
@@ -340,6 +343,20 @@ class SeccionController
                 Seccion::generarError($e->getMessage());
                 return ['error' => 'No se pudo eliminar la carpeta'];
             }
+        }
+    }
+
+    public static function permisos(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        $alertas = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $router->render('user/permisos', [
+                'alertas' => $alertas,
+            ]);
         }
     }
 }

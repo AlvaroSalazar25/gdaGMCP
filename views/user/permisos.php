@@ -1,5 +1,3 @@
-<?php include __DIR__ . "/../templates/alertasUser.php" ?>
-
 <section class="mt-3">
     <div class="dibujar" id="dibujar-js">
 
@@ -9,13 +7,14 @@
     </div>
 </section>
 
+<?php include __DIR__ . "/../templates/alertasUser.php" ?>
 <div id="modales">
 
 </div>
 
 <?php
 $script = '
-<script src="build/js/user/admin.js"></script>
+<script src="build/js/user/permisos.js"></script>
 ' ?>
 <?php
 //Assign all Page Specific variables
