@@ -1,5 +1,5 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?php echo $_ENV['URL_BASE']; ?>/public/build/css/base/app.css">
+<link rel="stylesheet" href="<?php echo $_ENV['URL_BASE']; ?>/public/build/css/app.css">
 <link rel="stylesheet" href="<?php echo $_ENV['URL_BASE']; ?>/public/build/css/base/jquery.dataTables.min.css">
 <link href="<?php echo $_ENV['URL_BASE']; ?>/public/build/css/base/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
 <link rel="preconnect" href="<?php echo $_ENV['URL_BASE']; ?>/public/build/css/base/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />

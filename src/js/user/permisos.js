@@ -10,8 +10,16 @@ async function iniciarApp() {
     console.log('hola');
     let secs = await traerSecciones();
     let carpetas = generarCarpetas(0, secs)
-    let dibujos = dibujarArbolCarpetas(carpetas)
-    document.getElementById('dibujar-tabla').appendChild(dibujos);
+    const contenedor = document.getElementById('dibujar-tabla');
+    contenedor.classList.add('contenedor-carpetas-permiso','p-5','mt-4')
+    const arbol = dibujarArbolCarpetas(carpetas, contenedor);
+    contenedor.append(arbol);
+    $(".moverC").hover(function(){
+        $(this).css("border-bottom", "2px solid #98c1fe");
+        }, function(){
+            $(this).css("border-bottom", "");
+
+      });
 }
 
 // funcion que carga las secciones 
@@ -41,7 +49,7 @@ function traerSecciones() {
                     window.location.href = URL_BASE + "/?r=8";
                 })
             }
-            if(response.length == 0){
+            if (response.length == 0) {
                 resolve(secciones)
             }
             $.each(response, (index, seccion) => {
@@ -115,66 +123,96 @@ let permisosDefault = [
     },
 ]
 
-function dibujarArbolCarpetas(carpeta) {
-    // console.log('carpeta datos', carpeta);
+function dibujarArbolCarpetas(carpeta, contenedor) {
+    let nombre = carpeta.nombre[0].toUpperCase() + carpeta.nombre.substring(1)
     const ul = document.createElement('ul');
-    ul.style = "font-size:15px"
+    ul.style="list-style-type:none;"
     const li = document.createElement('li');
-    const contenedorLiChecks = document.createElement('div');
-    contenedorLiChecks.classList.add('w-100', 'd-flex', 'justify-content-between')
-    const textoLi = document.createElement('p');
-    textoLi.textContent = carpeta.nombre
-    if (carpeta.id == 0) {
-        contenedorLiChecks.classList.add('bg-black')
-        textoLi.style = "color:white;font-weight:bold"
-    }
-    if (carpeta.hijos.length > 0) {
-        contenedorLiChecks.style = "border-bottom:1px dashed #707071;background-color:#DEE2E6"
+    li.id = 'li' + carpeta.id
+    if (carpeta.hijos.length == 0) {
+        li.innerHTML = `
+        <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
+        <div id="carpeta${carpeta.id}">
+        <a class="moverC" style="text-decoration:none" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
+        <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
+        <span style="color:#212529"><strong>${nombre}</strong></span>
+        </a>
+        </div>
+        </div>
+      `;
     } else {
-        contenedorLiChecks.style = "border-bottom:1px dashed #707071 !important"
-    }
-    li.appendChild(contenedorLiChecks);
-
-    contenedorLiChecks.appendChild(textoLi);
-    const contenedorChecks = document.createElement('div');
-    contenedorChecks.classList.add('d-flex')
-    var typePermisoCarpeta = document.createElement('div');
-    typePermisoCarpeta.style = "padding: 0px 3px;border-right:1px solid;border-left:1px solid;margin-right:5px"
-    var typePermisoFolder = document.createElement('div');
-    typePermisoFolder.style = "padding: 2px 3px;border-right:1px solid"
-    permisosDefault.forEach(permiso => {
-        const check = document.createElement('input');
-        check.classList.add('form-check-input', `${permiso.nombre}`, `${carpeta.id}`)
-        check.style = "margin:5px;border:1px solid #1a1b15"
-        check.type = 'checkbox'
-        check.id = carpeta.id + "p" + permiso.id;
-        if (permiso.type == 'carpeta') {
-            typePermisoCarpeta.appendChild(check)
+        let botonChevron
+        if (carpeta.id == 0) {
+            botonChevron = '<i class="fa-solid fa-chevron-up  fa-lg"></i>'
         } else {
-            typePermisoFolder.appendChild(check)
+            botonChevron = '<i class="fa-solid fa-chevron-down  fa-lg"></i>'
         }
-    })
-    contenedorChecks.appendChild(typePermisoCarpeta);
-    contenedorChecks.appendChild(typePermisoFolder);
-    contenedorLiChecks.appendChild(contenedorChecks);
+        li.innerHTML = `
+        <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
+        <div id="carpeta${carpeta.id}">
+        <a class="moverC"  style="text-decoration:none" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
+        <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
+        <span style="color:#212529"><strong>${nombre}</strong></span>
+        </a>
+          <button class="btn btn-link" type="button" id="boton${carpeta.id}" data-bs-toggle="collapse" data-bs-target="#collapse-${carpeta.id}" style="margin-left:12px" >
+          ${botonChevron}
+          </button>
+        </div>
+        </div>
+      `;
+    }
     ul.appendChild(li);
 
     if (carpeta.hijos.length > 0) {
+        const hijosContainer = document.createElement('div');
+        hijosContainer.id = `collapse-${carpeta.id}`;
+        if (carpeta.id == 0) {
+            hijosContainer.classList.add('show');
+        } else {
+            hijosContainer.classList.add('collapse');
+        }
+
+        const hijosUl = document.createElement('ul');
+        hijosUl.classList.add('list-group', 'ms-3', 'mb-3');
+
         carpeta.hijos.forEach(hijo => {
-            const hijoUl = dibujarArbolCarpetas(hijo);
-            li.appendChild(hijoUl);
+            const hijoLi = dibujarArbolCarpetas(hijo);
+            hijosUl.appendChild(hijoLi);
         });
+
+        hijosContainer.appendChild(hijosUl);
+        li.appendChild(hijosContainer);
+        // Agregar el controlador de eventos para cambiar el ícono del botón
+        const boton = li.querySelector('#boton' + carpeta.id);
+        const divSelected = li.querySelector('#carpeta' + carpeta.id);
+
+        boton.addEventListener('click', () => {
+            if (boton.childNodes[1].classList.contains('fa-chevron-down')) {
+                divSelected.classList.add('contenedor-carpetas-permiso','px-3')
+                let newChild = document.createElement('i')
+                newChild.classList.add('fa-solid', 'fa-chevron-up', 'fa-xl');
+                boton.replaceChild(newChild,boton.childNodes[1]);
+            } else if (boton.childNodes[1].classList.contains('fa-chevron-up')) {
+                divSelected.classList.remove('contenedor-carpetas-permiso','px-3')
+
+                let newChild = document.createElement('i')
+                newChild.classList.add('fa-solid', 'fa-chevron-down', 'fa-xl');
+                boton.replaceChild(newChild,boton.childNodes[1]);
+                }
+        });
+
     }
     return ul;
 }
 
 
+
 function generarCarpetas(id, secs) {
     let seccion = secs.find(sec => sec.id == id);
     if (seccion == undefined) {
-        var carpeta = { 'nombre': 'MARQUE PARA SELECCIONAR TODOS', 'id': '0', 'hijos': [] };
+        var carpeta = { 'nombre': 'BASE', 'id': '0','color': '#212529', 'hijos': [] };
     } else {
-        var carpeta = { 'nombre': seccion.seccion, 'id': seccion.id, 'hijos': [] }
+        var carpeta = { 'nombre': seccion.seccion, 'id': seccion.id,'color': seccion.color, 'hijos': [] }
     }
     let carpetas = secs.filter(sec => sec.idPadre == id);
     carpetas.forEach(folder => {

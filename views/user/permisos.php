@@ -1,3 +1,5 @@
+<h1 class="text-black"><strong>Administrar Permisos</strong></h1>
+<h3 class="text-black mt-3 mb-4">Seleccione una carpeta para elegir los permisos</h3>
 <section class="mt-3">
     <div class="dibujar" id="dibujar-js">
 
@@ -14,7 +16,7 @@
 
 <?php
 $script = '
-<script src="build/js/user/permisos.js"></script>
+<script src="'.$_ENV['URL_BASE'].'/build/js/user/permisos.js"></script>
 ' ?>
 <?php
 //Assign all Page Specific variables
