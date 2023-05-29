@@ -18,7 +18,7 @@
     <?php echo $contenido; ?>
 
     <?php echo $script ?? ''; ?>
-<script src="<?php echo $_ENV['URL_BASE']; ?>/public/build/js/varios/jquery.dataTables.min.js" crossorigin="anonymous"></script>
+    <script src="<?php echo $_ENV['URL_BASE']; ?>/public/build/js/varios/jquery.dataTables.min.js" crossorigin="anonymous"></script>
     <script src="<?php echo $_ENV['URL_BASE']; ?>/public/build/js/varios/sweetalert2@11.js"></script>
     <script src="<?php echo $_ENV['URL_BASE']; ?>/public/build/js/varios/popper.min.js" crossorigin="anonymous"></script>
     <script src="<?php echo $_ENV['URL_BASE']; ?>/public/build/js/varios/bootstrap.min.js" crossorigin="anonymous"></script>

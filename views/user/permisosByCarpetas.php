@@ -1,7 +1,6 @@
+<h1 class="text-black"><strong>Permisos de <?php echo ucfirst($carpeta->seccion)?></strong></h1>
+<h3 class="text-black mt-3 mb-4">Seleccione una carpeta para elegir los permisos</h3>
 <section class="mt-3">
-    <div id="contenedor-titulo">
-
-    </div>
     <div class="dibujar" id="dibujar-js">
 
     </div>
@@ -10,14 +9,14 @@
     </div>
 </section>
 
+<?php include __DIR__ . "/../templates/alertasUser.php" ?>
 <div id="modales">
 
 </div>
-<?php include __DIR__ . "/../templates/alertasUser.php" ?>
 
 <?php
 $script = '
-<script src="' . $_ENV['URL_BASE'] . '/build/js/user/permisos.js"></script>
+<script src="'.$_ENV['URL_BASE'].'/build/js/user/permisosByCarpeta.js"></script>
 ' ?>
 <?php
 //Assign all Page Specific variables

@@ -61,7 +61,10 @@ class SeccionController
                     echo json_encode($formularios);
                     break;
                 case 'findCarpeta':
-                    $carpeta = Seccion::where('id', $_POST['id']);
+                    $id = $_POST['id'];
+                    $carpeta = Seccion::where('id', $id);
+                    $respuesta = Seccion::getCarpetasHijos($carpeta->id);
+                    $carpeta->carpetas = Seccion::obtenerSecRama($respuesta);
                     echo json_encode($carpeta);
                     break;
                 case 'hijos':

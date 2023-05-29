@@ -357,6 +357,13 @@ class UserController
                     $user = User::consultaPlana($consulta);
                     echo json_encode(array_shift($user));
                     break;
+                case 'permisosUserCarpeta':
+                    $idUser = $_POST['idUser'];
+                    $idSeccion = $_POST['idSeccion'];
+                    $consulta = "SELECT su.*,u.nombre,s.seccion FROM seccion_user su INNER JOIN user u on u.id = su.idUser INNER JOIN seccion s ON s.id = su.idSeccion WHERE su.idUser = $idUser and su.idSeccion = $idSeccion";
+                    $todos = User::consultaPlana($consulta);
+                    echo json_encode($todos);
+                    break;
                 case 'unidades':
                     $unidades = Unidad::all();
                     echo json_encode($unidades);
