@@ -361,5 +361,9 @@ class SeccionController
                 'alertas' => $alertas,
             ]);
         }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $permiso = new SeccionUser($_POST);
+            dd($permiso);
+        }
     }
 }

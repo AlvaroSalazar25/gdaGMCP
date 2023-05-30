@@ -17,6 +17,25 @@ async function iniciarApp() {
     contenedor.append(arbol);
 }
 
+function alertas() {
+    const alertas = document.querySelectorAll('.alert')
+    const contenedorAlertas = document.getElementById('alertas')
+    const alertaTipo = document.querySelector('#alertaTipo')
+    if (alertas) {
+        setTimeout(() => {
+            alertas.forEach(function (alerta) {
+                alerta.remove();
+                if (contenedorAlertas) {
+                    contenedorAlertas.innerHTML = "";
+                }
+                if (alertaTipo) {
+                    alertaTipo.innerHTML = "";
+                }
+            })
+        }, 3000);
+    }
+}
+
 async function dibujarCarpetas() {
     var html = ""
     html += '<h1 class="text-black"><strong>Administrar Permisos</strong></h1>'
@@ -593,7 +612,7 @@ async function crearModalEditar(carpeta, usuario) {
     console.log('permisos', permisos);
     let iconos = ['fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
     /*=============================================================================================================//
-                                                Modal mover documentos
+                                                Modal de permisos carpeta y documentos
     //==============================================================================================================*/
     var html = "";
     html += '<div class="modal fade" id="exampleModalPermisosUser" tabindex="-1" aria-labelledby="exampleModalPermisosUser" aria-hidden="true">'
@@ -607,24 +626,47 @@ async function crearModalEditar(carpeta, usuario) {
     html += '<h3 class="text-black"><strong>' + user.nombre.toUpperCase() + '</strong></h3>';
 
     html += '<h5 class="text-black mt-4 mb-1">Permisos de Carpeta <i class="fa-solid fa-folder-open fa-lg" style="margin-left:5px"></i></h5>';
-    html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
+    html += '<div class="unido_alerta">'
 
+    html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
     html += '<div class="row p-3">'
     permisosDefault.forEach((permiso, index) => {
         if (permiso.id < 4) {
-            html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
-            html += '<div  style="width:160px" >'
-            html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
-            html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
-            html += '</div>'
-            html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
-            html += '</div>'
+            if (permiso.id == 1) {
+                html += '<div  class="d-flex justify-content-between w-100">'
+                html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+                html += '</div>'
+                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
+                html += '</div>'
+
+                html += '<div class="d-flex apagar" >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
+                html += '<label>Heredar Permisos</label>'
+                html += '</div>'
+                html += '<input class="form-check-input" id="heredar" type="checkbox">'
+                html += '</div>'
+                html += '</div>'
+            } else {
+                html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+                html += '</div>'
+                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
+                html += '</div>'
+            }
         }
     })
     html += '</div>'
     html += '</div>'
+    html += '</div>'
 
     html += '<h5 class="text-black mt-4 mb-1">Permisos de Documento<i class="fa-solid fa-file-pdf fa-lg" style="margin-left:5px"></i></h5>';
+    html += '<div class="unido_alerta">'
     html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
 
     html += '<div class="row p-3">'
@@ -641,8 +683,9 @@ async function crearModalEditar(carpeta, usuario) {
     })
     html += '</div>'
     html += '</div>'
+    html += '</div>'
 
-    html += '<div class="w-100"  id="alertasMoverDoc">'
+    html += '<div class="w-100"  id="alertasPermisosUser">'
     html += '</div>'
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
@@ -655,25 +698,54 @@ async function crearModalEditar(carpeta, usuario) {
         dropdownParent: $("#exampleModalPermisosUser")
     });
     $('#exampleModalPermisosUser').modal('show');
-
 }
-
+let cont = 0;
 document.addEventListener('click', function (e) {
     let permisos = document.querySelectorAll('.permiso')
     permisos.forEach(permiso => {
         if (e.target.id == 1 && e.target.classList.contains('permiso')) {
-            if (permiso.id != 1 && permiso.id < 4) {
-                permiso.parentNode.classList.toggle('apagar');
+            permiso.parentNode.parentNode.parentNode.classList.remove('alertaPermiso');
+            cont = 0;
+            if (e.target.checked == false && permiso.id != 1) {
+                permiso.checked = false;
+                console.log('permisi', permiso.id);
+                permiso.parentNode.classList.add('apagar');
+                if(permiso.id == 4){
+                    permiso.parentNode.classList.remove('apagar');   
+                }
+            } else if(e.target.checked == true ){
+                if (permiso.id != 1 && permiso.id < 4) {
+                    permiso.parentNode.classList.toggle('apagar');
+                    permiso.checked = false;
+                }
             }
         } else if (e.target.id == 4 && e.target.classList.contains('permiso')) {
             if (permiso.id != 4 && permiso.id > 4) {
                 permiso.parentNode.classList.toggle('apagar');
+                permiso.checked = false;
             }
         }
     })
+
+    if (e.target.classList.contains('permiso')) {
+        if (e.target.id > 1 && e.target.checked == true) {
+            cont++
+        } else if (e.target.id > 1 && e.target.checked == false) {
+            cont--
+        }
+        console.log('cont1', cont);
+        if (cont >= 1) {
+            document.getElementById('heredar').parentElement.classList.remove('apagar');
+            document.getElementById('heredar').checked = false;
+        } else {
+            document.getElementById('heredar').parentElement.classList.add('apagar');
+        }
+    }
+
 })
 
 async function savePermisosUser(carpeta, usuario) {
+    let heredar = document.getElementById('heredar').checked
     let permisos = document.querySelectorAll('.permiso')
     permisos = Array.apply(null, permisos);
 
@@ -681,42 +753,94 @@ async function savePermisosUser(carpeta, usuario) {
         .filter(permiso => permiso.checked)
         .map(permiso => permiso.id);
 
-    var html = "";
-    if (idPermisos.includes('1') == false) {
-        idPermisos = permisos
-            .filter(permiso => permiso.id < 4)
-            .map(permiso => permiso.id);
-            permisos.forEach(permiso => {
-                if(permiso.id <4){
-                console.log('Error', 'debo lanzar una alerta');
-                permiso.checked = false;
+    permisos.forEach(permiso => {
+        if (idPermisos.includes('1') == false && permiso.id == 1) {
+            const divAlerta = document.createElement('div');
+            divAlerta.classList.add('w-100', 'p-0', 'text-start', 'text-danger', 'alert')
+            divAlerta.textContent = 'Ver Carpeta es OBLIGATORIO';
+            permiso.parentNode.parentNode.parentNode.parentNode.classList.add('alertaPermiso');
+            permiso.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(divAlerta);
+            return;
+        }
+    })
+
+    let verSeccion = null;
+    let permisosArray = permisosDefault
+        .filter(permiso => {
+            if (permiso.id === 1) {
+                verSeccion = idPermisos.includes(permiso.id.toString()) ? true : false; // Actualizar el status del objeto con permiso.id igual a 1
+                return false; // Excluir el objeto con permiso.id igual a 1 del array permisosArray
             }
+            return true; // Incluir los demás objetos en el array permisosArray
         })
-        return;
+        .map(permiso => ({
+            ...permiso,
+            status: idPermisos.includes(permiso.id.toString()) ? true : permiso.status
+        }));
+
+    console.log('permisoId', verSeccion);
+    console.log('permisos Array', permisosArray);
+
+    if (verSeccion == true) {
+        const datos = new FormData()
+        datos.append('idSeccion', carpeta);
+        datos.append('verSeccion', verSeccion);
+        datos.append('heredar', heredar);
+        datos.append('idUser', usuario);
+        datos.append('permisos', JSON.stringify(permisosArray));
+        console.log([...datos]);
+
+        let url = URL_BASE + '/permisos/carpeta';
+        const request = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'token': token
+            },
+            body: datos
+        });
+        //  respuesta de la peticion de arriba, me arroja true o false
+        const response = await request.json();
+        console.log(response);
+        if (response.exito) {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: response.exito,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                dibujarCarpeta(carpeta)
+            })
+        } else if (response.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.error
+            }).then(() => {
+                dibujarCarpeta(carpeta)
+            })
+        } else if (response.exit) {
+            Swal.fire({
+                icon: 'warning',
+                title: response.exit,
+                showConfirmButton: false,
+                text: 'Sesión expirada, vuelva a iniciar sesión',
+                timer: 3000
+            }).then(() => {
+                window.location.href = URL_BASE + "/?r=8";
+            })
+        } else {
+            html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+            response.alertas.error.forEach(alerta => {
+                html += '<li class="text-danger"  >'
+                html += alerta
+                html += '</li>'
+            })
+            html += '</ul>'
+            document.getElementById('alertas').innerHTML = html;
+        }
     }
-    console.log('idPermisos', idPermisos); // me devuelve un array, Ejm = ['1','2','3']
-
-    let permisosArray = permisosDefault.map(permiso => ({
-        ...permiso,
-        status: idPermisos.includes(permiso.id.toString()) ? true : permiso.status
-    }));
-    console.log('array', permisosArray);
-
-    const datos = new FormData()
-    datos.append('id', id);
-    datos.append('keywords', claves)
-    datos.append('data', JSON.stringify(info));
-    console.log([...datos]);
-    let url = URL_BASE + '/documento/update';
-    const request = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'token': token
-        },
-        body: datos
-    });
-    //  respuesta de la peticion de arriba, me arroja true o false
-    const response = await request.json();
-    console.log(response);
-
+    alertas();
 }
+
+

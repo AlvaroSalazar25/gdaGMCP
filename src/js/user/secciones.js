@@ -1365,7 +1365,6 @@ async function mostrarDocsPro(padre) {
                 var html = "";
                 html += '<td colspan="8" valign="top">'
                 html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
-                html += '<div class="d-flex justify-content-center align-items-center">';
                 html += '<h4 class="" style="color:red">No Existen Documentos</h4>';
                 html += "</div>";
                 html += "</div>";

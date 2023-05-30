@@ -153,7 +153,7 @@ function traerUnidades() {
                 "tipo": 'unidades'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/user/datos',
+            url: URL_BASE + '/carpeta/datos',
             type: 'POST',
             headers: {
                 'token': token
