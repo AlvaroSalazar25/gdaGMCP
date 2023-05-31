@@ -135,6 +135,26 @@ class ActiveRecord
                 return $resultado;
         }
 
+        public function guardarPermiso()
+        {
+                $resultado = '';
+                $permisos = $this->cantidadPermisos();
+                if (!empty($permisos)) {
+                        // actualizar
+                        $resultado = $this->actualizarPermiso();
+                } else {
+                        // Creando un nuevo registro
+                        $resultado = $this->crear();
+                }
+                return $resultado;
+        }
+
+        public function cantidadPermisos(){
+                $consulta = "SELECT * FROM ".static::$tabla." WHERE idUser = ".$this->idUser." AND idSeccion = ".$this->idSeccion;
+                $permisos = self::consultaPlana($consulta); 
+                return array_shift($permisos);
+        }
+
         // Todos los registros
         public static function all()
         {
@@ -249,10 +269,21 @@ class ActiveRecord
                 return $resultado;
         }
 
-        public static function actualizarSeccion($dato, $dato1, $columna1, $valor1, $columna2, $valor2)
+        // Actualizar el registro
+        public function actualizarPermiso()
         {
-                $query = "UPDATE " . static::$tabla  . " SET $dato = '$dato1'  WHERE  $columna1 = '$valor1' AND $columna2 = '$valor2'";
-                //dd($query);
+                // Sanitizar los datos
+                $atributos = $this->sanitizarAtributos();
+                // Iterar para ir agregando cada campo de la BD
+                $valores = [];
+                foreach ($atributos as $key => $value) {
+                        $valores[] = "{$key}='{$value}'";
+                }
+                // Consulta SQL
+                $query = "UPDATE " . static::$tabla . " SET ";
+                $query .=  join(', ', $valores);
+                $query .= " WHERE idUser = '" . self::$db->escape_string($this->idUser) . "' AND idSeccion = '" . self::$db->escape_string($this->idSeccion) . "' ";
+                // Actualizar BD
                 $resultado = self::$db->query($query);
                 return $resultado;
         }

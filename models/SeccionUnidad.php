@@ -6,7 +6,7 @@ namespace Model;
 class SeccionUnidad extends ActiveRecord
 {
     protected static $tabla = 'seccion_unidad';
-    protected static $columnasDB = ['id', 'idUnidad','idSeccion','permisos'];
+    protected static $columnasDB = ['id', 'idUnidad','idSeccion','verSeccion','permisos'];
 
     public $id;
     public $idUnidad;

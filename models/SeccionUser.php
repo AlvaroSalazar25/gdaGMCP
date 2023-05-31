@@ -6,11 +6,12 @@ namespace Model;
 class SeccionUser extends ActiveRecord
 {
     protected static $tabla = 'seccion_user';
-    protected static $columnasDB = ['id', 'idUser','idSeccion','permisos'];
+    protected static $columnasDB = ['id', 'idUser','idSeccion','verSeccion','permisos'];
 
     public $id;
     public $idUser;
     public $idSeccion;
+    public $verSeccion;
     public $permisos;
     public $created_at;
     public $updated_at;
@@ -20,6 +21,7 @@ class SeccionUser extends ActiveRecord
         $this->id = $args['id'] ?? null;
         $this->idUser = $args['idUser'] ?? '';
         $this->idSeccion = $args['idSeccion'] ?? '';
+        $this->verSeccion = $args['verSeccion'] ?? 0;
         $this->permisos = $args['permisos'] ?? '';
     }
     

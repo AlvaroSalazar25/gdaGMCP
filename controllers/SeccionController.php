@@ -362,8 +362,28 @@ class SeccionController
             ]);
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try{
             $permiso = new SeccionUser($_POST);
-            dd($permiso);
+            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
+            $permiso->guardarPermiso();
+            if ($_POST['heredar'] == 'false'){
+                $resolve = ['exito' => 'Permisos Guardados con éxito'];
+                echo json_encode($resolve);
+                return;
+            }
+            $carpetas = Seccion::getCarpetasHijos(intval($permiso->idSeccion)); // para los permisos heredados de esta carpeta hacia abajo (hijos)
+            if(!empty($carpetas)){
+                    foreach($carpetas as $carpeta){
+                        $permiso->idSeccion = $carpeta;
+                        $permiso->guardarPermiso();    
+                    }
+                }
+                $resolve = ['exito' => 'Permisos Guardados y heredados con éxito'];
+                echo json_encode($resolve);
+            } catch (Exception $e){
+                $resolve = ['error' => 'No se pudo guardar los Permisos'];
+                echo json_encode($resolve);
+            }
         }
     }
 }

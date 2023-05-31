@@ -93,59 +93,51 @@ function traerSecciones() {
 let permisosDefault = [
     {
         "id": 1,
+        "status": false,
         "nombre": "Ver_Carpeta",
-        "type": 'carpeta',
         "descripcion": "Permiso para visualizar la carpeta",
-        "status": false
     },
     {
         "id": 2,
+        "status": false,
         "nombre": "Crear_Carpeta",
-        "type": 'carpeta',
         "descripcion": "Permiso para crear carpetas",
-        "status": false
     },
     {
         "id": 3,
+        "status": false,
         "nombre": "Editar_Carpeta",
-        "type": 'carpeta',
         "descripcion": "Permiso para Editar,Mover,Eliminar la carpeta",
-        "status": false
     },
     {
         "id": 4,
+        "status": false,
         "nombre": "Ver_Documento",
-        "type": 'documento',
         "descripcion": "Permiso para visualizar el documento",
-        "status": false
     },
     {
         "id": 5,
+        "status": false,
         "nombre": "Crear_Documento",
-        "type": 'documento',
         "descripcion": "Permiso para Crear un documento",
-        "status": false
     },
     {
         "id": 6,
         "nombre": "Editar_Documento",
-        "type": 'documento',
+        "status": false,
         "descripcion": "Permiso para Editar la metadata del documento",
-        "status": false
     },
     {
         "id": 7,
+        "status": false,
         "nombre": "Mover_Documentos",
-        "type": 'documento',
         "descripcion": "Permiso para mover de carpeta los documentos",
-        "status": false
     },
     {
         "id": 8,
+        "status": false,
         "nombre": "Eliminar_Documento",
-        "type": 'documento',
         "descripcion": "Permiso para Eliminar el documento",
-        "status": false
     },
 ]
 
@@ -158,7 +150,7 @@ function dibujarArbolCarpetas(carpeta, contenedor) {
     if (carpeta.hijos.length == 0) {
         li.innerHTML = `
         <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
-        <div id="carpeta${carpeta.id}">
+        <div id="carpeta${carpeta.id}"class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}" >
         <a class="moverC" style="text-decoration:none ;cursor:pointer" onclick="dibujarCarpeta(${carpeta.id})">
         <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
         <span style="color:#212529"><strong>${nombre}</strong></span>
@@ -175,7 +167,7 @@ function dibujarArbolCarpetas(carpeta, contenedor) {
         }
         li.innerHTML = `
         <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
-        <div id="carpeta${carpeta.id}">
+        <div id="carpeta${carpeta.id}" class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}">
         <a class="moverC"  style="text-decoration:none;cursor:pointer" onclick="dibujarCarpeta(${carpeta.id})">
         <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
         <span style="color:#212529"><strong>${nombre}</strong></span>
@@ -642,7 +634,7 @@ async function crearModalEditar(carpeta, usuario) {
                 html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
                 html += '</div>'
 
-                html += '<div class="d-flex apagar" >'
+                html += '<div class="d-flex" >'
                 html += '<div  style="width:160px" >'
                 html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
                 html += '<label>Heredar Permisos</label>'
@@ -726,21 +718,6 @@ document.addEventListener('click', function (e) {
             }
         }
     })
-
-    if (e.target.classList.contains('permiso')) {
-        if (e.target.id > 1 && e.target.checked == true) {
-            cont++
-        } else if (e.target.id > 1 && e.target.checked == false) {
-            cont--
-        }
-        console.log('cont1', cont);
-        if (cont >= 1) {
-            document.getElementById('heredar').parentElement.classList.remove('apagar');
-            document.getElementById('heredar').checked = false;
-        } else {
-            document.getElementById('heredar').parentElement.classList.add('apagar');
-        }
-    }
 
 })
 
