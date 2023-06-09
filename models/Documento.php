@@ -49,53 +49,6 @@ class Documento extends ActiveRecord
         return self::$alertas;
     }
 
-    // public function saveDoc()
-    // {
-    //     try {
-    //         $archivo = new Documento($this->atributos());
-
-    //         if (!intval($archivo->idSeccion)) {
-    //             return false;
-    //         } else {
-    //             $idSeccion =  $archivo->idSeccion;
-    //         };
-    //         $seccion = Seccion::where('id', $idSeccion);
-    //         $recorteNSeccion = strtoupper(substr($seccion->seccion, 0, 3));
-    //         $idDoc = Documento::selectMax('id');
-    //         $refDoc = $recorteNSeccion . "-" . $archivo->idFormulario . "-" . str_pad($idDoc, 9, 0, STR_PAD_LEFT);
-    //         $path = explode("/", $_FILES['path']['type']);
-    //         $archivo->codigo = $refDoc;
-
-    //         $carpetaArchivos = '../public/archivos/';
-    //         if (!is_dir($carpetaArchivos)) {
-    //             mkdir($carpetaArchivos);
-    //         }
-    //         setlocale(LC_ALL, "spanish");
-    //         $year = strftime('%Y');
-    //         $mes = strftime('%B');
-    //         $yearArchivo = $carpetaArchivos . $year . "/";
-    //         $mesArchivo = $yearArchivo . $mes . "/";
-    //         $seccionArchivo = $mesArchivo . strtolower($seccion->seccion) . "/";
-    //         if (!is_dir($yearArchivo)) {
-    //             mkdir($yearArchivo);
-    //         }
-    //         if (!is_dir($mesArchivo)) {
-    //             mkdir($mesArchivo);
-    //         }
-    //         if (!is_dir($seccionArchivo)) {
-    //             mkdir($seccionArchivo);
-    //         }
-    //         move_uploaded_file($_FILES['path']['tmp_name'], $seccionArchivo . $refDoc . "." . $path['1']);
-    //         $archivo->path = explode("..", $seccionArchivo . $refDoc . "." . $path['1'])[1];
-
-    //         $resp = $archivo->guardar();
-    //         return $resp;
-    //     } catch (Exception $e) {
-    //         Documento::generarError($e->getMessage());
-    //         return ['error' => 'No se pudo guardar el documento'];
-    //     }
-    // }
-
     public function getPath()
     {
         $idPadre = intval($this->idSeccion);
@@ -169,19 +122,21 @@ class Documento extends ActiveRecord
     {
         $carpetaArchivos = '../public/archivos';
         foreach ($documentos as $documento) {
-            $doc = new Documento($documento);
-            $pathEdited = Documento::editNameDoc($doc);
-            $old = $carpetaArchivos.$pathEdited;
-            $new = $carpetaArchivos.$doc->getPath();
-            $doc->path = $doc->getPath();
-            $doc->codigo = $doc->updateCodigo();
-            //echo json_encode($doc).'<br>';
-            $doc->guardar();
-            // echo $resultado. '<br>';
-            rename($old,$new);
+            $seccion = Seccion::where('id',$documento->idPadre);
+            if($seccion->status == 0){
+                $doc = new Documento($documento);
+                $pathEdited = Documento::editNameDoc($doc);
+                $old = $carpetaArchivos.$pathEdited;
+                $new = $carpetaArchivos.$doc->getPath();
+                $doc->path = $doc->getPath();
+                $doc->codigo = $doc->updateCodigo();
+                $doc->guardar();
+                rename($old,$new);
+            }
         }
         return true;
     }
+
 
     public static function editNameDoc($doc){
         $oldPath = $doc->path;

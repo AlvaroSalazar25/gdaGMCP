@@ -179,7 +179,7 @@ class ActiveRecord
                 return array_shift($resultado);
         }
 
-        public static function whereUnidad($columna, $valor, $columna2, $valor2)
+        public static function whereCampos($columna, $valor, $columna2, $valor2)
         {
                 $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor' AND $columna2 = '$valor2'";
                 $resultado = self::consultarSQL($query);

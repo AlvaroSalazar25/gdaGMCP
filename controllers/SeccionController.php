@@ -33,6 +33,31 @@ class SeccionController
         }
     }
 
+    public static function permisosByCarpeta(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        $alertas = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if (!is_numeric($_GET['id'])) {
+                header('Location:' . $_ENV['URL_BASE'] . '/permisos');
+                return;
+            };
+            $carpeta = Seccion::find(intval($_GET['id']));
+            if(!$carpeta){
+                header('Location:' . $_ENV['URL_BASE'] . '/permisos');
+                return;
+            }
+            $router->render('user/permisosCarpeta', [
+                'alertas' => $alertas,
+                'carpeta'=> $carpeta,
+            ]);
+        }
+    }
+
     public static function datos(Router $router)
     {
         $validar = JsonWT::validateJwt(token);
@@ -106,7 +131,7 @@ class SeccionController
                     $seccion = Seccion::where('id', intval($_POST['id']));
                     $idPadre = $seccion->idPadre;
                     $value = $_POST['value'];
-                    $sql = Seccion::getIdFolderPath($idPadre,$seccion->id);
+                    $sql = Seccion::getIdFolderPath($idPadre, $seccion->id);
                     $consulta = "SELECT * FROM seccion s WHERE s.idPadre IN ($sql) AND s.seccion = '$value' LIMIT 1";
                     $secciones = Seccion::consultaPlana($consulta);
                     $carpetas = [];
@@ -143,7 +168,14 @@ class SeccionController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
             $seccion = new Seccion($_POST);
+            $seccion->seccion = strtolower($seccion->seccion);
             $alertas = $seccion->validar();
+            $padreSeccion = Seccion::where('id', $_POST['idPadre']);
+            if ($padreSeccion->status != 0) {
+                $resolve = ['alertas' => ['error' => array('Carpeta en movimiento, Espere...')]];
+                echo json_encode($resolve);
+                return;
+            }
             if (!empty($alertas)) {
                 $resolve = ['alertas' => $alertas];
                 echo json_encode($resolve);
@@ -180,113 +212,66 @@ class SeccionController
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $alertas = [];
-            switch ($_POST['tipo']) {
-                case 'updatePadre':
-                    $id = $_POST['padre'];
-                    $seccion = Seccion::find($id);
-                    $padre = $seccion->id;
-                    if (!$seccion) {
-                        $resolve = ['error' => 'La Sección no Existe'];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $oldName = $seccion->seccion;
-                    $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
-                    $seccion->sincronizar($_POST);
-                    $alertas = $seccion->validar();
-                    if (!empty($alertas)) {
-                        $resolve = ['alertas' => $alertas];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
-                    $seccion->guardar(); // guardar posibles cambios en el nombre antes de generar el path
-                    if ($oldName !== $_POST['seccion']) {
-                        Documento::updateCodDoc($seccion->id);
-                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                        $respuesta = Seccion::getCarpetasHijos(intval($id));
-                        array_push($respuesta, $id);
-                        $documentos = Documento::obtenerAllDocs($respuesta);
-                        Documento::updatePathDoc($documentos);
-                    }
-                    $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                    Documento::updatePathDoc($seccion->id);
-                    $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
-                    if ($resultado != true) {
-                        $hijos = Seccion::wherePlano('idPadre', $padre);
-                        $resolve = [
-                            'hijos' => $hijos,
-                            'error' => 'Ocurrió un problema al guardar la Sección'
-                        ];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $carpetas = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
-                    Seccion::updatePathHijos($carpetas); // cambiar el path de los hijos en caso de tener
-                    $hijos = Seccion::wherePlano('idPadre', $padre);
-                    $resolve = [
-                        'padre' => $seccion,
-                        'hijos' => $hijos,
-                        'exito' => 'Sección actualizada correctamente'
-                    ];
+            $id = $_POST['hijo'];
+            try {
+                $seccion = Seccion::find($id);
+                if (!$seccion) {
+                    $resolve = ['error' => 'La Carpeta no Existe'];
                     echo json_encode($resolve);
                     return;
-                    break;
-                case 'updateHijo':
-                    $id = $_POST['hijo'];
-                    $seccion = Seccion::find($id);
-                    $padre = Seccion::find($seccion->idPadre) ?? 0;
-                    if (!$seccion) {
-                        $resolve = ['error' => 'La Sección no Existe'];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $oldName = $seccion->seccion;
-                    $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
-                    $seccion->sincronizar($_POST);
-                    $alertas = $seccion->validar();
-                    if (!empty($alertas)) {
-                        $resolve = ['alertas' => $alertas];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
-                    $seccion->guardar();
-                    //$seccion->move_to($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                    if ($oldName !== $_POST['seccion']) {
-                        Documento::updateCodDoc($seccion->id);
-                        $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
-                        $respuesta = Seccion::getCarpetasHijos(intval($id));
-                        array_push($respuesta, $id);
-                        $documentos = Documento::obtenerAllDocs($respuesta);
-                        Documento::updatePathDoc($documentos);
-                    }
-                    $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
-                    if ($resultado != true) {
-                        $hijos = Seccion::wherePlano('idPadre', $padre);
-                        $resolve = [
-                            'hijos' => $hijos,
-                            'error' => 'Ocurrió un problema al guardar la Sección'
-                        ];
-                        echo json_encode($resolve);
-                        return;
-                    }
-                    $carpetas = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
-                    Seccion::updatePathHijos($carpetas); // cambiar el path de los hijos en caso de tener
+                }
+                if ($seccion->status != 0) {
+                    $resolve = ['alertas' => ['error' => array('Carpeta en movimiento, Espere...')]];
+                    echo json_encode($resolve);
+                    return;
+                }
+                $oldName = $seccion->seccion;
+                $oldPath = $seccion->path; //guadar el path anterior para renombrar/mover carpeta
+                $seccion->sincronizar($_POST);
+                $alertas = $seccion->validar();
+                if (!empty($alertas)) {
+                    $resolve = ['alertas' => $alertas];
+                    echo json_encode($resolve);
+                    return;
+                }
+                $seccion->path = $seccion->getPath(); //crear elnuevo path path a partir de los datos actualizados de la carpeta
+                $seccion->guardar();
+                //$seccion->move_to($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                if ($oldName !== $_POST['seccion']) {
+                    //Documento::updateCodDoc($seccion->id);
+                    $seccion->renameDir($oldPath); // cambiar la direccion fisica del padre con el nuevo path
+                    $respuesta = Seccion::getCarpetasHijos(intval($id));
+                    array_push($respuesta, $id);
+                    Seccion::updateStatus($respuesta);
+                    $documentos = Documento::obtenerAllDocs($respuesta);
+                    Documento::updatePathDoc($documentos);
+                    Seccion::updateStatus($respuesta);
+                }
+                $resultado = $seccion->guardar(); // guardar la carpeta con el path nuevo
+                if ($resultado != true) {
                     $hijos = Seccion::wherePlano('idPadre', $seccion->idPadre);
                     $resolve = [
-                        'padre' => $padre,
                         'hijos' => $hijos,
-                        'exito' => 'Sección actualizada correctamente'
+                        'error' => 'Ocurrió un problema al guardar la Carpeta'
                     ];
                     echo json_encode($resolve);
                     return;
-                    break;
-                default:
-                    $resolve = ['error' => 'No existe búsqueda de ese tipo'];
-                    echo json_encode($resolve);
-                    return;
-                    break;
+                }
+                $carpetas = Seccion::getCarpetasHijos(intval($seccion->id)); //obtener carpetas hijos del padre
+                Seccion::updatePathHijos($carpetas); // cambiar el path de los hijos en caso de tener
+                $hijos = Seccion::wherePlano('idPadre', $seccion->idPadre);
+                $resolve = [
+                    'padre' => $seccion->idPadre,
+                    'hijos' => $hijos,
+                    'exito' => 'Carpeta actualizada correctamente'
+                ];
+                echo json_encode($resolve);
+                return;
+            } catch (Exception $e) {
+                $seccion->status = 0;
+                $resolve = ['error' => 'No se pudo actualizar la carpeta'];
+                echo json_encode($resolve);
+                return;
             }
         }
     }
@@ -302,6 +287,11 @@ class SeccionController
             $seccion = Seccion::find($_POST['id']);
             if (!$seccion) {
                 $resolve = ['error' => 'Carpeta no existe o no se encuentra'];
+                echo json_encode($resolve);
+                return;
+            }
+            if ($seccion->status != 0) {
+                $resolve = ['error' => 'en movimiento, Espere...','carpeta' => ucfirst($seccion->seccion)];
                 echo json_encode($resolve);
                 return;
             }
@@ -349,41 +339,5 @@ class SeccionController
         }
     }
 
-    public static function permisos(Router $router)
-    {
-        $validar = JsonWT::validateJwt(token);
-        if ($validar['status'] != true) {
-            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
-        }
-        $alertas = [];
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $router->render('user/permisos', [
-                'alertas' => $alertas,
-            ]);
-        }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try{
-            $permiso = new SeccionUser($_POST);
-            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-            $permiso->guardarPermiso();
-            if ($_POST['heredar'] == 'false'){
-                $resolve = ['exito' => 'Permisos Guardados con éxito'];
-                echo json_encode($resolve);
-                return;
-            }
-            $carpetas = Seccion::getCarpetasHijos(intval($permiso->idSeccion)); // para los permisos heredados de esta carpeta hacia abajo (hijos)
-            if(!empty($carpetas)){
-                    foreach($carpetas as $carpeta){
-                        $permiso->idSeccion = $carpeta;
-                        $permiso->guardarPermiso();    
-                    }
-                }
-                $resolve = ['exito' => 'Permisos Guardados y heredados con éxito'];
-                echo json_encode($resolve);
-            } catch (Exception $e){
-                $resolve = ['error' => 'No se pudo guardar los Permisos'];
-                echo json_encode($resolve);
-            }
-        }
-    }
+
 }

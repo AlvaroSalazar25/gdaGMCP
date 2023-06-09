@@ -19,8 +19,6 @@ document.addEventListener('DOMContentLoaded', iniciarApp())
 
 async function iniciarApp() {
     unidades = await traerUnidades();
-    console.log('asdfasdf', unidades);
-
     dibujarUnidades(unidades)
 }
 
@@ -84,7 +82,47 @@ function traerUnidades() {
     })
 }
 
-
+function traerUsers(id) {
+    return new Promise((resolve, reject) => {
+        let usuarios = []
+        $.ajax({
+            data: {
+                "tipo": 'usersUnidad',
+                "id": id
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/unidad/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+            if(response.length == 0){
+                resolve(usuarios)
+            }
+            $.each(response, (index, user) => {
+                usuarios.push(user);
+                if (response.length == index + 1) {
+                    resolve(usuarios)
+                }
+            })
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}
 
 async function dibujarUnidadesUpdate() {
     let unid = await traerUnidades();
@@ -96,7 +134,7 @@ function dibujarUnidades(unidadesActualizadas) {
     html += '<section>'
     html += '<div class="mb-3">'
     html += '<div class="d-flex justify-content-end">'
-    html += '<a class=" btn btn-primary " onclick="agregarUnidad()"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton">Agregar Unidad</span></a>'
+    html += '<a class=" btn btn-primary " onclick="agregarUnidad()"><i class="fa-solid fa-plus fa-2x"></i> <span class="span-boton">Unidad</span></a>'
     html += '</div>'
     html += '</div>'
     html += '</section>'
@@ -173,11 +211,15 @@ function dibujarUnidades(unidadesActualizadas) {
 }
 
 async function agregarUnidad(tipo = 1, id) {
+    var usuarios;
+    if(tipo == 2){
+        usuarios = await traerUsers(id)
+        console.log('usuaiors',usuarios);
+    }
     var html = '';
     var unidadesActualizadas = await traerUnidades();
     if (tipo == '2') {
         var unidad = unidadesActualizadas.find(unid => unid.id == id);
-        var seccionesUnidad = JSON.parse(unidad.seccion);
         var nombre = unidad.unidad
         var jefe = unidad.jefe
     }
@@ -200,70 +242,20 @@ async function agregarUnidad(tipo = 1, id) {
     html += '<label for="exampleFormControlInput1" class="form-label"><strong>Jefe:</strong></label>'
     html += '<input type="text" class="form-control" id="jefe" name="jefe" value="' + jefe + '" placeholder="Ingrese nombre de Jefe" aria-label="Username" aria-describedby="basic-addon1">'
     html += '</div>'
-    html += '<h4 class="text-black mt-4 mb-4">Permisos de Unidad</h4>'
-    //let unidad = unidades.find( unidad => unidad.id == id)
-    html += '<div class="bg-white py-3 px-2" style="border-radius:8px;border:1px solid #e0e4e7">'
-    if (tipo == '2') {
-        secciones.forEach(seccion => {
-            let seccionUnidad = seccionesUnidad.find(section => section.idSeccion == seccion.id)
-            if (seccionUnidad != undefined) {
-                html += '<div class="d-flex" style="font-size:15px;margin-bottom:5px" >'
-                html += '<div class="d-flex" style="width:200px;justify-content:start;align-items:center">'
-                //console.log('seccion_id', seccion.id);
-                html += '<input class="secciones" type="checkbox" checked id="' + seccion.id + '" name="' + seccion.seccion + '" value="' + seccion.id + '">'
-                html += ' <label style="margin-left:5px">' + seccion.seccion + '</label>'
-                html += '</div>'
-                html += '<div class="d-flex justify-content-center" id="contenedor' + seccion.id + '" style="font-size:13px;border:1px solid #ced4da;padding:5px 0px 5px 10px">'
-                permisosDefault.forEach(permisoD => {
-                    let permisosUnidad = JSON.parse(seccionUnidad.permisos)
-                    let permisoUnidad = permisosUnidad.find(permi => permi.id == permisoD.id)
-                    if (permisoUnidad != undefined) {
-                        if (permisoUnidad.status == 'true') {
-                            html += '<input style="margin-right:5px" type="checkbox" checked  id="permiso' + permisoD.id + '" name="' + permisoD.nombre + '" value="' + permisoD.id + '">'
-                            html += ' <label style="margin-right:10px" >' + permisoD.nombre + '</label>'
-                        } else {
-                            html += '<input style="margin-right:5px" type="checkbox"   id="permiso' + permisoD.id + '" name="' + permisoD.nombre + '" value="' + permisoD.id + '">'
-                            html += ' <label style="margin-right:10px" >' + permisoD.nombre + '</label>'
-                        }
-                    } else {
-                        html += '<input style="margin-right:5px" type="checkbox"  id="permiso' + permisoD.id + '" name="' + permisoD.nombre + '" value="' + permisoD.id + '">'
-                        html += ' <label style="margin-right:10px" >' + permisoD.nombre + '</label>'
-                    }
-                })
-                html += '</div>'
-                html += '</div>'
-            } else {
-                html += '<div class="d-flex" style="font-size:15px;margin-bottom:5px" >'
-                html += '<div class="d-flex" style="width:200px;justify-content:start;align-items:center">'
-                html += '<input class="secciones" type="checkbox" id="' + seccion.id + '" name="' + seccion.seccion + '" value="' + seccion.id + '">'
-                html += ' <label style="margin-left:5px">' + seccion.seccion + '</label>'
-                html += '</div>'
-                html += '<div class="d-flex justify-content-center visiblePermiso" id="contenedor' + seccion.id + '" style="font-size:13px;border:1px solid #ced4da;padding:5px 0px 5px 10px">'
-                permisosDefault.forEach(permisoD => {
-                    html += '<input style="margin-right:5px" type="checkbox"  id="permiso' + permisoD.id + '" name="' + permisoD.nombre + '" value="' + permisoD.id + '">'
-                    html += ' <label style="margin-right:10px" >' + permisoD.nombre + '</label>'
-                })
-                html += '</div>'
-                html += '</div>'
-            }
+    if(tipo == 2){
+        html += '<label for="exampleFormControlInput1" class="form-label"><strong>Usuarios:</strong></label>'
+        html += '<div class="bg-white py-3 px-2" style="border-radius:8px;border:1px solid #e0e4e7">'
+        html += '<ul style="list-style-type:none;">'
+        usuarios.forEach(user =>{
+        html += '<li><i class="fa-solid fa-user" style="margin-right:5px"></i>'+user.nombre+'</li>'
+
         })
-    } else {
-        secciones.forEach(seccion => {
-            html += '<div class="d-flex" style="font-size:15px;margin-bottom:5px" >'
-            html += '<div class="d-flex" style="width:200px;justify-content:start;align-items:center">'
-            html += '<input class="secciones" type="checkbox" id="' + seccion.id + '" name="' + seccion.seccion + '" value="' + seccion.id + '">'
-            html += ' <label style="margin-left:5px">' + seccion.seccion + '</label>'
-            html += '</div>'
-            html += '<div class="d-flex justify-content-center visiblePermiso" id="contenedor' + seccion.id + '" style="font-size:13px;border:1px solid #ced4da;padding:5px 0px 5px 10px">'
-            permisosDefault.forEach(permisoD => {
-                html += '<input style="margin-right:5px" type="checkbox"  id="permiso' + permisoD.id + '" name="' + permisoD.nombre + '" value="' + permisoD.id + '">'
-                html += ' <label style="margin-right:10px" >' + permisoD.nombre + '</label>'
-            })
-            html += '</div>'
-            html += '</div>'
-        })
+        html += '</ul>'
+
+        html += '</div>'
     }
-    html += '</div>'
+
+    //let unidad = unidades.find( unidad => unidad.id == id)
     html += '<div class="w-100 mt-2" id="alertas">'
     html += '</div>'
     html += '<div class="my-5 d-flex justify-content-center align-items-center">'

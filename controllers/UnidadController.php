@@ -9,6 +9,7 @@ use Model\Seccion;
 use Classes\JsonWT;
 use Model\SeccionUser;
 use Model\SeccionUnidad;
+use Model\User;
 
 define('token', $_SESSION['token'] ?? '');
 if (!isset($_SESSION)) {
@@ -54,6 +55,28 @@ class UnidadController
                     }
                     echo json_encode($unidades);
                     break;
+                case 'unidades':
+                    //$roles = seccionRoles::consultaPlana($consulta);
+                    $unidades = Unidad::all();
+                    echo json_encode($unidades);
+                    break;
+                case 'unidad':
+                    $unidad = Unidad::find($_POST['id']);
+                    echo json_encode($unidad);
+                    break;
+                case 'permisosUnidadCarpeta':
+                    $idUnidad = $_POST['idUnidad'];
+                    $idSeccion = $_POST['idSeccion'];
+                    $consulta = "SELECT su.*,u.unidad,s.seccion FROM seccion_unidad su INNER JOIN unidad u on u.id = su.idUnidad INNER JOIN seccion s ON s.id = su.idSeccion WHERE su.idUnidad = $idUnidad and su.idSeccion = $idSeccion";
+                    $permisos = Unidad::consultaPlana($consulta);
+                    echo json_encode($permisos);
+                    break;
+                case 'usersUnidad':
+                    $id = $_POST['id'];
+                    $usuarios = User::whereTodos('idUnidad', $id);
+                    echo json_encode($usuarios);
+                    break;
+
                 default:
                     $resolve = [
                         'error' => 'No existe busqueda de ese tipo'

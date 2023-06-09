@@ -658,7 +658,7 @@ async function dibujarPadre(padre) {
         html += '</div>'
         html += '<div class="modal-footer">'
         html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
-        html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + padre + ',' + seccionActual.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+        html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + seccionActual.idPadre + ',' + seccionActual.id + ',1)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
         html += '</div>'
         html += '</div>'
         html += '</div>'
@@ -684,7 +684,7 @@ async function dibujarHijosPadre(padre, response = []) {
     }
     var html = "";
     if (hijos.length === 0) {
-        html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
+        html += '<div class="px-5 py-2 mt-3 w-100 ">';
         html += '<div class="d-flex justify-content-center align-items-center">';
         html += '<h4 class="" style="color:red">No Existen Carpetas</h4>';
         html += "</div>";
@@ -969,9 +969,11 @@ async function dibujarDocs(padre, docs = []) {
 
             html += '<div class="mb-4" id="alias">';
             html += '<label class="form-label"><strong>ALIAS</strong></label>';
-            html += '<textarea class="form-control edit-campos' + documento.id + '" rows="2" name="alias" placeholder="Documento sin alias">' + documento.alias + '</textarea>';
+            html += '<textarea class="form-control ' + documento.id + '" rows="2" name="alias" placeholder="Documento sin alias">' + documento.alias + '</textarea>';
             html += '</div>';
 
+            html += '<div class="w-100 mt-2" id="alertasEditarMetadata'+documento.id+'">'
+            html += '</div>'
             html += '</div>';
             html += '<div class="modal-footer mt-3 d-flex justify-content-between">';
             html += '<p class=""> Ultima modificación: <strong>' + documento.updated_at + '</strong></p>';
@@ -1018,8 +1020,6 @@ document.addEventListener('click', e => {
         }
     }
 })
-
-
 
 async function inputsValue(id) {
     let seccionesActualizadas = await traerSecciones();
@@ -1244,6 +1244,7 @@ async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
 async function saveEditDoc(id) {
     const inputs = document.querySelectorAll('.edit-campos' + id)
     const nombres = Array.apply(null, inputs);
+    var html = "";
     const info = [];
     let claves;
     nombres.forEach((nombre) => {
@@ -1324,13 +1325,14 @@ async function saveEditDoc(id) {
             })
         } else {
             html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+            console.log('swf',response.alertas.error);
             response.alertas.error.forEach(alerta => {
                 html += '<li class="text-danger"  >'
                 html += alerta
                 html += '</li>'
             })
             html += '</ul>'
-            document.getElementById('alertas').innerHTML = html;
+            document.getElementById('alertasEditarMetadata'+id).innerHTML = html;
         }
         alertas();
     }
@@ -1364,7 +1366,7 @@ async function mostrarDocsPro(padre) {
             if (response.length == 0) {
                 var html = "";
                 html += '<td colspan="8" valign="top">'
-                html += '<div class="alert  px-5 py-2 mt-3 w-100 ">';
+                html += '<div class="px-5 py-2 mt-3 w-100 d-flex justify-content-center">';
                 html += '<h4 class="" style="color:red">No Existen Documentos</h4>';
                 html += "</div>";
                 html += "</div>";
@@ -1757,11 +1759,7 @@ async function updateSeccion(padre, hijo, tipo) {
     if (padre != idPadre) {
         datos.append('idPadre', idPadre);
     }
-    if (tipo == 1) {
-        datos.append('tipo', 'updatePadre');
-    } else {
-        datos.append('tipo', 'updateHijo');
-    }
+    tipo == 1 ? datos.append('tipo', 1) : datos.append('tipo', 2);
     console.log([...datos]);
     let url = URL_BASE + '/carpeta/update';
     const request = await fetch(url, {

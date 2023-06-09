@@ -241,7 +241,7 @@ class UserController
             $resolve = ['error' => 'No se encontró ningún usuario'];
             switch ($_POST["tipo"]) {
                 case 'buscarNombre':
-                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,e.estado FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad INNER JOIN estado e ON e.id = u.idEstado WHERE u.nombre LIKE '%{$dato}%'";
+                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,u.estado FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad WHERE u.nombre LIKE '%{$dato}%'";
                     $todos =  User::consultaPlana($consulta);
                     if (empty($todos)) {
                         echo json_encode($resolve);
@@ -304,13 +304,13 @@ class UserController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'];
             $user = User::where('id', $id);
-            if ($user->idEstado == 1) {
+            if ($user->estado == 1) {
                 if ($user->idRol == 1) {
                     $resolve = ['error' => 'No se puede desabilitar a los administradores'];
                     echo json_encode($resolve);
                     return;
                 }
-                $user->idEstado = 2;
+                $user->estado = 2;
                 $resultado = $user->guardar();
                 if ($resultado) {
                     $resolve = ['inactivo' => 'Usuario desabilitado'];
@@ -320,8 +320,8 @@ class UserController
                     echo json_encode($resolve);
                     return;
                 }
-            } else if ($user->idEstado == 2) {
-                $user->idEstado = 1;
+            } else if ($user->estado == 2) {
+                $user->estado = 1;
                 $resultado = $user->guardar();
                 if ($resultado) {
                     $resolve = ['activo' => 'Usuario activado'];

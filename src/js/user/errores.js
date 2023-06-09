@@ -37,7 +37,7 @@ function traerErrores() {
                 "tipo": 'errores'
             },
             //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/errores/datos',
+            url: URL_BASE + '/error/datos',
             type: 'POST',
             headers: {
                 'token': token
@@ -110,21 +110,20 @@ async function dibujarErrores() {
         html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
         html += ' </div>'
         html += ' <div class="modal-body">'
-        let data = JSON.parse(error.data)
-        let datosForm = JSON.parse(data.data);
-        if(data.user){
-            html += ' <div class="d-flex w-100">'
-            html += ' <p style="font-size:14px"><strong>Usuario: </strong>'+' '+ data.user +'</p>'
-            html += ' </div>'
-        }
-        console.log('datosFormm',datosForm);
+        // let data = JSON.parse(error.data)
+        // let datosForm = JSON.parse(data.data);
+        // if(data.user){
+        //     html += ' <div class="d-flex w-100">'
+        //     html += ' <p style="font-size:14px"><strong>Usuario: </strong>'+' '+ data.user +'</p>'
+        //     html += ' </div>'
+        // }
         
-        datosForm.forEach((datos,index)=>{
-            html += ' <div class=" w-100 text-justify">'
-            html += ' <p class="text-justify" style="font-size:14px"><strong>'+ (datos.nombre[0].toUpperCase() + datos.nombre.substring(1)) +': </strong></p>'
-            html += ' <p style="font-size:14px;text-align:justify">'+ datos.valor +'</p>'
-            html += ' </div>'
-        });
+        // datosForm.forEach((datos,index)=>{
+        //     html += ' <div class=" w-100 text-justify">'
+        //     html += ' <p class="text-justify" style="font-size:14px"><strong>'+ (datos.nombre[0].toUpperCase() + datos.nombre.substring(1)) +': </strong></p>'
+        //     html += ' <p style="font-size:14px;text-align:justify">'+ datos.valor +'</p>'
+        //     html += ' </div>'
+        // });
         html += ' </div>'
         html += '<div class="modal-footer">'
         html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>'

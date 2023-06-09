@@ -115,6 +115,12 @@ class DocumentosController
             }
             // try{
             $archivo = new Documento($_POST);
+            $seccion = Seccion::where('id',$archivo->idSeccion);
+            if($seccion->status != 0){
+                $resolve = ['alertas'=> ['error' => array('Carpeta en movimiento, Espere...')]];
+                echo json_encode($resolve);
+                return;
+            }
             $alertas = $archivo->validar();
             if (!empty($alertas)) {
                 $resolve = ['alertas' => $alertas];
@@ -153,6 +159,12 @@ class DocumentosController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $documento = Documento::find($_POST['id']);
             $documento->sincronizar($_POST);
+            $seccion = Seccion::where('id',$documento->idSeccion);
+            if($seccion->status != 0){
+                $resolve = ['alertas'=> ['error' => array('Carpeta en movimiento, Espere...')]];
+                echo json_encode($resolve);
+                return;
+            }
             $alertas = $documento->validar();
             if (!empty($alertas)) {
                 $resolve = ['alertas' => $alertas];

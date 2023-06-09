@@ -7,6 +7,7 @@ use Controllers\UserController;
 use Controllers\ErrorController;
 use Controllers\LoginController;
 use Controllers\UnidadController;
+use Controllers\PermisoController;
 use Controllers\SeccionController;
 use Controllers\DocumentosController;
 use Controllers\FormularioController;
@@ -50,8 +51,11 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/create',[SeccionController::clas
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/update',[SeccionController::class,'update']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/datos',[SeccionController::class,'datos']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/delete',[SeccionController::class,'delete']);
-$router->get($_ENV['NOMBRE_CARPETA'].'/permisos/carpeta',[SeccionController::class,'permisos']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/permisos/carpeta',[SeccionController::class,'permisos']);
+
+$router->get($_ENV['NOMBRE_CARPETA'].'/permisos',[PermisoController::class,'permisos']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/permisos',[PermisoController::class,'permisos']);
+
+$router->get($_ENV['NOMBRE_CARPETA'].'/permisos/carpeta',[SeccionController::class,'permisosByCarpeta']);
 
 //rutas para formularios
 $router->get($_ENV['NOMBRE_CARPETA'].'/formulario',[FormularioController::class,'index']);

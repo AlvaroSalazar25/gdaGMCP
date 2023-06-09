@@ -8,7 +8,7 @@ use Exception;
 class Seccion extends ActiveRecord
 {
     protected static $tabla = 'seccion';
-    protected static $columnasDB = ['id', 'idPadre', 'seccion', 'descripcion', 'color', 'path'];
+    protected static $columnasDB = ['id', 'idPadre', 'seccion', 'descripcion', 'color', 'path', 'status'];
 
     public $id;
     public $idPadre;
@@ -16,6 +16,7 @@ class Seccion extends ActiveRecord
     public $descripcion;
     public $color;
     public $path;
+    public $status;
     public $created_at;
     public $updated_at;
 
@@ -27,6 +28,7 @@ class Seccion extends ActiveRecord
         $this->descripcion = $args['descripcion'] ?? '';
         $this->color = $args['color'] ?? '';
         $this->path = $args['path'] ?? '';
+        $this->status = $args['status'] ?? '';
     }
 
     public function validar()
@@ -93,8 +95,8 @@ class Seccion extends ActiveRecord
     public function renameDir($oldPath)
     {
         $carpetaArchivos = '../public/archivos';
-        $old = $carpetaArchivos.$oldPath;
-        $new = $carpetaArchivos.$this->path;
+        $old = $carpetaArchivos . $oldPath;
+        $new = $carpetaArchivos . $this->path;
         $resolve = rename($old, $new);
         return $resolve;
     }
@@ -105,7 +107,9 @@ class Seccion extends ActiveRecord
         $old = $carpetaArchivos . $oldPath;
         $new = $carpetaArchivos . $this->path;
         $res = copy($old, $new);
-        if ($res == true) {unlink($old);}
+        if ($res == true) {
+            unlink($old);
+        }
     }
 
     public function crearCarpeta()
@@ -134,10 +138,47 @@ class Seccion extends ActiveRecord
         return true;
     }
 
-    public static function getIdFolderPath($idPadre,$idSeccion)
+    public static function updateStatus($hijos)
+    {
+        foreach ($hijos as $hijo) {
+            $seccion = Seccion::where('id', $hijo);
+            if ($seccion) {
+                $seccion->status = ($seccion->status == 0) ? 1 : 0;
+                $seccion->guardar();
+            } else {
+                throw new Exception('error');
+            }
+        }
+        return true;
+    }
+
+    public static function updatePermisosPadre($idPadre, $idSeccion, $idUser, $verSeccion)
     {
         $idCarpetas = [];
-        array_push($idCarpetas, $idSeccion,0);
+
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id', $idPadre);
+            array_push($idCarpetas, $secPadre->id);
+            $idPadre = $secPadre->idPadre;
+        }
+        array_push($idCarpetas, $idSeccion);
+        foreach ($idCarpetas as $idCarpeta) {
+            $permiso = SeccionUser::whereCampos('idUser', $idUser, 'idSeccion', $idCarpeta);
+            dd($permiso);
+            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
+            echo $permiso->verSeccion . "-" . $idCarpeta . "<br>";
+            echo "----------------" . "<br>";
+            $permiso->verSeccion = $verSeccion;
+            echo $permiso->verSeccion . "<br>";
+            // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
+        }
+        return ;
+    }
+
+    public static function getIdFolderPath($idPadre, $idSeccion)
+    {
+        $idCarpetas = [];
+        array_push($idCarpetas, $idSeccion, 0);
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
             array_push($idCarpetas, $secPadre->id);
@@ -145,7 +186,12 @@ class Seccion extends ActiveRecord
         }
         $sql = "";
         foreach ($idCarpetas as $index => $idCarpeta) {
-            if ($index != count($idCarpetas) - 1) { $sql .=  "'$idCarpeta',"; } else{$sql .=  "'$idCarpeta'";}
+            if ($index != count($idCarpetas) - 1) {
+                $sql .=  "'$idCarpeta',";
+            } else {
+                $sql .=  "'$idCarpeta'";
+            }
+            // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
         }
         return $sql;
     }
@@ -157,13 +203,15 @@ class Seccion extends ActiveRecord
         return $hijos;
     }
 
-    public static function getCarpetasHijosDatos($id,$dato){
+    public static function getCarpetasHijosDatos($id, $dato)
+    {
         $GLOBALS['hijos'] = [];
-        $hijos = getHijosDatos($id,$dato); // obtener hijos de carpeta padre
+        $hijos = getHijosDatos($id, $dato); // obtener hijos de carpeta padre
         return $hijos;
     }
 
-    public static function getCarpetasHijosAllData($id){
+    public static function getCarpetasHijosAllData($id)
+    {
         $hijos = getHijosAllData($id); // obtener hijos de carpeta padre
         return $hijos;
     }
