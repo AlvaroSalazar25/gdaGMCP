@@ -135,13 +135,13 @@ class ActiveRecord
                 return $resultado;
         }
 
-        public function guardarPermiso()
+        public function guardarPermiso($campo,$valor)
         {
                 $resultado = '';
-                $permisos = $this->cantidadPermisos();
+                $permisos = $this->cantidadPermisos($campo,$valor);
                 if (!empty($permisos)) {
                         // actualizar
-                        $resultado = $this->actualizarPermiso();
+                        $resultado = $this->actualizarPermiso($campo,$valor);
                 } else {
                         // Creando un nuevo registro
                         $resultado = $this->crear();
@@ -149,8 +149,8 @@ class ActiveRecord
                 return $resultado;
         }
 
-        public function cantidadPermisos(){
-                $consulta = "SELECT * FROM ".static::$tabla." WHERE idUser = ".$this->idUser." AND idSeccion = ".$this->idSeccion;
+        public function cantidadPermisos($campo, $valor){
+                $consulta = "SELECT * FROM ".static::$tabla." WHERE ".$campo." = ".$valor." AND idSeccion = ".$this->idSeccion;
                 $permisos = self::consultaPlana($consulta); 
                 return array_shift($permisos);
         }
@@ -270,7 +270,7 @@ class ActiveRecord
         }
 
         // Actualizar el registro
-        public function actualizarPermiso()
+        public function actualizarPermiso($campo,$valor)
         {
                 // Sanitizar los datos
                 $atributos = $this->sanitizarAtributos();
@@ -282,7 +282,7 @@ class ActiveRecord
                 // Consulta SQL
                 $query = "UPDATE " . static::$tabla . " SET ";
                 $query .=  join(', ', $valores);
-                $query .= " WHERE idUser = '" . self::$db->escape_string($this->idUser) . "' AND idSeccion = '" . self::$db->escape_string($this->idSeccion) . "' ";
+                $query .= " WHERE ".$campo." = '" . self::$db->escape_string($valor) . "' AND idSeccion = '" . self::$db->escape_string($this->idSeccion) . "' ";
                 // Actualizar BD
                 $resultado = self::$db->query($query);
                 return $resultado;

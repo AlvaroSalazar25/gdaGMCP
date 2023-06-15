@@ -9,48 +9,56 @@ let permisosDefault = [
         "id": 1,
         "status": false,
         "nombre": "Ver_Carpeta",
-        "descripcion": "Permiso para visualizar la carpeta",
+        "type": "carpeta",
+        "descripcion": "Permiso para ver carpetas",
     },
     {
         "id": 2,
         "status": false,
         "nombre": "Crear_Carpeta",
+        "type": "carpeta",
         "descripcion": "Permiso para crear carpetas",
     },
     {
         "id": 3,
         "status": false,
         "nombre": "Editar_Carpeta",
+        "type": "carpeta",
         "descripcion": "Permiso para Editar,Mover,Eliminar la carpeta",
     },
     {
         "id": 4,
         "status": false,
         "nombre": "Ver_Documento",
+        "type": "documento",
         "descripcion": "Permiso para visualizar el documento",
     },
     {
         "id": 5,
         "status": false,
         "nombre": "Crear_Documento",
+        "type": "documento",
         "descripcion": "Permiso para Crear un documento",
     },
     {
         "id": 6,
-        "nombre": "Editar_Documento",
         "status": false,
+        "nombre": "Editar_Documento",
+        "type": "documento",
         "descripcion": "Permiso para Editar la metadata del documento",
     },
     {
         "id": 7,
         "status": false,
         "nombre": "Mover_Documentos",
+        "type": "documento",
         "descripcion": "Permiso para mover de carpeta los documentos",
     },
     {
         "id": 8,
         "status": false,
         "nombre": "Eliminar_Documento",
+        "type": "documento",
         "descripcion": "Permiso para Eliminar el documento",
     },
 ]
@@ -331,7 +339,7 @@ async function dibujarUsers(contenedor, carpeta, tipo = 1, usuarios = []) {
         html += '<div class="d-flex">'
         let tipoDato = (dato.idUnidad != '-' ? 1 : 0);
         let valorDato = (dato.idUnidad != '-' ? dato.idUnidad : dato.idUser)
-        html += `<a class="btn btn-primary  botonPermiso" id="${tipo}" onclick="crearModalEditar('${carpeta}','${valorDato}',${tipoDato})" style="margin:0px 5px">Permisos</a>`
+        html += `<a class="btn btn-primary  botonPermiso" id="${tipo}" onclick="modalPermiso('${carpeta}','${valorDato}',${tipoDato})" style="margin:0px 5px">Permisos</a>`
         html += '<div>'
         html += '</td>'
         html += '</tr>'
@@ -481,11 +489,11 @@ function mutarDato(item) {
 }
 
 async function dibujarAtras() {
-    window.location.href = URL_BASE+"/permisos"; 
+    window.location.href = URL_BASE + "/permisos";
 }
 
-
 function traerPermisosUser(carpeta, usuario) {
+    let permisos = []
     return new Promise((resolve, reject) => {
         $.ajax({
             data: {
@@ -501,7 +509,6 @@ function traerPermisosUser(carpeta, usuario) {
             },
             dataType: 'json'
         }).done((response) => {
-            //console.log(response);
             if (response.exit) {
                 Swal.fire({
                     icon: 'warning',
@@ -514,7 +521,6 @@ function traerPermisosUser(carpeta, usuario) {
                 })
             }
             resolve(response)
-
         }).fail((err) => {
             reject(err);
         });
@@ -625,20 +631,36 @@ function findUnidadById(id) {
     })
 }
 
-async function crearModalEditar(carpeta, dato, tipo) {
-    console.log('dato', dato);
-    let permisosUser = [], permisosUnidad = [];
+
+async function modalPermiso(carpeta, dato, tipo) {
+    let permisos;
+    if (tipo == 0) {
+        permisos = await traerPermisosUser(carpeta, dato);
+        let user = await findUserById(dato);
+        console.log('usereeee',user);
+        if(permisos.length == 0){
+            permisos = await traerPermisosUnidad(carpeta, user.idUnidad);
+            }
+    } else if (tipo == 1) {
+        permisos = await traerPermisosUnidad(carpeta, dato);
+    }
+
+    if (permisos.length == 0) {
+        crearModalAgregarPermisos(carpeta, dato, tipo);
+    } else {
+        crearModalEditarPermisos(carpeta, dato, tipo)
+    }
+}
+
+async function crearModalAgregarPermisos(carpeta, dato, tipo) {
     if (tipo == 0) {
         dato = await findUserById(dato);
-        permisosUser = await traerPermisosUser(carpeta, dato.id);
     }
     if (tipo == 1) {
         dato = await findUnidadById(dato);
-        permisosUnidad = await traerPermisosUnidad(carpeta, dato.id);
     }
-    dato = mutarDato(dato)
-    console.log('datooo', dato);
 
+    dato = mutarDato(dato)
     let iconos = ['fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
     /*=============================================================================================================//
                                                 Modal de permisos carpeta y documentos
@@ -648,7 +670,7 @@ async function crearModalEditar(carpeta, dato, tipo) {
     html += '<div class="modal-dialog">'
     html += '<div class="modal-content">'
     html += '<div class="modal-header bg-black">'
-    html += '<h5 class="modal-title text-white">Permisos</h5>'
+    html += '<h5 class="modal-title text-white">Agregar Permisos</h5>'
     html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
     html += '</div>'
     html += '<div class="modal-body">'
@@ -659,8 +681,9 @@ async function crearModalEditar(carpeta, dato, tipo) {
 
     html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
     html += '<div class="row p-3">'
+
     permisosDefault.forEach((permiso, index) => {
-        if (permiso.id < 4) {
+        if (permiso.type == "carpeta") {
             if (permiso.id == 1) {
                 html += '<div  class="d-flex justify-content-between w-100">'
                 html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
@@ -685,7 +708,9 @@ async function crearModalEditar(carpeta, dato, tipo) {
                 html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
                 html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
                 html += '</div>'
+
                 html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
+
                 html += '</div>'
             }
         }
@@ -700,7 +725,7 @@ async function crearModalEditar(carpeta, dato, tipo) {
 
     html += '<div class="row p-3">'
     permisosDefault.forEach((permiso, index) => {
-        if (permiso.id >= 4) {
+        if (permiso.type == "documento") {
             html += '<div class="d-flex ' + (permiso.id != 4 ? 'apagar' : '') + '">'
             html += '<div  style="width:160px">'
             html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
@@ -719,7 +744,7 @@ async function crearModalEditar(carpeta, dato, tipo) {
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    html += `<button type="button" class="btn btn-success" onclick="${tipo == 0 ? 'savePermisosUser' : 'savePermisosUnidad'}(${carpeta},${dato.id})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
+    html += `<button type="button" class="btn btn-success" onclick="savePermisos(${carpeta},${dato.id},${tipo})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
     html += '</div>';
     html += '</div>'
     document.getElementById('modales').innerHTML = html;
@@ -728,6 +753,130 @@ async function crearModalEditar(carpeta, dato, tipo) {
     });
     $('#exampleModalPermisosUser').modal('show');
 }
+
+async function crearModalEditarPermisos(carpeta, dato, tipo) {
+    let permisos;
+    let datoUserPermiso = false;
+    if (tipo == 0) {
+        dato = await findUserById(dato);
+        permisos = await traerPermisosUser(carpeta, dato.id);
+        if(permisos.length == 0){
+            datoUserPermiso = true;
+            permisos = await traerPermisosUnidad(carpeta, dato.idUnidad);
+            }
+    }
+    if (tipo == 1) {
+        dato = await findUnidadById(dato);
+        permisos = await traerPermisosUnidad(carpeta, dato.id);
+    }
+    dato = mutarDato(dato)
+    console.log('dato',dato);
+    console.log('datoUserPermiso',datoUserPermiso);
+    let permisosUN = JSON.parse(permisos[0].permisos);
+    console.log('tipo == 0 es usuario, 1 es unidad',tipo);
+    console.log('permiso de usuario', permisosUN);
+
+    let iconos = ['fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
+    /*=============================================================================================================//
+                                                Modal de permisos carpeta y documentos
+    //==============================================================================================================*/
+    var html = "";
+    html += '<div class="modal fade" id="exampleModalPermisosUser" tabindex="-1" aria-labelledby="exampleModalPermisosUser" aria-hidden="true">'
+    html += '<div class="modal-dialog">'
+    html += '<div class="modal-content">'
+    html += '<div class="modal-header bg-black">'
+    html += '<h5 class="modal-title text-white">Editar Permisos</h5>'
+    html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+    html += '</div>'
+    html += '<div class="modal-body">'
+    html += '<h3 class="text-black"><strong>' + dato.nombre.toUpperCase() + '</strong></h3>';
+
+    html += '<h5 class="text-black mt-4 mb-1">Permisos de Carpeta <i class="fa-solid fa-folder-open fa-lg" style="margin-left:5px"></i></h5>';
+    html += '<div class="unido_alerta">'
+
+    html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
+    html += '<div class="row p-3">'
+    permisosUN.forEach((permiso, index) => {
+        if (permiso.type == "carpeta") {
+            if (permiso.id == 1) {
+                html += '<div  class="d-flex justify-content-between w-100">'
+                html += '<div class="d-flex " >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+                html += '</div>'
+                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox"' + (permiso.status == true ? 'checked' : '') + '>'
+                html += '</div>'
+
+                html += '<div class="d-flex" >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
+                html += '<label>Heredar Permisos</label>'
+                html += '</div>'
+                html += '<input class="form-check-input" id="heredar" type="checkbox">'
+                html += '</div>'
+                html += '</div>'
+            } else {
+                html += '<div class="d-flex" >'
+                html += '<div  style="width:160px" >'
+                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+                html += '</div>'
+
+                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox" ' + (permiso.status == true ? 'checked' : '') + '>'
+
+                html += '</div>'
+            }
+        }
+    })
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+
+    html += '<h5 class="text-black mt-4 mb-1">Permisos de Documento<i class="fa-solid fa-file-pdf fa-lg" style="margin-left:5px"></i></h5>';
+    html += '<div class="unido_alerta">'
+    html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
+
+    html += '<div class="row p-3">'
+    permisosUN.forEach((permiso, index) => {
+
+        if (permiso.type == "documento") {
+            html += '<div class="d-flex ">'
+            html += '<div  style="width:160px">'
+            html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+            html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+            html += '</div>'
+            html += '<input class="form-check-input permiso" id="' + permiso.id + '"  type="checkbox" ' + (permiso.status == true ? 'checked' : '') + '>'
+            html += '</div>'
+        }
+    })
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+
+    html += '<div class="w-100"  id="alertasPermisosUser">'
+    html += '</div>'
+    html += '</div>'
+    html += '<div class="modal-footer mt-2 d-flex justify-content-between">';
+    if(datoUserPermiso == true){
+        html += `<div id="passwordHelp" class="form-text">* Permisos Heredados de la Unidad <strong>${dato.unidad}</strong></div>`
+    } else{
+        html += '<div>'
+        html += '</div>'  
+    }
+    html += '<div>'
+    html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+    html += `<button type="button" class="btn btn-success" style="margin-left:5px" onclick="savePermisos(${carpeta},${dato.id},${tipo})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
+    html += '</div>'
+    html += '</div>';
+    html += '</div>'
+    document.getElementById('modales').innerHTML = html;
+    $("#selectMover").select2({
+        dropdownParent: $("#exampleModalPermisosUser")
+    });
+    $('#exampleModalPermisosUser').modal('show');
+}
+
 let cont = 0;
 document.addEventListener('click', function (e) {
     let permisos = document.querySelectorAll('.permiso')
@@ -737,111 +886,141 @@ document.addEventListener('click', function (e) {
             cont = 0;
             if (e.target.checked == false && permiso.id != 1) {
                 permiso.checked = false;
-                console.log('permisi', permiso.id);
                 permiso.parentNode.classList.add('apagar');
                 if (permiso.id == 4) {
                     permiso.parentNode.classList.remove('apagar');
                 }
             } else if (e.target.checked == true) {
                 if (permiso.id != 1 && permiso.id < 4) {
-                    permiso.parentNode.classList.toggle('apagar');
+                    permiso.parentNode.classList.remove('apagar');
                     permiso.checked = false;
                 }
             }
         } else if (e.target.id == 4 && e.target.classList.contains('permiso')) {
-            if (permiso.id != 4 && permiso.id > 4) {
-                permiso.parentNode.classList.toggle('apagar');
-                permiso.checked = false;
+            if (e.target.checked == false) {
+                if (permiso.id != 4 && permiso.id > 4) {
+                    permiso.parentNode.classList.add('apagar');
+                    permiso.checked = false;
+                }
+            } else if (e.target.checked == true) {
+                if (permiso.id != 4 && permiso.id > 4) {
+                    permiso.parentNode.classList.remove('apagar');
+                    permiso.checked = false;
+                }
             }
         }
     })
-
 })
 
-async function savePermisosUser(carpeta, usuario) {
+async function savePermisos(carpeta, dato,tipo) {
+    console.log('tipo',tipo);
     let heredar = document.getElementById('heredar').checked
     let permisos = document.querySelectorAll('.permiso')
     permisos = Array.apply(null, permisos);
+    let cont = 0;
+    var html = "";
 
     let idPermisos = permisos
         .filter(permiso => permiso.checked)
         .map(permiso => permiso.id);
 
-
     let verSeccion = null;
     let permisosArray = permisosDefault
         .filter(permiso => {
             if (permiso.id === 1) {
-                verSeccion = idPermisos.includes(permiso.id.toString()) ? true : false; // Actualizar el status del objeto con permiso.id igual a 1
-                return false; // Excluir el objeto con permiso.id igual a 1 del array permisosArray
+                verSeccion = idPermisos.includes(permiso.id.toString()) ? true : false;
             }
-            return true; // Incluir los demás objetos en el array permisosArray
+            return true;
         })
         .map(permiso => ({
             ...permiso,
             status: idPermisos.includes(permiso.id.toString()) ? true : permiso.status
         }));
 
-    console.log('permisoId', verSeccion);
-    console.log('permisos Array', permisosArray);
-
-        const datos = new FormData()
-        datos.append('idSeccion', carpeta);
-        datos.append('verSeccion', verSeccion);
-        datos.append('heredar', heredar);
-        datos.append('idUser', usuario);
-        datos.append('permisos', JSON.stringify(permisosArray));
-        console.log([...datos]);
-
-        let url = URL_BASE + '/permisos';
-        const request = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'token': token
-            },
-            body: datos
-        });
-        //  respuesta de la peticion de arriba, me arroja true o false
-        const response = await request.json();
-        console.log(response);
-        if (response.exito) {
-            Swal.fire({
-                position: 'top-end',
-                icon: 'success',
-                title: response.exito,
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                dibujarCarpeta(carpeta)
+        if(verSeccion == false){
+            permisos.forEach(permiso => {
+                if(permiso.id > 3 && permiso.checked == true){
+                    cont++
+                }
             })
-        } else if (response.error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'ERROR',
-                text: response.error
-            }).then(() => {
-                dibujarCarpeta(carpeta)
-            })
-        } else if (response.exit) {
-            Swal.fire({
-                icon: 'warning',
-                title: response.exit,
-                showConfirmButton: false,
-                text: 'Sesión expirada, vuelva a iniciar sesión',
-                timer: 3000
-            }).then(() => {
-                window.location.href = URL_BASE + "/?r=8";
-            })
-        } else {
-            html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
-            response.alertas.error.forEach(alerta => {
-                html += '<li class="text-danger"  >'
-                html += alerta
-                html += '</li>'
-            })
-            html += '</ul>'
-            document.getElementById('alertas').innerHTML = html;
         }
+
+    if (cont != 0) {
+        html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+        html += '<li class="text-danger">'
+        html += 'Ver Carpeta debe activarse para dar permisos a los Documentos'
+        html += '</li>'
+        document.getElementById('alertasPermisosUser').innerHTML = html;
+        alertas()
+        return;
+    }
+    const datos = new FormData()
+    datos.append('idSeccion', carpeta);
+    datos.append('verSeccion', verSeccion);
+    datos.append('heredar', heredar);
+    if(tipo == 0){
+        datos.append('idUser', dato);
+    } else if(tipo == 1){
+        datos.append('idUnidad', dato);
+    }
+    datos.append('permisos', JSON.stringify(permisosArray));
+    console.log([...datos]);
+    let url;
+    if(tipo == 0){
+        url = URL_BASE + '/permisos/user';
+    } else if(tipo == 1){
+        url = URL_BASE + '/permisos/unidad';
+    }
+    const request = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'token': token
+        },
+        body: datos
+    });
+    //  respuesta de la peticion de arriba, me arroja true o false
+    const response = await request.json();
+    console.log(response);
+    if (response.exito) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: response.exito,
+            showConfirmButton: false,
+            timer: 1500
+        }).then(() => {
+            dibujarCarpeta(carpeta)
+            $('#exampleModalPermisosUser').modal('hide');
+        })
+    } else if (response.error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ERROR',
+            text: response.error
+        }).then(() => {
+            dibujarCarpeta(carpeta)
+            $('#exampleModalPermisosUser').modal('hide');
+        })
+    } else if (response.exit) {
+        Swal.fire({
+            icon: 'warning',
+            title: response.exit,
+            showConfirmButton: false,
+            text: 'Sesión expirada, vuelva a iniciar sesión',
+            timer: 3000
+        }).then(() => {
+            window.location.href = URL_BASE + "/?r=8";
+        })
+    } else {
+        html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+        response.alertas.error.forEach(alerta => {
+            html += '<li class="text-danger"  >'
+            html += alerta
+            html += '</li>'
+        })
+        html += '</ul>'
+        document.getElementById('alertas').innerHTML = html;
+    }
     alertas();
 }
 

@@ -93,19 +93,33 @@ class UserController
                 $user->hashPassword();
                 $resultado = $user->guardar();
                 $idUser = $resultado['id'];
-                if ($idUser) {
-                    $resolve = [
-                        'exito' => 'Usuario creado CORRECTAMENTE'
-                    ];
-                    echo json_encode($resolve);
-                    return;
-                } else {
+                if ($resultado['resultado'] !== true) {
                     $resolve = [
                         'error' => 'Ocurrió un ERROR al guardar el usuario'
                     ];
                     echo json_encode($resolve);
                     return;
+                } 
+                $permisos = SeccionUnidad::whereTodos('idUnidad',$user->idUnidad);
+                foreach($permisos as $permiso){
+                    $d = $permiso->atributos();
+                    $permisoUser = new SeccionUser($d);
+                    $permisoUser->idUser = $idUser;
+                    $resultado = $permisoUser->guardar();
+                    if ($resultado['resultado'] !== true) {
+                        $resolve = [
+                            'error' => 'Ocurrió un ERROR al guardar el usuario'
+                        ];
+                        echo json_encode($resolve);
+                        return;
+                    } 
                 }
+
+                $resolve = [
+                    'exito' => 'Usuario creado CORRECTAMENTE'
+                ];
+                echo json_encode($resolve);
+                return;
             } else {
                 $resolve = [
                     'alertas' => $alertas
@@ -353,15 +367,15 @@ class UserController
                     break;
                 case 'usuario':
                     $id = $_POST['id'];
-                    $consulta = "SELECT u.id,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,u.estado,u.created_at,u.updated_at FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad WHERE u.id = $id";
+                    $consulta = "SELECT u.id,u.idUnidad,u.nombre,u.cedula,u.celular,u.email,r.rol,un.unidad,u.estado,u.created_at,u.updated_at FROM user u INNER JOIN roles r ON r.id = u.idRol INNER JOIN unidad un ON un.id = u.idUnidad WHERE u.id = $id";
                     $user = User::consultaPlana($consulta);
                     echo json_encode(array_shift($user));
                     break;
                 case 'permisosUserCarpeta':
                     $idUser = $_POST['idUser'];
                     $idSeccion = $_POST['idSeccion'];
-                    $consulta = "SELECT su.*,u.nombre,s.seccion FROM seccion_user su INNER JOIN user u on u.id = su.idUser INNER JOIN seccion s ON s.id = su.idSeccion WHERE su.idUser = $idUser and su.idSeccion = $idSeccion";
-                    $todos = User::consultaPlana($consulta);
+                    $consulta = "SELECT su.*,u.nombre,s.seccion FROM seccion_user su INNER JOIN user u on u.id = su.idUser INNER JOIN seccion s ON s.id = su.idSeccion WHERE su.idUser = $idUser and su.idSeccion = $idSeccion LIMIT 1";
+                    $todos = SeccionUser::consultaPlana($consulta);
                     echo json_encode($todos);
                     break;
                 case 'unidades':

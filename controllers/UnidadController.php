@@ -68,7 +68,7 @@ class UnidadController
                     $idUnidad = $_POST['idUnidad'];
                     $idSeccion = $_POST['idSeccion'];
                     $consulta = "SELECT su.*,u.unidad,s.seccion FROM seccion_unidad su INNER JOIN unidad u on u.id = su.idUnidad INNER JOIN seccion s ON s.id = su.idSeccion WHERE su.idUnidad = $idUnidad and su.idSeccion = $idSeccion";
-                    $permisos = Unidad::consultaPlana($consulta);
+                    $permisos = SeccionUnidad::consultaPlana($consulta);
                     echo json_encode($permisos);
                     break;
                 case 'usersUnidad':

@@ -11,6 +11,7 @@ class SeccionUnidad extends ActiveRecord
     public $id;
     public $idUnidad;
     public $idSeccion;
+    public $verSeccion;
     public $permisos;
     public $created_at;
     public $updated_at;
@@ -20,6 +21,7 @@ class SeccionUnidad extends ActiveRecord
         $this->id = $args['id'] ?? null;
         $this->idUnidad = $args['idUnidad'] ?? '';
         $this->idSeccion = $args['idSeccion'] ?? '';
+        $this->verSeccion = $args['verSeccion'] ?? 0;
         $this->permisos = $args['permisos'] ?? '';
     }
     

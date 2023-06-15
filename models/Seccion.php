@@ -4,6 +4,7 @@
 namespace Model;
 
 use Exception;
+use Model\SeccionUnidad;
 
 class Seccion extends ActiveRecord
 {
@@ -152,7 +153,7 @@ class Seccion extends ActiveRecord
         return true;
     }
 
-    public static function updatePermisosPadre($idPadre, $idSeccion, $idUser, $verSeccion)
+    public static function updatePermisosPadreUser($idPadre, $idSeccion, $idUser, $verSeccion)
     {
         $idCarpetas = [];
 
@@ -164,15 +165,31 @@ class Seccion extends ActiveRecord
         array_push($idCarpetas, $idSeccion);
         foreach ($idCarpetas as $idCarpeta) {
             $permiso = SeccionUser::whereCampos('idUser', $idUser, 'idSeccion', $idCarpeta);
-            dd($permiso);
+
             $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-            echo $permiso->verSeccion . "-" . $idCarpeta . "<br>";
-            echo "----------------" . "<br>";
             $permiso->verSeccion = $verSeccion;
-            echo $permiso->verSeccion . "<br>";
             // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
         }
-        return ;
+        return;
+    }
+
+    public static function updatePermisosPadreUnidad($idPadre, $idSeccion, $idUnidad, $verSeccion)
+    {
+        $idCarpetas = [];
+
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id', $idPadre);
+            array_push($idCarpetas, $secPadre->id);
+            $idPadre = $secPadre->idPadre;
+        }
+        array_push($idCarpetas, $idSeccion);
+        foreach ($idCarpetas as $idCarpeta) {
+            $permiso = SeccionUnidad::whereCampos('idUnidad', $idUnidad, 'idSeccion', $idCarpeta);
+            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
+            $permiso->verSeccion = $verSeccion;
+            // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
+        }
+        return;
     }
 
     public static function getIdFolderPath($idPadre, $idSeccion)

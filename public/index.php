@@ -53,7 +53,8 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/datos',[SeccionController::class
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/delete',[SeccionController::class,'delete']);
 
 $router->get($_ENV['NOMBRE_CARPETA'].'/permisos',[PermisoController::class,'permisos']);
-$router->post($_ENV['NOMBRE_CARPETA'].'/permisos',[PermisoController::class,'permisos']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/permisos/user',[PermisoController::class,'permisosUser']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/permisos/unidad',[PermisoController::class,'permisosUnidad']);
 
 $router->get($_ENV['NOMBRE_CARPETA'].'/permisos/carpeta',[SeccionController::class,'permisosByCarpeta']);
 
