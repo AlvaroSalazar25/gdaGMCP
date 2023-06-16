@@ -41,17 +41,27 @@ class PermisoController
             try {
                 $permiso = new SeccionUser($_POST);
                 $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-                $permiso->guardarPermiso('idUser', $permiso->idUser);
-                if ($_POST['heredar'] == 'false') {
+                $seccion = Seccion::find($permiso->idSeccion);
+                $respuesta = Seccion::updatePermisosPadreUser($seccion->idPadre, $seccion->id, $permiso->idUser, $permiso->verSeccion);
+                if ($respuesta != true) {
+                    $resolve = ['error' => 'No se pudo guardar los Permisos'];
+                    echo json_encode($resolve);
+                    return;
+                }
+                if ($_POST['heredar'] == 'false' && $permiso->verSeccion == true) {
+                    $permiso->guardarPermiso('idUser', $permiso->idUser);
                     $resolve = ['exito' => 'Permisos Guardados con éxito'];
                     echo json_encode($resolve);
                     return;
                 }
-                $carpetas = Seccion::getCarpetasHijos(intval($permiso->idSeccion)); // para los permisos heredados de esta carpeta hacia abajo (hijos)
-                $seccion = Seccion::find($permiso->idSeccion);
-                $hola = Seccion::updatePermisosPadreUser($seccion->idPadre, $seccion->id, $permiso->idUser, $permiso->verSeccion);
+                // para los permisos heredados de esta carpeta hacia abajo (hijos)
+                $carpetas = Seccion::getCarpetasHijos(intval($permiso->idSeccion));
+                array_push($carpetas, $permiso->idSeccion);
                 if (!empty($carpetas)) {
                     foreach ($carpetas as $carpeta) {
+                        if ($permiso->verSeccion == false && $_POST['heredar'] == 'false') {
+                            $permiso->verSeccion = false;
+                        }
                         $permiso->idSeccion = $carpeta;
                         $permiso->guardarPermiso('idUser', $permiso->idUser);
                     }

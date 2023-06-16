@@ -637,7 +637,6 @@ async function modalPermiso(carpeta, dato, tipo) {
     if (tipo == 0) {
         permisos = await traerPermisosUser(carpeta, dato);
         let user = await findUserById(dato);
-        console.log('usereeee',user);
         if(permisos.length == 0){
             permisos = await traerPermisosUnidad(carpeta, user.idUnidad);
             }
@@ -859,7 +858,7 @@ async function crearModalEditarPermisos(carpeta, dato, tipo) {
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-between">';
     if(datoUserPermiso == true){
-        html += `<div id="passwordHelp" class="form-text">* Permisos Heredados de la Unidad <strong>${dato.unidad}</strong></div>`
+        html += `<div class="form-text">* Permisos Heredados de la Unidad <strong>${dato.unidad}</strong></div>`
     } else{
         html += '<div>'
         html += '</div>'  

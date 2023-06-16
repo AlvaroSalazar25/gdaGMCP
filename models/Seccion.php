@@ -155,22 +155,45 @@ class Seccion extends ActiveRecord
 
     public static function updatePermisosPadreUser($idPadre, $idSeccion, $idUser, $verSeccion)
     {
-        $idCarpetas = [];
+        try {
+            $cont = 0;
+            $carpetasHijas = [];
+            $carpetasHijasPadre = Seccion::whereTodos('idPadre', $idPadre);
+            foreach ($carpetasHijasPadre as $carpeta) {
+                array_push($carpetasHijas, $carpeta->id);
+            };
+            
+            foreach ($carpetasHijas as $carpeta) {
+                $permisoCarpetasHijas = SeccionUser::whereCampos('idUser', $idUser, 'idSeccion', $carpeta);
+                if ($permisoCarpetasHijas) {
+                    $cont++;
+                }
+            };
 
-        while ($idPadre != 0) {
-            $secPadre = Seccion::where('id', $idPadre);
-            array_push($idCarpetas, $secPadre->id);
-            $idPadre = $secPadre->idPadre;
-        }
-        array_push($idCarpetas, $idSeccion);
-        foreach ($idCarpetas as $idCarpeta) {
-            $permiso = SeccionUser::whereCampos('idUser', $idUser, 'idSeccion', $idCarpeta);
+            $idCarpetas = [];
+            while ($idPadre != 0) {
+                $secPadre = Seccion::where('id', $idPadre);
+                array_push($idCarpetas, $secPadre->id);
+                $idPadre = $secPadre->idPadre;
+            };
 
-            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-            $permiso->verSeccion = $verSeccion;
-            // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
+            foreach ($idCarpetas as $idCarpeta) {
+                $permiso = new SeccionUser();
+                $permiso->idUser = $idUser;
+                $permiso->idSeccion = $idCarpeta;
+                if ($cont == 0) {
+                    $permiso->verSeccion = false;
+                } else{
+                    $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
+                    $permiso->verSeccion = $verSeccion;
+                }
+                $permiso->guardarPermiso('idUser', $permiso->idUser);
+            }
+            return true;
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return false;
         }
-        return;
     }
 
     public static function updatePermisosPadreUnidad($idPadre, $idSeccion, $idUnidad, $verSeccion)
