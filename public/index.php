@@ -46,7 +46,7 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/unidad/datos',[UnidadController::class,'
 $router->post($_ENV['NOMBRE_CARPETA'].'/unidad/delete',[UnidadController::class,'delete']);
 
 //rutas para las carpetas
-$router->get($_ENV['NOMBRE_CARPETA'].'/carpeta',[SeccionController::class,'index']);
+$router->get($_ENV['NOMBRE_CARPETA'].'/carpeta',[SeccionController::class,'carpetaById']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/create',[SeccionController::class,'create']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/update',[SeccionController::class,'update']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/datos',[SeccionController::class,'datos']);

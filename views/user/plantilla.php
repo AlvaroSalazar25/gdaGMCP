@@ -21,6 +21,7 @@
             <a class="list-group-item list-group-item-action list-group-item-light p-3 opciones" href="<?php echo $_ENV['URL_BASE']; ?>/formulario"><i class="fa-solid fa-list-ol" style="margin-right: 12px;"></i><span>Formularios</span></a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3 opciones" href="<?php echo $_ENV['URL_BASE']; ?>/carpeta"><i class="fa-regular fa-folder-open" style="margin-right: 12px;"></i><span>Carpetas</span></a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3 opciones" href="<?php echo $_ENV['URL_BASE']; ?>/error"><i class="fa-solid fa-circle-exclamation" style="margin-right: 12px;"></i><span>Errores</span></a>
+
         </div>
     </div>
     <!-- Page content wrapper-->

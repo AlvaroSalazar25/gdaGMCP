@@ -186,6 +186,13 @@ class ActiveRecord
                 return array_shift($resultado);
         }
 
+        public static function whereCamposTodos($columna, $valor, $columna2, $valor2)
+        {
+                $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor' AND $columna2 = '$valor2'";
+                $resultado = self::consultarSQL($query);
+                return $resultado;
+        }
+
         public static function whereTodos($columna, $valor)
         {
                 $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor'";
@@ -198,6 +205,13 @@ class ActiveRecord
                 $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor'";
                 $resultados = self::consultaPlana($query);
                 return  $resultados;
+        }
+
+        public static function whereCamposCarpetas($columna, $valor, $columna2, $valor2, $columna3, $valor3)
+        {
+                $query = "SELECT * FROM " . static::$tabla  . " WHERE  $columna = '$valor' AND $columna2 = '$valor2' AND $columna3 = '$valor3'";
+                $resultado = self::consultarSQL($query);
+                return $resultado;
         }
 
         // Obtener Registros con cierta cantidad

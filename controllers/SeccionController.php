@@ -58,6 +58,30 @@ class SeccionController
         }
     }
 
+    public static function carpetaById(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        $alertas = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if (!is_numeric($_GET['id'])) {
+                header('Location:' . $_ENV['URL_BASE'] . '/carpeta?id=0');
+                return;
+            }; // aqui arreglar la vista de las secciones, esta cambiado el nombre d ela funcion en el index
+            $carpetas = SeccionUser::whereCamposCarpetas('idUser',$_SESSION['id'],'idPadre',intval($_GET['id']),'verSeccion',1);
+            if(empty($carpetas)){
+                header('Location:' . $_ENV['URL_BASE'] . '/carpeta?id=0');
+                return;
+            }
+            $router->render('user/carpetas', [
+                'alertas' => $alertas,
+            ]);
+        }
+    }
+
     public static function datos(Router $router)
     {
         $validar = JsonWT::validateJwt(token);

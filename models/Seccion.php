@@ -43,7 +43,7 @@ class Seccion extends ActiveRecord
             self::$alertas['error'][] = 'El Nombre de la Sección no debe contener caracteres especiales';
         }
 
-        $nombre = Seccion::whereUnidad('seccion', $this->seccion, 'idPadre', $this->idPadre);
+        $nombre = Seccion::whereCampos('seccion', strtolower($this->seccion), 'idPadre', intval($this->idPadre));
         if ($nombre) {
             if ($this->id != $nombre->id) {
                 self::$alertas['error'][] = 'La carpeta ya existe';
@@ -153,66 +153,92 @@ class Seccion extends ActiveRecord
         return true;
     }
 
-    public static function updatePermisosPadreUser($idPadre, $idSeccion, $idUser, $verSeccion)
+    public static function updatePermisosPadreUser($idPadre, $idSeccion, $idUser, $verSeccion, $accion)
     {
         try {
             $cont = 0;
-            $carpetasHijas = [];
-            $carpetasHijasPadre = Seccion::whereTodos('idPadre', $idPadre);
-            foreach ($carpetasHijasPadre as $carpeta) {
-                array_push($carpetasHijas, $carpeta->id);
-            };
-            
-            foreach ($carpetasHijas as $carpeta) {
-                $permisoCarpetasHijas = SeccionUser::whereCampos('idUser', $idUser, 'idSeccion', $carpeta);
-                if ($permisoCarpetasHijas) {
+            $permisoCarpetasHijas = SeccionUser::whereCamposTodos('idUser', $idUser, 'idPadre', $idPadre);
+            foreach ($permisoCarpetasHijas as $carpetaHijas) {
+                if ($carpetaHijas->verSeccion == true && $carpetaHijas->idSeccion != $idSeccion) {
                     $cont++;
                 }
-            };
-
+            }
+            if ($verSeccion == true) {
+                $cont++;
+            }
             $idCarpetas = [];
             while ($idPadre != 0) {
                 $secPadre = Seccion::where('id', $idPadre);
                 array_push($idCarpetas, $secPadre->id);
                 $idPadre = $secPadre->idPadre;
-            };
-
+            }
             foreach ($idCarpetas as $idCarpeta) {
                 $permiso = new SeccionUser();
                 $permiso->idUser = $idUser;
-                $permiso->idSeccion = $idCarpeta;
-                if ($cont == 0) {
-                    $permiso->verSeccion = false;
-                } else{
-                    $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-                    $permiso->verSeccion = $verSeccion;
+                $seccion = Seccion::find($idCarpeta);
+                $permiso->idSeccion = $seccion->id;
+                $permiso->idPadre = $seccion->idPadre;
+                switch ($accion) {
+                    case 0:
+                        $permiso->verSeccion = $verSeccion;
+                        break;
+                    case 1:
+                        $permiso->verSeccion = ($cont == 0) ? false : true;
+                        break;
+                    default:
+                        $permiso->verSeccion = false;
+                        break;
                 }
                 $permiso->guardarPermiso('idUser', $permiso->idUser);
             }
             return true;
         } catch (Exception $e) {
-            dd($e->getMessage());
             return false;
         }
     }
 
-    public static function updatePermisosPadreUnidad($idPadre, $idSeccion, $idUnidad, $verSeccion)
+    public static function updatePermisosPadreUnidad($idPadre, $idSeccion, $idUnidad, $verSeccion,$accion)
     {
-        $idCarpetas = [];
-
-        while ($idPadre != 0) {
-            $secPadre = Seccion::where('id', $idPadre);
-            array_push($idCarpetas, $secPadre->id);
-            $idPadre = $secPadre->idPadre;
+        try {
+            $cont = 0;
+            $permisoCarpetasHijas = SeccionUnidad::whereCamposTodos('idUnidad', $idUnidad, 'idPadre', $idPadre);
+            foreach ($permisoCarpetasHijas as $carpetaHijas) {
+                if ($carpetaHijas->verSeccion == true && $carpetaHijas->idSeccion != $idSeccion) {
+                    $cont++;
+                }
+            }
+            if ($verSeccion == true) {
+                $cont++;
+            }
+            $idCarpetas = [];
+            while ($idPadre != 0) {
+                $secPadre = Seccion::where('id', $idPadre);
+                array_push($idCarpetas, $secPadre->id);
+                $idPadre = $secPadre->idPadre;
+            }
+            foreach ($idCarpetas as $idCarpeta) {
+                $permiso = new SeccionUnidad();
+                $permiso->idUnidad = $idUnidad;
+                $seccion = Seccion::find($idCarpeta);
+                $permiso->idSeccion = $seccion->id;
+                $permiso->idPadre = $seccion->idPadre;
+                switch ($accion) {
+                    case 0:
+                        $permiso->verSeccion = $verSeccion;
+                        break;
+                    case 1:
+                        $permiso->verSeccion = ($cont == 0) ? false : true;
+                        break;
+                    default:
+                        $permiso->verSeccion = false;
+                        break;
+                }
+                $permiso->guardarPermiso('idUnidad', $permiso->idUnidad);
+            }
+            return true;
+        } catch (Exception $e) {
+            return false;
         }
-        array_push($idCarpetas, $idSeccion);
-        foreach ($idCarpetas as $idCarpeta) {
-            $permiso = SeccionUnidad::whereCampos('idUnidad', $idUnidad, 'idSeccion', $idCarpeta);
-            $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
-            $permiso->verSeccion = $verSeccion;
-            // $sql .= ($index != count($idCarpetas) - 1) ? "'$idCarpeta'," : "'$idCarpeta'";
-        }
-        return;
     }
 
     public static function getIdFolderPath($idPadre, $idSeccion)

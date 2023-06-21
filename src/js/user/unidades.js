@@ -144,7 +144,7 @@ function dibujarUnidades(unidadesActualizadas) {
     html += '<th>N°</th>'
     html += '<th class="">Unidad</th>'
     html += '<th class="">Jefe</th>'
-    html += '<th class="col-2">Sección</th>'
+    html += '<th class="col-2">Carpetas</th>'
     html += '<th class="col-2">Permisos</th>'
     html += '<th class="col-2">Acciones</th>'
     html += '</tr>'
@@ -157,16 +157,14 @@ function dibujarUnidades(unidadesActualizadas) {
         html += '<td>' + unidad.unidad + '</td>'
         html += '<td>' + unidad.jefe + '</td>'
         const secciones = JSON.parse(unidad.seccion)
-        //console.log('secciones', secciones);
         html += '<td>'
         if (secciones.length == 0) {
-            html += '<p class="text-danger" style="font-size:13px;margin-right:10px">Sin secciones</p>'
+            html += '<p class="text-danger" style="font-size:13px;margin-right:10px">Sin Carpetas</p>'
         } else {
             html += '<ul class="ultimoNo" style="height:44px;margin-bottom:0px;">'
             secciones.forEach((seccion, index) => {
                 html += '<li  style="font-size:14px;margin-bottom:10px">' + seccion.seccion + '</li>'
                 const permisos = JSON.parse(seccion.permisos)
-                permisoU.push(permisos);
             })
             html += '</ul>'
         }
@@ -182,7 +180,7 @@ function dibujarUnidades(unidadesActualizadas) {
                 html += '<button class="btn btn-secondary dropdown-toggle" id="dropdownMenu' + unidad.id + contador + '" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ver Permisos</button>'
                 html += '<div class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenu' + unidad.id + contador + '">'
                 permiso.forEach(permi => {
-                    if (permi.status == 'true') {
+                    if (permi.status == true) {
                         html += '<p  class="dropdown-item"><i class="fa-solid fa-check text-success" style="margin-right:8px"></i>' + permi.nombre + '</p>'
                         html += '<div class="ultimoNo "></div>'
                     } else {
@@ -202,6 +200,7 @@ function dibujarUnidades(unidadesActualizadas) {
         html += '<a class="btn btn-danger botonAccionesUnidad" onclick="eliminarUnidad(' + unidad.id + ')"><i class="fa-solid fa-trash marginIcon"></i>Eliminar</a>'
         html += '</div>'
         html += '</td>'
+        html += '</tr>'
     })
     html += '</tbody>';
     html += '</table>'

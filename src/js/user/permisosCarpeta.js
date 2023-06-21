@@ -6,13 +6,6 @@ let secciones;
 let roles;
 let permisosDefault = [
     {
-        "id": 1,
-        "status": false,
-        "nombre": "Ver_Carpeta",
-        "type": "carpeta",
-        "descripcion": "Permiso para ver carpetas",
-    },
-    {
         "id": 2,
         "status": false,
         "nombre": "Crear_Carpeta",
@@ -637,9 +630,9 @@ async function modalPermiso(carpeta, dato, tipo) {
     if (tipo == 0) {
         permisos = await traerPermisosUser(carpeta, dato);
         let user = await findUserById(dato);
-        if(permisos.length == 0){
+        if (permisos.length == 0) {
             permisos = await traerPermisosUnidad(carpeta, user.idUnidad);
-            }
+        }
     } else if (tipo == 1) {
         permisos = await traerPermisosUnidad(carpeta, dato);
     }
@@ -651,7 +644,7 @@ async function modalPermiso(carpeta, dato, tipo) {
     }
 }
 
-async function crearModalAgregarPermisos(carpeta, dato, tipo) {
+async function crearModalAgregarPermisos(carpeta, dato, tipo,) {
     if (tipo == 0) {
         dato = await findUserById(dato);
     }
@@ -660,7 +653,7 @@ async function crearModalAgregarPermisos(carpeta, dato, tipo) {
     }
 
     dato = mutarDato(dato)
-    let iconos = ['fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
+    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
     /*=============================================================================================================//
                                                 Modal de permisos carpeta y documentos
     //==============================================================================================================*/
@@ -681,37 +674,33 @@ async function crearModalAgregarPermisos(carpeta, dato, tipo) {
     html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
     html += '<div class="row p-3">'
 
+    html += '<div  class="d-flex justify-content-between w-100">'
+    html += '<div class="d-flex " >'
+    html += '<div  style="width:160px" >'
+    html += `<i class="fa-solid fa-eye fa-xl" style="margin-right:5px"></i>`
+    html += '<label>Ver Carpeta</label>'
+    html += '</div>'
+    html += '<input class="form-check-input permiso" id="1" type="checkbox">'
+    html += '</div>'
+
+    html += '<div class="d-flex" >'
+    html += '<div  style="width:160px" >'
+    html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
+    html += '<label>Heredar Permisos</label>'
+    html += '</div>'
+    html += '<input class="form-check-input" id="heredar" type="checkbox">'
+    html += '</div>'
+    html += '</div>'
+
     permisosDefault.forEach((permiso, index) => {
         if (permiso.type == "carpeta") {
-            if (permiso.id == 1) {
-                html += '<div  class="d-flex justify-content-between w-100">'
-                html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
-                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
-                html += '</div>'
-                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
-                html += '</div>'
-
-                html += '<div class="d-flex" >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
-                html += '<label>Heredar Permisos</label>'
-                html += '</div>'
-                html += '<input class="form-check-input" id="heredar" type="checkbox">'
-                html += '</div>'
-                html += '</div>'
-            } else {
-                html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
-                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
-                html += '</div>'
-
-                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
-
-                html += '</div>'
-            }
+            html += '<div class="d-flex ' + (permiso.id != 1 ? 'apagar' : '') + '" >'
+            html += '<div  style="width:160px" >'
+            html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+            html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+            html += '</div>'
+            html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox">'
+            html += '</div>'
         }
     })
     html += '</div>'
@@ -743,7 +732,7 @@ async function crearModalAgregarPermisos(carpeta, dato, tipo) {
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-end">';
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    html += `<button type="button" class="btn btn-success" onclick="savePermisos(${carpeta},${dato.id},${tipo})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
+    html += `<button type="button" class="btn btn-success" onclick="savePermisos(${carpeta},${dato.id},${tipo},0)"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
     html += '</div>';
     html += '</div>'
     document.getElementById('modales').innerHTML = html;
@@ -756,26 +745,24 @@ async function crearModalAgregarPermisos(carpeta, dato, tipo) {
 async function crearModalEditarPermisos(carpeta, dato, tipo) {
     let permisos;
     let datoUserPermiso = false;
+    let accion = 1;
     if (tipo == 0) {
         dato = await findUserById(dato);
         permisos = await traerPermisosUser(carpeta, dato.id);
-        if(permisos.length == 0){
+        if (permisos.length == 0) {
             datoUserPermiso = true;
             permisos = await traerPermisosUnidad(carpeta, dato.idUnidad);
-            }
+            accion = 0;
+        }
     }
     if (tipo == 1) {
         dato = await findUnidadById(dato);
         permisos = await traerPermisosUnidad(carpeta, dato.id);
     }
     dato = mutarDato(dato)
-    console.log('dato',dato);
-    console.log('datoUserPermiso',datoUserPermiso);
     let permisosUN = JSON.parse(permisos[0].permisos);
-    console.log('tipo == 0 es usuario, 1 es unidad',tipo);
-    console.log('permiso de usuario', permisosUN);
-
-    let iconos = ['fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
+    console.log('permisos',permisos);
+    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
     /*=============================================================================================================//
                                                 Modal de permisos carpeta y documentos
     //==============================================================================================================*/
@@ -793,39 +780,36 @@ async function crearModalEditarPermisos(carpeta, dato, tipo) {
     html += '<h5 class="text-black mt-4 mb-1">Permisos de Carpeta <i class="fa-solid fa-folder-open fa-lg" style="margin-left:5px"></i></h5>';
     html += '<div class="unido_alerta">'
 
+    // ============================================================================
     html += '<div class="mb-2" style="border:1px solid #bcbcbc;border-radius:5px">'
     html += '<div class="row p-3">'
+
+    html += '<div  class="d-flex justify-content-between w-100">'
+    html += '<div class="d-flex " >'
+    html += '<div  style="width:160px" >'
+    html += `<i class="fa-solid fa-eye fa-xl" style="margin-right:5px"></i>`
+    html += '<label>Ver Carpeta</label>'
+    html += '</div>'
+    html += '<input class="form-check-input permiso" id="1" type="checkbox"' + (permisos[0].verSeccion == true ? 'checked' : '') + '>'
+    html += '</div>'
+
+    html += '<div class="d-flex" >'
+    html += '<div  style="width:160px" >'
+    html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
+    html += '<label>Heredar Permisos</label>'
+    html += '</div>'
+    html += '<input class="form-check-input" id="heredar" type="checkbox">'
+    html += '</div>'
+    html += '</div>'
     permisosUN.forEach((permiso, index) => {
         if (permiso.type == "carpeta") {
-            if (permiso.id == 1) {
-                html += '<div  class="d-flex justify-content-between w-100">'
-                html += '<div class="d-flex " >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
-                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
-                html += '</div>'
-                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox"' + (permiso.status == true ? 'checked' : '') + '>'
-                html += '</div>'
-
-                html += '<div class="d-flex" >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="fa-solid fa-right-left fa-xl" style="margin-right:5px"></i>`
-                html += '<label>Heredar Permisos</label>'
-                html += '</div>'
-                html += '<input class="form-check-input" id="heredar" type="checkbox">'
-                html += '</div>'
-                html += '</div>'
-            } else {
-                html += '<div class="d-flex" >'
-                html += '<div  style="width:160px" >'
-                html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
-                html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
-                html += '</div>'
-
-                html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox" ' + (permiso.status == true ? 'checked' : '') + '>'
-
-                html += '</div>'
-            }
+            html += '<div class="d-flex" >'
+            html += '<div  style="width:160px" >'
+            html += `<i class="${iconos[index]} fa-xl" style="margin-right:5px"></i>`
+            html += '<label>' + permiso.nombre.replaceAll("_", " ") + '</label>'
+            html += '</div>'
+            html += '<input class="form-check-input permiso" id="' + permiso.id + '" type="checkbox" ' + (permiso.status == true ? 'checked' : '') + '>'
+            html += '</div>'
         }
     })
     html += '</div>'
@@ -857,15 +841,15 @@ async function crearModalEditarPermisos(carpeta, dato, tipo) {
     html += '</div>'
     html += '</div>'
     html += '<div class="modal-footer mt-2 d-flex justify-content-between">';
-    if(datoUserPermiso == true){
+    if (datoUserPermiso == true) {
         html += `<div class="form-text">* Permisos Heredados de la Unidad <strong>${dato.unidad}</strong></div>`
-    } else{
+    } else {
         html += '<div>'
-        html += '</div>'  
+        html += '</div>'
     }
     html += '<div>'
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    html += `<button type="button" class="btn btn-success" style="margin-left:5px" onclick="savePermisos(${carpeta},${dato.id},${tipo})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
+    html += `<button type="button" class="btn btn-success" style="margin-left:5px" onclick="savePermisos(${carpeta},${dato.id},${tipo},${accion})"><i class="fa-solid fa-floppy-disk" style="margin-right:3px"></i>Guardar</button>`
     html += '</div>'
     html += '</div>';
     html += '</div>'
@@ -911,8 +895,8 @@ document.addEventListener('click', function (e) {
     })
 })
 
-async function savePermisos(carpeta, dato,tipo) {
-    console.log('tipo',tipo);
+async function savePermisos(carpeta, dato, tipo, accion) {
+    console.log('tipo', tipo);
     let heredar = document.getElementById('heredar').checked
     let permisos = document.querySelectorAll('.permiso')
     permisos = Array.apply(null, permisos);
@@ -923,11 +907,12 @@ async function savePermisos(carpeta, dato,tipo) {
         .filter(permiso => permiso.checked)
         .map(permiso => permiso.id);
 
-    let verSeccion = null;
+    let verSeccion = document.querySelector("input[id='1']").checked;
+    console.log('verSeccion',verSeccion);
     let permisosArray = permisosDefault
         .filter(permiso => {
             if (permiso.id === 1) {
-                verSeccion = idPermisos.includes(permiso.id.toString()) ? true : false;
+                return false;
             }
             return true;
         })
@@ -936,13 +921,13 @@ async function savePermisos(carpeta, dato,tipo) {
             status: idPermisos.includes(permiso.id.toString()) ? true : permiso.status
         }));
 
-        if(verSeccion == false){
-            permisos.forEach(permiso => {
-                if(permiso.id > 3 && permiso.checked == true){
-                    cont++
-                }
-            })
-        }
+    if (verSeccion == false) {
+        permisos.forEach(permiso => {
+            if (permiso.id > 3 && permiso.checked == true) {
+                cont++
+            }
+        })
+    }
 
     if (cont != 0) {
         html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
@@ -957,17 +942,18 @@ async function savePermisos(carpeta, dato,tipo) {
     datos.append('idSeccion', carpeta);
     datos.append('verSeccion', verSeccion);
     datos.append('heredar', heredar);
-    if(tipo == 0){
+    datos.append('accion', accion);
+    if (tipo == 0) {
         datos.append('idUser', dato);
-    } else if(tipo == 1){
+    } else if (tipo == 1) {
         datos.append('idUnidad', dato);
     }
     datos.append('permisos', JSON.stringify(permisosArray));
     console.log([...datos]);
     let url;
-    if(tipo == 0){
+    if (tipo == 0) {
         url = URL_BASE + '/permisos/user';
-    } else if(tipo == 1){
+    } else if (tipo == 1) {
         url = URL_BASE + '/permisos/unidad';
     }
     const request = await fetch(url, {
