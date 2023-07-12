@@ -13,7 +13,7 @@ async function iniciarApp() {
     let secs = await traerSecciones();
     let carpetas = generarCarpetas(0, secs)
     const contenedor = document.getElementById('contenedor-carpetas');
-    const arbol = dibujarArbolCarpetas(carpetas, contenedor);
+    const arbol = dibujarArbolCarpetas(carpetas);
     contenedor.append(arbol);
 }
 
@@ -94,88 +94,91 @@ function traerSecciones() {
 }
 
 function dibujarArbolCarpetas(carpeta) {
-    let nombre = carpeta.nombre[0].toUpperCase() + carpeta.nombre.substring(1)
+    let nombre = carpeta.nombre[0].toUpperCase() + carpeta.nombre.substring(1);
     const ul = document.createElement('ul');
-    ul.style = "list-style-type:none;"
-    const li = document.createElement('li');
-    li.id = 'li' + carpeta.id
+    ul.style = "list-style-type:none;";
     
-    if (carpeta.hijos.length == 0) {
+    if (carpeta.id != '0') {
+      const li = document.createElement('li');
+      li.id = 'li' + carpeta.id;
+  
+      if (carpeta.hijos.length == 0) {
         li.innerHTML = `
-        <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
-        <div id="carpeta${carpeta.id}"class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}" >
-        <a class="moverC" style="text-decoration:none ;cursor:pointer" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
-        <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
-        <span style="color:#212529"><strong>${nombre}</strong></span>
-        </a>
-        </div>
-        </div>
-      `;
-    } else {
-        let botonChevron
-        if (carpeta.id == 0) {
-            botonChevron = '<i class="fa-solid fa-chevron-up  fa-lg"></i>'
-        } else {
-            botonChevron = '<i class="fa-solid fa-chevron-down  fa-lg"></i>'
-        }
+          <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
+            <div id="carpeta${carpeta.id}" class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}">
+              <a class="moverC" style="text-decoration:none ;cursor:pointer" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
+                <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
+                <span style="color:#212529"><strong>${nombre}</strong></span>
+              </a>
+            </div>
+          </div>
+        `;
+      } else {
+        let botonChevron = '<i class="fa-solid fa-chevron-down fa-lg"></i>';
         li.innerHTML = `
-        <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
-        <div id="carpeta${carpeta.id}" class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}">
-        <a class="moverC" style="text-decoration:none ;cursor:pointer" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
-        <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
-        <span style="color:#212529"><strong>${nombre}</strong></span>
-        </a>
-          <button class="btn btn-link" type="button" id="boton${carpeta.id}" data-bs-toggle="collapse" data-bs-target="#collapse-${carpeta.id}" style="margin-left:12px" >
-          ${botonChevron}
-          </button>
-        </div>
-        </div>
-      `;
-    }
-    ul.appendChild(li);
-
-    if (carpeta.hijos.length > 0) {
+          <div class="d-flex align-items-center mt-1 mb-2" style="font-size:15px">
+            <div id="carpeta${carpeta.id}" class="${carpeta.id == '0' ? 'contenedor-carpetas-permiso px-3' : ''}">
+              <a class="moverC" style="text-decoration:none ;cursor:pointer" href="${URL_BASE}/permisos/carpeta?id=${carpeta.id}">
+                <i class="fa-solid fa-folder-open fa-lg" style="margin-right:7px;color:${carpeta.color}"></i>
+                <span style="color:#212529"><strong>${nombre}</strong></span>
+              </a> 
+              <button class="btn btn-link" type="button" id="boton${carpeta.id}" data-bs-toggle="collapse" data-bs-target="#collapse-${carpeta.id}" style="margin-left:12px">
+                ${botonChevron}
+              </div>
+          </div>
+        `;
+      }
+  
+      ul.appendChild(li);
+  
+      if (carpeta.hijos.length > 0) {
         const hijosContainer = document.createElement('div');
         hijosContainer.id = `collapse-${carpeta.id}`;
         if (carpeta.id == 0) {
-            hijosContainer.classList.add('show');
+          hijosContainer.classList.add('show');
         } else {
-            hijosContainer.classList.add('collapse');
+          hijosContainer.classList.add('collapse');
         }
-
+  
         const hijosUl = document.createElement('ul');
         hijosUl.classList.add('list-group', 'ms-3', 'mb-3');
-
+  
         carpeta.hijos.forEach(hijo => {
-            const hijoLi = dibujarArbolCarpetas(hijo);
-            hijosUl.appendChild(hijoLi);
+          const hijoLi = dibujarArbolCarpetas(hijo);
+          hijosUl.appendChild(hijoLi);
         });
-
+  
         hijosContainer.appendChild(hijosUl);
         li.appendChild(hijosContainer);
-        // Agregar el controlador de eventos para cambiar el ícono del botón
+  
         const boton = li.querySelector('#boton' + carpeta.id);
         const divSelected = li.querySelector('#carpeta' + carpeta.id);
-
+  
         boton.addEventListener('click', () => {
-            if (boton.childNodes[1].classList.contains('fa-chevron-down')) {
-                divSelected.classList.add('contenedor-carpetas-permiso', 'px-3')
-                let newChild = document.createElement('i')
-                newChild.classList.add('fa-solid', 'fa-chevron-up', 'fa-xl');
-                boton.replaceChild(newChild, boton.childNodes[1]);
-            } else if (boton.childNodes[1].classList.contains('fa-chevron-up')) {
-                divSelected.classList.remove('contenedor-carpetas-permiso', 'px-3')
-
-                let newChild = document.createElement('i')
-                newChild.classList.add('fa-solid', 'fa-chevron-down', 'fa-xl');
-                boton.replaceChild(newChild, boton.childNodes[1]);
-            }
+          if (boton.childNodes[1].classList.contains('fa-chevron-down')) {
+            divSelected.classList.add('contenedor-carpetas-permiso', 'px-3');
+            let newChild = document.createElement('i');
+            newChild.classList.add('fa-solid', 'fa-chevron-up', 'fa-xl');
+            boton.replaceChild(newChild, boton.childNodes[1]);
+          } else if (boton.childNodes[1].classList.contains('fa-chevron-up')) {
+            divSelected.classList.remove('contenedor-carpetas-permiso', 'px-3');
+            let newChild = document.createElement('i');
+            newChild.classList.add('fa-solid', 'fa-chevron-down', 'fa-xl');
+            boton.replaceChild(newChild, boton.childNodes[1]);
+          }
         });
-
+      }
+    } else {
+      // Si carpeta.id == 0, no se dibuja nada
+      carpeta.hijos.forEach(hijo => {
+        const hijoLi = dibujarArbolCarpetas(hijo);
+        ul.appendChild(hijoLi);
+      });
     }
+  
     return ul;
-}
-
+  }
+  
 function generarCarpetas(id, secs) {
     let seccion = secs.find(sec => sec.id == id);
     if (seccion == undefined) {

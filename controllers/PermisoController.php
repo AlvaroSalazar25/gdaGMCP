@@ -38,19 +38,27 @@ class PermisoController
         }
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
+            try { // aqui arreglar el tema del try catch y el historial de los permisos
+                SeccionUser::initTransaction();
                 $permiso = new SeccionUser($_POST);
                 $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
                 $seccion = Seccion::find($permiso->idSeccion);
                 $permiso->idPadre = $seccion->idPadre;
-                $respuesta = Seccion::updatePermisosPadreUser($seccion->idPadre, $seccion->id, $permiso->idUser, $permiso->verSeccion,$_POST['accion']);
-                if ($respuesta != true) {
-                    $resolve = ['error' => 'No se pudo guardar los Permisos'];
-                    echo json_encode($resolve);
-                    return;
-                }
+                SeccionUser::updatePermisosPadreUser($seccion->idPadre, $seccion->id, $permiso->idUser, $permiso->verSeccion, $_POST['accion']);
                 if ($_POST['heredar'] == 'false' && $permiso->verSeccion == true) {
-                    $permiso->guardarPermiso('idUser', $permiso->idUser);
+                    try {
+                        SeccionUser::initTransaction();
+                        $cantidad = SeccionUser::cantidadPermisos('idSeccion', $permiso->idSeccion, 'idUser', $permiso->idUser);
+                        if (!empty($cantidad)) {
+                            $permiso->actualizarPermiso('idSeccion', $permiso->idSeccion);
+                        } else {
+                            $permiso->crear();
+                        }
+                        SeccionUser::endTransaction();
+                    } catch (Exception $e) {
+                        SeccionUser::rollback();
+                        throw new Exception('No se pudieron guardar los permisos de la Unidad por problemas en el árbol de carpetas');
+                    }
                     $resolve = ['exito' => 'Permisos Guardados con éxito'];
                     echo json_encode($resolve);
                     return;
@@ -62,13 +70,26 @@ class PermisoController
                     foreach ($carpetas as $carpeta) {
                         if ($permiso->verSeccion == false && $_POST['heredar'] == 'false') {
                             $permiso->verSeccion = false;
-                        } 
+                        }
                         $permiso->idSeccion = $carpeta;
                         $seccion = Seccion::find($permiso->idSeccion);
                         $permiso->idPadre = $seccion->idPadre;
-                        $permiso->guardarPermiso('idUser', $permiso->idUser);
+                        try {
+                            SeccionUser::initTransaction();
+                            $cantidad = SeccionUser::cantidadPermisos('idSeccion', $permiso->idSeccion, 'idUser', $permiso->idUser);
+                            if (!empty($cantidad)) {
+                                $permiso->actualizarPermiso('idSeccion', $permiso->idSeccion);
+                            } else {
+                                $permiso->crear();
+                            }
+                            SeccionUser::endTransaction();
+                        } catch (Exception $e) {
+                            SeccionUser::rollback();
+                            throw new Exception('No se pudieron guardar los permisos de la Unidad por problemas en el árbol de carpetas');
+                        }
                     }
                 }
+                SeccionUser::endTransaction();
                 $resolve = ['exito' => 'Permisos Guardados y Heredados con éxito'];
                 echo json_encode($resolve);
             } catch (Exception $e) {
@@ -88,18 +109,31 @@ class PermisoController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
+                SeccionUnidad::initTransaction();
                 $permiso = new SeccionUnidad($_POST);
                 $permiso->verSeccion = filter_var($permiso->verSeccion, FILTER_VALIDATE_BOOLEAN);
                 $seccion = Seccion::find($permiso->idSeccion);
                 $permiso->idPadre = $seccion->idPadre;
-                $respuesta = Seccion::updatePermisosPadreUnidad($seccion->idPadre, $seccion->id, $permiso->idUnidad, $permiso->verSeccion,$_POST['accion']);
+                $respuesta = SeccionUnidad::updatePermisosPadreUnidad($seccion->idPadre, $seccion->id, $permiso->idUnidad, $permiso->verSeccion, $_POST['accion']);
                 if ($respuesta != true) {
                     $resolve = ['error' => 'No se pudo guardar los Permisos'];
                     echo json_encode($resolve);
                     return;
                 }
                 if ($_POST['heredar'] == 'false' && $permiso->verSeccion == true) {
-                    $permiso->guardarPermiso('idUnidad', $permiso->idUnidad);
+                    try {
+                        SeccionUnidad::initTransaction();
+                        $cantidad = SeccionUnidad::cantidadPermisos('idSeccion', $permiso->idSeccion, 'idUnidad', $permiso->idUnidad);
+                        if (!empty($cantidad)) {
+                            $permiso->actualizarPermiso('idSeccion', $permiso->idSeccion);
+                        } else {
+                            $permiso->crear();
+                        }
+                        SeccionUnidad::endTransaction();
+                    } catch (Exception $e) {
+                        SeccionUnidad::rollback();
+                        throw new Exception('No se pudieron guardar los permisos de la Unidad por problemas en el árbol de carpetas');
+                    }
                     $resolve = ['exito' => 'Permisos Guardados con éxito'];
                     echo json_encode($resolve);
                     return;
@@ -111,14 +145,51 @@ class PermisoController
                     foreach ($carpetas as $carpeta) {
                         if ($permiso->verSeccion == false && $_POST['heredar'] == 'false') {
                             $permiso->verSeccion = false;
-                        } 
+                        }
                         $permiso->idSeccion = $carpeta;
                         $seccion = Seccion::find($permiso->idSeccion);
                         $permiso->idPadre = $seccion->idPadre;
-                        $permiso->guardarPermiso('idUnidad', $permiso->idUnidad);
+                        try {
+                            SeccionUnidad::initTransaction();
+                            $cantidad = SeccionUnidad::cantidadPermisos('idSeccion', $permiso->idSeccion, 'idUnidad', $permiso->idUnidad);
+                            if (!empty($cantidad)) {
+                                $permiso->actualizarPermiso('idSeccion', $permiso->idSeccion);
+                            } else {
+                                $permiso->crear();
+                            }
+                            SeccionUnidad::endTransaction();
+                        } catch (Exception $e) {
+                            SeccionUnidad::rollback();
+                            throw new Exception('No se pudieron guardar los permisos de la Unidad por problemas en el árbol de carpetas');
+                        }
                     }
                 }
                 $resolve = ['exito' => 'Permisos Guardados y Heredados con éxito'];
+                echo json_encode($resolve);
+            } catch (Exception $e) {
+                $resolve = ['error' => 'No se pudo guardar los Permisos'];
+                echo json_encode($resolve);
+            }
+        }
+    }
+
+    public static function permisosHeredar(Router $router)
+    {
+        $validar = JsonWT::validateJwt(token);
+        if ($validar['status'] != true) {
+            header('Location:' . $_ENV['URL_BASE'] . '/?r=8');
+        }
+        $alertas = [];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $permisos = SeccionUser::eliminarTodos('idUser', $_POST['idUser']);
+                if ($permisos != true) {
+                    $resolve = ['error' => 'No se pudo guardar los Permisos heredados'];
+                    echo json_encode($resolve);
+                    return;
+                }
+
+                $resolve = ['exito' => 'Permisos Heredados con éxito'];
                 echo json_encode($resolve);
             } catch (Exception $e) {
                 $resolve = ['error' => 'No se pudo guardar los Permisos'];

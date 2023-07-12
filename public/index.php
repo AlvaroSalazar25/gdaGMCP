@@ -2,10 +2,12 @@
 //define('NOMBRE_CARPETA','/gdagmcp');
 require_once __DIR__ . '/../includes/app.php';
 
+use Model\User;
 use MVC\Router;
 use Controllers\UserController;
 use Controllers\ErrorController;
 use Controllers\LoginController;
+use Controllers\EditorController;
 use Controllers\UnidadController;
 use Controllers\PermisoController;
 use Controllers\SeccionController;
@@ -26,6 +28,10 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/recuperar',[LoginController::class,'recu
 // rutas para User
 $router->get($_ENV['NOMBRE_CARPETA'].'/admin',[UserController::class,'admin']); 
 $router->get($_ENV['NOMBRE_CARPETA'].'/editor',[UserController::class,'editor']); 
+$router->post($_ENV['NOMBRE_CARPETA'].'/editor/datos',[EditorController::class,'datos']); 
+$router->get($_ENV['NOMBRE_CARPETA'].'/editor/carpeta',[EditorController::class,'carpetaByPermisos']); 
+$router->post($_ENV['NOMBRE_CARPETA'].'/editor/carpeta',[EditorController::class,'carpetaByPermisos']); 
+$router->post($_ENV['NOMBRE_CARPETA'].'/editor/carpeta/create',[EditorController::class,'crearCarpeta']); 
 
 
 $router->post($_ENV['NOMBRE_CARPETA'].'/user/create',[UserController::class,'crear']);
@@ -55,8 +61,9 @@ $router->post($_ENV['NOMBRE_CARPETA'].'/carpeta/delete',[SeccionController::clas
 $router->get($_ENV['NOMBRE_CARPETA'].'/permisos',[PermisoController::class,'permisos']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/permisos/user',[PermisoController::class,'permisosUser']);
 $router->post($_ENV['NOMBRE_CARPETA'].'/permisos/unidad',[PermisoController::class,'permisosUnidad']);
-
 $router->get($_ENV['NOMBRE_CARPETA'].'/permisos/carpeta',[SeccionController::class,'permisosByCarpeta']);
+$router->post($_ENV['NOMBRE_CARPETA'].'/permisos/heredar',[PermisoController::class,'permisosHeredar']);
+
 
 //rutas para formularios
 $router->get($_ENV['NOMBRE_CARPETA'].'/formulario',[FormularioController::class,'index']);

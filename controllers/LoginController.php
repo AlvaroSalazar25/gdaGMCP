@@ -60,7 +60,7 @@ class LoginController
                                 break;
                             case 2:
                                 $resolve = [
-                                    'exito' => '/editor',
+                                    'exito' => '/editor/carpeta?id=0',
                                     'token' => $_SESSION['token']
                                 ];
                                 echo json_encode($resolve);

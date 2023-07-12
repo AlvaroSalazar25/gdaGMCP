@@ -5,6 +5,15 @@ const token = JSON.parse(localStorage.getItem('token'))
 let unidades;
 let secciones;
 let roles;
+let permisosDefault = [{
+    "id": "1",
+    "nombre": "Leer",
+    "status": "false"
+}, {
+    "id": "2",
+    "nombre": "Escribir",
+    "status": "false"
+}]
 
 var configDocs = {
     "saveBoton": false,
@@ -18,13 +27,8 @@ async function iniciarApp() {
     const valores = window.location.search;
     const urlParams = new URLSearchParams(valores);
     var id = urlParams.get('id');
-    var alerta = urlParams.get('a');
-    console.log('alerta', alerta);
-    console.log('id', id);
+    console.log('id',id);
     await dibujarPadreAndCarpetas(id)
-    if (alerta) {
-        mostrarAlerta();
-    }
 }
 
 function alertas() {
@@ -46,51 +50,6 @@ function alertas() {
     }
 }
 
-function mostrarAlerta() {
-    Swal.fire({
-        icon: 'warning',
-        title: 'Error',
-        showConfirmButton: true,
-        text: `La Carpeta no existe`,
-    }).then(() => {
-        window.location.href = URL_BASE + "/carpeta?id=0";
-    })
-}
-
-function traerSeccion(id) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            data: {
-                "tipo": 'findCarpeta',
-                "id": id
-            },
-            //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + '/carpeta/datos',
-            type: 'POST',
-            headers: {
-                'token': token
-            },
-            dataType: 'json'
-        }).done((response) => {
-            if (response.exit) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: response.exit,
-                    showConfirmButton: false,
-                    text: 'Sesión expirada, vuelva a iniciar sesión',
-                    timer: 3000
-                }).then(() => {
-                    window.location.href = URL_BASE + "/?r=8";
-                })
-            }
-            resolve(response)
-
-        }).fail((err) => {
-            reject(err);
-        });
-    })
-}
-// funcion que carga las secciones 
 function traerSecciones() {
     return new Promise((resolve, reject) => {
         let secciones = []
@@ -118,6 +77,7 @@ function traerSecciones() {
                 })
             }
             if (response.length == 0) {
+                console.log('secciones', secciones);
                 resolve(secciones)
             }
             $.each(response, (index, seccion) => {
@@ -126,7 +86,6 @@ function traerSecciones() {
                     resolve(secciones)
                 }
             })
-
         }).fail((err) => {
             reject(err);
         });
@@ -332,138 +291,6 @@ function traerHijos(id = 0) {
     })
 }
 
-function traerHistorial(id) {
-    return new Promise((resolve, reject) => {
-        let datos = [];
-        $.ajax({
-            data: {
-                "idSeccion": id,
-                "tipo": "historial",
-            },
-            //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + "/carpeta/datos",
-            type: "POST",
-            headers: {
-                token: token,
-            },
-            dataType: "json",
-        })
-            .done((response) => {
-                if (response.exit) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: response.exit,
-                        showConfirmButton: false,
-                        text: "Sesión expirada, vuelva a iniciar sesión",
-                        timer: 3000,
-                    }).then(() => {
-                        window.location.href = URL_BASE + "/?r=8";
-                    });
-                }
-                if (response.length == 0) {
-                    resolve(datos);
-                }
-                $.each(response, (index, dato) => {
-                    datos.push(dato);
-                    if (response.length == index + 1) {
-                        resolve(datos);
-                    }
-                });
-            })
-            .fail((err) => {
-                reject(err);
-            });
-    });
-}
-
-function traerHistorialDocCarpeta(id) {
-    return new Promise((resolve, reject) => {
-        let datos = [];
-        $.ajax({
-            data: {
-                "idSeccion": id,
-                "tipo": "historial",
-            },
-            //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + "/documento/datos",
-            type: "POST",
-            headers: {
-                token: token,
-            },
-            dataType: "json",
-        })
-            .done((response) => {
-                if (response.exit) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: response.exit,
-                        showConfirmButton: false,
-                        text: "Sesión expirada, vuelva a iniciar sesión",
-                        timer: 3000,
-                    }).then(() => {
-                        window.location.href = URL_BASE + "/?r=8";
-                    });
-                }
-                if (response.length == 0) {
-                    resolve(datos);
-                }
-                $.each(response, (index, dato) => {
-                    datos.push(dato);
-                    if (response.length == index + 1) {
-                        resolve(datos);
-                    }
-                });
-            })
-            .fail((err) => {
-                reject(err);
-            });
-    });
-}
-
-function traerHistorialDoc(id) {
-    return new Promise((resolve, reject) => {
-        let datos = [];
-        $.ajax({
-            data: {
-                "idDoc": id,
-                "tipo": "historialByDoc",
-            },
-            //url: ENV.URL_BASE + '/user/datos',
-            url: URL_BASE + "/documento/datos",
-            type: "POST",
-            headers: {
-                token: token,
-            },
-            dataType: "json",
-        })
-            .done((response) => {
-                if (response.exit) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: response.exit,
-                        showConfirmButton: false,
-                        text: "Sesión expirada, vuelva a iniciar sesión",
-                        timer: 3000,
-                    }).then(() => {
-                        window.location.href = URL_BASE + "/?r=8";
-                    });
-                }
-                if (response.length == 0) {
-                    resolve(datos);
-                }
-                $.each(response, (index, dato) => {
-                    datos.push(dato);
-                    if (response.length == index + 1) {
-                        resolve(datos);
-                    }
-                });
-            })
-            .fail((err) => {
-                reject(err);
-            });
-    });
-}
-
 function moverCarpeta(id) {
     return new Promise((resolve, reject) => {
         let hijos = []
@@ -548,7 +375,8 @@ function traerDocsMover(id) {
 }
 
 async function dibujarAtras(padre) {
-    let seccionActual = await traerSeccion(padre);
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
     dibujarPadreAndCarpetas(seccionActual.idPadre)
 }
 
@@ -576,7 +404,6 @@ function buscarCarpeta(seccionActual) {
 }
 
 escucharCarpeta = (value, id) => {
-    var html = "";
     $.ajax({
         data: { "tipo": "buscarCarpetas", "value": value, "id": id },
         url: URL_BASE + '/carpeta/datos',
@@ -597,17 +424,8 @@ escucharCarpeta = (value, id) => {
                 window.location.href = URL_BASE + "/?r=8";
             })
         }
-        if (response.length != 0) {
-            dibujarHijosPadre(id, response);
-        } else {
-
-            html += '<div class="px-5 py-2 mt-3 w-100 ">';
-            html += '<div class="d-flex justify-content-center align-items-center">';
-            html += '<h4 class="" style="color:red">No Existen Carpetas</h4>';
-            html += "</div>";
-            html += "</div>";
-            document.getElementById("contenedorCarpetas").innerHTML = html;
-        }
+        console.log(response);
+        dibujarHijosPadre(id, response);
     }).fail((err) => {
         console.log(err);
     });
@@ -624,7 +442,7 @@ async function dibujarPadreAndCarpetas(padre) {
     }
 }
 
-async function dibujarPath(path, id) {
+async function dibujarPath(path,id) {
     if (path != 'base') {
         $.ajax({
             data: {
@@ -651,51 +469,37 @@ async function dibujarPath(path, id) {
                 })
             }
             response.forEach(path => {
-                window.location.href = URL_BASE + "/carpeta?id=" + path.id;
+                dibujarPadreAndCarpetas(path.id);
             })
         }).fail((err) => {
             console.log(err);
         });
     } else {
-        window.location.href = URL_BASE + "/carpeta?id=0";
+        dibujarPadreAndCarpetas(0);
     }
 }
 
 async function dibujarPadre(padre) {
     var html = "";
-    let seccionActual = await traerSeccion(padre);
-    let historial = await traerHistorial(padre);
-
-    let idPadre;
-    if (seccionActual == false) {
-        idPadre = 0
-    } else {
-        idPadre = seccionActual.idPadre
-    }
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
     html += '<div class="d-flex justify-content-center padreAtras">'
     html += '<div class="d-flex justify-content-center hijoAtras">'
-    html += '<a class=" btn btn-outline-danger ' + (seccionActual == false ? 'noVisible' : '') + ' " href="' + URL_BASE + '/carpeta?id=' + idPadre + '"><i class="fa-solid fa-arrow-left-long fa-2x"></i> <span class="span-boton">Atrás</span></a>'
+    html += '<a class=" btn btn-outline-danger ' + (seccionActual == undefined ? 'noVisible' : '') + ' " onclick="dibujarAtras(' + padre + ')"><i class="fa-solid fa-arrow-left-long fa-2x"></i> <span class="span-boton">Atrás</span></a>'
     html += '</div>'
-    if (seccionActual == false) {
-        html += '<h1 class="text-black "><strong>Administrar Carpetas</strong></h1>'
+    if (seccionActual == undefined) {
+        html += '<h1 class="text-black mb-3"><strong>Administrar Carpetas</strong></h1>'
     } else {
         html += '<div class="d-flex flex-column justify-content-center">'
-        html += '<div class="d-flex justify-content-center align-items-center">'
-        html += '<i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;font-size:35px;color:' + seccionActual.color + '"></i>'
-        html += '<div class="d-flex justify-content-center align-items-center">'
-        html += '<h1 class="text-black m-0 p-0"><strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong></h1>'
-        html += '</div>'
-        html += '<div class="d-flex justify-content-center align-items-center mb-2" style="margin-left:5px">'
-        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle py-0" data-bs-toggle="dropdown" style="width:25px;height:30px;border:none">'
-        html += '<i class="fa-solid fa-ellipsis-vertical" style="font-size:25px"></i>'
+        html += '<div class="d-flex justify-content-center">'
+        html += '<h1 class="text-black mb-3"><i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;color:' + seccionActual.color + '"></i><strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong></h1>'
+        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" style="margin-left:5px;margin-top:4px;width:25px;height:30px;border-radius:15px">'
+        html += '<i class="fa-solid fa-ellipsis-vertical fa-xl "></i>'
         html += '</button>'
-        
         html += '<ul class="dropdown-menu dropdown-menu-dark">'
         html += ' <li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + seccionActual.id + '"><i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>Editar</a></li>'
-        html += ' <li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalInfo' + seccionActual.id + '"><i class="fa-solid fa-circle-info" style="margin-right:7px"></i>Información</a></li>'
         html += '<li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + seccionActual.id + ')"><i class="fa-solid fa-trash" style="margin-right:7px"></i>Eliminar</a></li>'
         html += '</ul>'
-        html += '</div>'
         html += '</div>'
         if (seccionActual.descripcion.length > 0) {
             html += '<h3 class="text-black mt-3 mb-4">' + (seccionActual.descripcion[0].toUpperCase() + seccionActual.descripcion.substring(1)) + '</h3>'
@@ -710,19 +514,20 @@ async function dibujarPadre(padre) {
     html += '</div>' // del primer div
     html += '<div class="d-flex justify-content-end mt-2">'
     html += '<div style="margin-right:5px" id="divBtnBuscar">'
-    html += '<a class="btn btn-outline-primary" onclick="buscarCarpeta(' + (seccionActual != false ? seccionActual.id : 0) + ')"><i class="fa-solid fa-magnifying-glass fa-2x"></i><span class="span-boton">Carpeta</span></a>'
+    html += '<a class="btn btn-outline-primary" onclick="buscarCarpeta(' + (seccionActual != undefined ? seccionActual.id : 0) + ')"><i class="fa-solid fa-magnifying-glass fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '<div>'
     html += '<a class=" btn btn-primary"  data-bs-toggle="modal" data-bs-target="#exampleModal' + padre + '" id="' + padre + '"><i class="fa-solid fa-plus fa-2x"></i><span class="span-boton">Carpeta</span></a>'
     html += '</div>'
     html += '</div>';
     html += '<div class="w-100 mt-2">';
-    if (seccionActual != false) {
-        let paths = JSON.parse(seccionActual.pathLink);
+    if (seccionActual != undefined) {
+        let paths = (CARPETA_BASE + seccionActual.path).split('/')
+        let removes = paths.shift();
         paths.forEach(path => {
-            console.log('paths', path);
-            var nombre = path.seccion.replaceAll('_', ' ');
-            html += `<a class="puntero" style="text-decoration: none !important;" href="${URL_BASE}/carpeta?id=${path.id}")"><strong>` + (nombre[0].toUpperCase() + nombre.substring(1)) + '</strong></a> / ' + " " + '';
+            var nombre = path.replaceAll('_', ' ');
+            console.log('nombre',nombre);
+            html += `<a class="puntero" style="text-decoration: none !important;" onclick="dibujarPath('${nombre}','${seccionActual.id}')"><strong>` + (nombre[0].toUpperCase() + nombre.substring(1)) + '</strong></a> / ' + " " + '';
         })
 
     }
@@ -744,15 +549,15 @@ async function dibujarPadre(padre) {
     html += '<div class="modal-dialog">'
     html += '<div class="modal-content">'
     html += '  <div class="modal-header bg-black">'
-    if (seccionActual == false) {
+    if (seccionActual == undefined) {
         html += '   <h5 class="modal-title text-white">Crear Carpeta</h5>'
     } else {
-        html += '   <h5 class="modal-title text-white">Agregar Carpeta en ' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</h5>'
+        html += '   <h5 class="modal-title text-white">Agregar Carpeta en ' + seccionActual.seccion + '</h5>'
     }
     html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
     html += '  </div>'
     html += '  <div class="modal-body">'
-    html += '<h3 class="text-black mt-2 mb-4">Ingresar Datos</h3>'
+    html += '<h3 class="text-black mt-2 mb-4">Ingresar datos de la Carpeta</h3>'
 
     html += '<div class="mb-3">'
     html += '<label  class="form-label"><strong>Nombre:</strong></label>'
@@ -775,8 +580,9 @@ async function dibujarPadre(padre) {
     html += '</div>'
     html += '<div class="modal-footer">'
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
-    if (seccionActual == false) {
+    if (seccionActual == undefined) {
         html += '<a class="btn btn-success" id="botonCrear" onclick="createSeccion(0)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+
     } else {
         html += '<a class="btn btn-success" id="botonCrear" onclick="createSeccion(' + padre + ')"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
     }
@@ -788,7 +594,7 @@ async function dibujarPadre(padre) {
     /*=============================================================================================================//
                                                 Modal para EDITAR el padre
     //==============================================================================================================*/
-    if (seccionActual !== false) {
+    if (seccionActual !== undefined) {
         html += '<div class="modal fade" id="exampleModalEditar' + seccionActual.id + '" tabindex="-1" aria-labelledby="exampleModalLabel' + seccionActual.id + '" aria-hidden="true">'
         html += '<div class="modal-dialog">'
         html += '<div class="modal-content">'
@@ -861,114 +667,16 @@ async function dibujarPadre(padre) {
         html += '</div>'
         html += '</div>'
         html += '</div>'
-
-        /*=============================================================================================================//
-                                            modal para Mostrar Informacion de carpeta
-        //==============================================================================================================*/
-
-        html += '<div class="modal fade" id="exampleModalInfo' + padre + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" >'
-        html += '<div class="modal-dialog modal-lg" style="min-width:800px !important" >'
-        html += '<div class="modal-content">'
-        html += '  <div class="modal-header bg-black">'
-        html += '   <h5 class="modal-title text-white">Información de Carpeta</h5>'
-        html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
-        html += '  </div>'
-        html += '  <div class="modal-body">'
-        if (seccionActual == false) {
-            html += '   <h5 class="modal-title text-white">Modificaciones</h5>'
-        } else {
-            html += '<div class="d-flex justify-content-between">'
-            html += '<div style="width:160px"></div>'
-            html += '<h3 class="text-black mt-2 mb-4"> <i class="fa-solid fa-folder-open" style="color:' + seccionActual.color + '"></i> ' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</h3>'
-            html += '<div><button type="button" class="btn btn-warning" style="font-size:13.4px" onclick="historialDocs(' + seccionActual.id + ')"><i class="fa-solid fa-rotate-right fa-flip-horizontal" style="margin-right:5px"></i>Historial Documentos</button></div>'
-            html += '</div>'
-        }
-
-        html += '<div id="historialDoc">'
-        html += '<table class="table table-hover align-middle" id="tablaUsuarios">'
-        html += '<thead class="table-secondary ">'
-        html += '<tr style="text-transform:uppercase">'
-        html += '<th >#</th>'
-        html += '<th >Usuario</th>'
-        html += '<th >Acción</th>'
-        html += '<th style="width:170px">Carpeta</th>'
-        html += '<th >Fecha</th>'
-        html += '<th  >Detalle</th>'
-        html += '</tr>'
-
-        html += '</thead>'
-        html += '<tbody class="contenido" id="contenido">'
-        historial.forEach((dato, index) => {
-            var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
-            html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
-            html += `<td >${index + 1}</td>`
-            html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
-            html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
-            html += `<td >${carpeta[0].toUpperCase() + carpeta.substring(1)}</td>`
-            html += `<td style="min-width:172px"> ${dato.created_at}</td>`
-            html += '<td ">';
-            html += '<div class="d-flex justify-content-center dropend">'
-            html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
-            html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
-            html += '</button>'
-            html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
-            html += '<div class="d-flex" style="font-size:13px">';
-            html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-folder-open" style="margin-right:5px"></i> <strong>' + (carpeta[0].toUpperCase() + carpeta.substring(1)) + '</strong>';
-            html += '</div>';
-            html += '</div>';
-            html += '<div class="row" style="font-size:13px">';
-            var data = JSON.parse(dato.data);
-
-            for (var key in data.new) {
-                html += '<div style="display:block;height:auto;">';
-                html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
-                html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
-                html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
-                html += '</div>';
-            }
-            html += '</div>';
-            html += '</div>';
-            html += '</td>';
-            html += '</tr>';
-        })
-        html += '</tbody>'
-        html += '</table>'
-        html += '</div>'
-
-        html += '<div class="w-100 mt-2" id="alertas">'
-        html += '</div>'
-
-        html += '</div>'
-        html += '<div class="modal-footer">'
-        html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
-        html += '</div>'
-        html += '</div>'
-        html += '</div>'
-        html += '</div>'
     }
-
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
     waitResponse('#contenedorCarpetas');
     if (padre > 0) {
         await dibujarDocs(padre);
     }
-
     $("#select" + padre).select2({
         dropdownParent: $("#exampleModalEditar" + padre)
     });
-    $("#tablaUsuarios").DataTable({
-        columnDefs: [
-            {
-                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
-                searchable: false // La columna "Detalle" no será incluida en la búsqueda
-            }
-        ],
-        language: {
-            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
-        }
-    });
-
 }
 
 async function dibujarHijosPadre(padre, response = []) {
@@ -989,7 +697,7 @@ async function dibujarHijosPadre(padre, response = []) {
         html += '<div class="d-flex justify-content-center " style="flex-wrap:wrap">'
         hijos.forEach(hijo => {
             html += '<div class="p-3 padreCarpeta">'
-            html += '<a class="btn hoverCarpeta" style="border:1px solid #e2e4e6"  href="' + URL_BASE + '/carpeta?id=' + hijo.id + '">'
+            html += '<a class="btn hoverCarpeta" style="border:1px solid #e2e4e6" onclick="dibujarPadreAndCarpetas(' + hijo.id + ')">'
             html += '<div class="row justify-content-center align-items-center  widthCarpeta ">'
             html += '<div class="">'
             html += '<i class="fa-regular fa-folder-open" style="font-size:40px;margin-bottom:10px;color:' + hijo.color + '"></i>'
@@ -1061,6 +769,7 @@ async function dibujarHijosPadre(padre, response = []) {
                 path: '/base',
             }
             let carpetas = JSON.parse(hijo.carpetas);
+            console.log('carpetas para mover', carpetas);
             carpetas.unshift(base);
             carpetas.forEach(seccion => {
                 if (seccion.id != hijo.id) {
@@ -1098,8 +807,10 @@ async function dibujarHijosPadre(padre, response = []) {
     })
 }
 
+
 async function dibujarDocs(padre, docs = []) {
-    let seccionActual = await traerSeccion(padre)
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == padre);
     let documentos;
     if (docs.length == 0) {
         documentos = await traerDocs(padre);
@@ -1138,31 +849,28 @@ async function dibujarDocs(padre, docs = []) {
     html += '<table class="table" style="min-width:1000px" id="tablaDocsUltimo">';
     html += '<thead class="table-dark">';
     html += '<tr class="" style="text-transform:uppercase">';
-    html += '<th style="max-width:40px !important">N°</th>';
-    html += '<th style="min-width:225px !important">Documento</th>';
+    html += "<th>N°</th>";
+    html += '<th class="col-2">Nombre</th>';
     html += '<th class="">Carpeta</th>';
     html += '<th class="">Form</th>';
-    html += '<th >Datos</th>';
+    html += '<th class="col-1">Datos</th>';
     html += '<th class="">Responsable</th>';
-    html += '<th >Fecha</th>';
+    html += '<th class="col-1">Fecha</th>';
     // html += '<th class="">Estado</th>';
-    html += '<th >Acciones</th>';
+    html += '<th class="col">Acciones</th>';
     // html += '<th class="col-1">Acciones</th>';
     html += "</tr>";
     html += "</thead>";
-    html += '<tbody class="contenido docsContenido" id="contenido">';
+    html += '<tbody class="contenido" id="contenido">';
     if (documentos.length > 0) {
         documentos.forEach((documento, index) => {
             html += "<tr>"
-            html += '<td style="max-width:40px !important">' + (parseInt(index) + 1) + '</td>'
-            html += '<td>';
+            html += "<td>" + (parseInt(index) + 1) + "</td>"
             if (documento.alias == "") {
-                html += '<i class="fa-solid fa-file-pdf" style="margin-right:5px"></i>' + documento.codigo + ''
+                html += "<td>" + documento.codigo + "</td>"
             } else {
-                html += '<i class="fa-solid fa-file-pdf" style="margin-right:5px"></i>' + documento.alias + ''
+                html += "<td>" + documento.alias + "</td>"
             }
-            html += '<button title="Historial" class="btn btn-outline-secondary" style="margin-left:5px;border:none;margin-bottom:7px" onclick="dibujarModalHistorialDoc(' + documento.id + ')"><i class="fa-solid fa-ellipsis-vertical fa-xl"></i></button>';
-            html += '</div>';
             html += "<td>" + documento.seccion + "</td>"
             html += "<td>" + documento.formulario + "</td>"
             html += '<td><buttom class="btn btn-secondary" style="margin-left:12px" data-bs-toggle="modal" data-bs-target="#exampleModalVer' + documento.id + '">Ver</buttom></td>'; // hacer este boton modal
@@ -1180,10 +888,10 @@ async function dibujarDocs(padre, docs = []) {
             html += '<div class="d-flex justify-content-center">';
             const urlA = "'" + documento.path + "'";
             const nombreA = "'" + documento.codigo + "'"
-            html += '<button title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px;height:30px;" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></button>';
-            // html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
-            html += '<button title="Editar" class="btn btn-warning"  data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + documento.id + '" style="margin-right:5px;height:30px;"><i class="fa-solid fa-pen-to-square fa-2x"></i></button>';
-            html += '<button title="Eliminar" class="btn btn-outline-danger" style=";height:30px;" onclick="deleteDoc(' + documento.id + ')"><i class="fa-solid fa-trash fa-2x"></i></button>';
+            html += '<buttom title="Ver Documento" class="btn btn-outline-primary" style="margin-right:5px;height:30px;width:32px" onclick="abrirPdf(' + urlA + "," + nombreA + ')"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            // html += '<buttom title="Descargar Documento" class="btn btn-primary" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-file-pdf fa-2x"></i></buttom>';
+            html += '<buttom title="Editar" class="btn btn-warning"  data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + documento.id + '" style="margin-right:5px;height:30px;width:32px"><i class="fa-solid fa-pen-to-square fa-2x"></i></i></buttom>';
+            html += '<buttom title="Eliminar" class="btn btn-outline-danger" style=";height:30px;width:32px" onclick="deleteDoc(' + documento.id + ')"><i class="fa-solid fa-trash fa-2x"></i></buttom>';
             html += '</div>';
             html += '</div>';
 
@@ -1265,10 +973,10 @@ async function dibujarDocs(padre, docs = []) {
 
             html += '<div class="mb-4" id="alias">';
             html += '<label class="form-label"><strong>ALIAS</strong></label>';
-            html += '<textarea class="form-control ' + documento.id + '" rows="2" name="alias" id="aliasDoc" placeholder="Documento sin alias">' + documento.alias + '</textarea>';
+            html += '<textarea class="form-control ' + documento.id + '" rows="2" name="alias" placeholder="Documento sin alias">' + documento.alias + '</textarea>';
             html += '</div>';
 
-            html += '<div class="w-100 mt-2" id="alertasEditarMetadata' + documento.id + '">'
+            html += '<div class="w-100 mt-2" id="alertasEditarMetadata'+documento.id+'">'
             html += '</div>'
             html += '</div>';
             html += '<div class="modal-footer mt-3 d-flex justify-content-between">';
@@ -1281,7 +989,6 @@ async function dibujarDocs(padre, docs = []) {
             html += '</div>';
             html += '</div>';
             html += '</div>';
-
         });
     }
     html += "</tbody>";
@@ -1298,209 +1005,11 @@ async function dibujarDocs(padre, docs = []) {
     }
     $("#tablaDocsUltimo").DataTable({
         language: {
-            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
-        }
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
     });
 }
 
-async function dibujarModalHistorialDoc(id) {
-    var html = "";
-    let documento = await traerDocumento(id);
-    let historial = await traerHistorialDoc(id);
-    /* ================================================================================================================
-            Modal Historial del documento
-    ==================================================================================================================*/
-    html += '<div class="modal fade" id="exampleModalHistorialByDoc' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
-    html += ' <div class="modal-dialog modal-lg">';
-    html += ' <div class="modal-content">';
-    html += ' <div class="modal-header bg-black ">';
-    html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Historial Documento <strong>' + documento.codigo + '</strong></h5>';
-    html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
-    html += ' </div>';
-    html += '  <div class="modal-body">';
-    html += '<h3 class="text-black mt-2 mb-4"> <i class="fa-solid fa-file-pdf" "></i> ' + (documento.alias != "" ? documento.alias : documento.codigo) + '</h3>'
-    html += '<div id="historialDoc">'
-    html += '<table class="table table-hover align-middle" id="tablaHistorialByDoc">'
-    html += '<thead class="table-secondary ">'
-    html += '<tr style="text-transform:uppercase">'
-    html += '<th >#</th>'
-    html += '<th >Usuario</th>'
-    html += '<th >Acción</th>'
-    html += '<th style="width:170px">Carpeta</th>'
-    html += '<th >Fecha</th>'
-    html += '<th  >Detalle</th>'
-    html += '</tr>'
-
-    html += '</thead>'
-    html += '<tbody class="contenido" id="contenido">'
-    historial.forEach((dato, index) => {
-        console.log('dato', dato);
-        var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
-        html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
-        html += `<td >${index + 1}</td>`
-        html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
-        html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
-        html += `<td >${carpeta[0].toUpperCase() + carpeta.substring(1)}</td>`
-        html += `<td style="min-width:172px"> ${dato.created_at}</td>`
-        html += '<td ">';
-        html += '<div class="d-flex justify-content-center dropend">'
-        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
-        html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
-        html += '</button>'
-        html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
-        html += '<div class="d-flex" style="font-size:13px">';
-        html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-file-pdf" style="margin-right:5px"></i> <strong>' + dato.documento + '</strong>';
-        html += '</div>';
-        html += '</div>';
-        html += '<div class="row" style="font-size:13px">';
-        var data = JSON.parse(dato.data);
-        for (var key in data.new) {
-            html += '<div style="display:block;height:auto;">';
-            html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
-            if (key != 'data') {
-                html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
-                if (data.old != null) {
-                    html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
-                }
-            } else {
-                var dataDoc = JSON.parse(data.new.data);
-                html += '<div style="display:block;height:auto;">';
-                if (data.old !== null) {
-                    for (let i = 0; i < dataDoc.length; i++) {
-                        var dataDocOld = JSON.parse(data.old.data);
-                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
-                        html += '<div> <span class="text-warning">Old =></span> ' + (dataDocOld[i].nombre != null ? dataDocOld[i].nombre : 'null') + ' => ' + (dataDocOld[i].valor != null ? dataDocOld[i].valor : 'null') + '</div>';
-                    }
-                } else {
-                    for (let i = 0; i < dataDoc.length; i++) {
-                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
-                    }
-                }
-                html += '</div>';
-            }
-            html += '</div>';
-        }
-        html += '</div>';
-
-        html += '</div>';
-        html += '</td>';
-        html += '</tr>';
-
-    })
-    html += '</tbody>'
-    html += '</table>'
-    html += '</div>'
-    html += '<div>';
-
-    html += '</div>';
-    html += ' <div class="modal-footer mt-3">';
-    html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
-    html += "  </div>";
-    html += "</div>";
-    html += "</div>";
-    html += "</div>";
-    document.getElementById("modales").innerHTML = html;
-    $("#tablaHistorialByDoc").DataTable({
-        columnDefs: [
-            {
-                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
-                searchable: false // La columna "Detalle" no será incluida en la búsqueda
-            }
-        ],
-        language: {
-            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
-        }
-    });
-    $('#exampleModalHistorialByDoc' + documento.id).modal('show');
-}
-
-async function historialDocs(id) {
-    var html = "";
-    await waitResponse('#historialDoc','374.5px',2);
-    let historial = await traerHistorialDocCarpeta(id);
-    html += '<h3 class="text-black mt-2 mb-4"><strong>HISTORIAL DOCUMENTOS</strong></h3>'
-    html += '<table class="table table-hover align-middle" id="tablaHistorialDocs">'
-    html += '<thead class="table-secondary">'
-    html += '<tr style="text-transform:uppercase">'
-    html += '<th >#</th>'
-    html += '<th >Usuario</th>'
-    html += '<th >Acción</th>'
-    html += '<th style="width:170px">Documento</th>'
-    html += '<th >Fecha</th>'
-    html += '<th  >Detalle</th>'
-    html += '</tr>'
-    html += '</thead>'
-    html += '<tbody class="contenido" id="contenido">'
-    historial.forEach((dato, index) => {
-        console.log('dato', dato);
-        var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
-        html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
-        html += `<td >${index + 1}</td>`
-        html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
-        html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
-        html += `<td >${dato.documento}</td>`
-        html += `<td style="min-width:172px"> ${dato.created_at}</td>`
-        html += '<td ">';
-        html += '<div class="d-flex justify-content-center dropend">'
-        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
-        html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
-        html += '</button>'
-        html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
-        html += '<div class="d-flex" style="font-size:13px">';
-        html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-file-pdf" style="margin-right:5px"></i> <strong>' + dato.documento + '</strong>';
-        html += '</div>';
-        html += '</div>';
-        html += '<div class="row" style="font-size:13px">';
-        var data = JSON.parse(dato.data);
-        for (var key in data.new) {
-            html += '<div style="display:block;height:auto;">';
-            html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
-            if (key != 'data') {
-                html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
-                if (data.old != null) {
-                    html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
-                }
-            } else {
-                var dataDoc = JSON.parse(data.new.data);
-                html += '<div style="display:block;height:auto;">';
-                if (data.old !== null) {
-                    for (let i = 0; i < dataDoc.length; i++) {
-                        var dataDocOld = JSON.parse(data.old.data);
-                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
-                        html += '<div> <span class="text-warning">Old =></span> ' + (dataDocOld[i].nombre != null ? dataDocOld[i].nombre : 'null') + ' => ' + (dataDocOld[i].valor != null ? dataDocOld[i].valor : 'null') + '</div>';
-                    }
-                } else {
-                    for (let i = 0; i < dataDoc.length; i++) {
-                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
-                    }
-                }
-                html += '</div>';
-            }
-            html += '</div>';
-        }
-        html += '</div>';
-
-        html += '</div>';
-        html += '</td>';
-        html += '</tr>';
-
-    })
-    html += '</tbody>'
-    html += '</table>'
-    document.getElementById('historialDoc').innerHTML = html;
-    $("#tablaHistorialDocs").DataTable({
-        columnDefs: [
-            {
-                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
-                searchable: false // La columna "Detalle" no será incluida en la búsqueda
-            }
-        ],
-        language: {
-            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
-        }
-    });
-
-}
 
 var contInputs = 0;
 document.addEventListener('click', e => {
@@ -1521,8 +1030,8 @@ document.addEventListener('click', e => {
 })
 
 async function inputsValue(id) {
-    let seccionActual = await traerSeccion(id);
-    let seccionesActualizadas = await traerSecciones(); // este funciona para el select de mover
+    let seccionesActualizadas = await traerSecciones();
+    let seccionActual = seccionesActualizadas.find(sec => sec.id == id);
     let docsActualizados = await traerDocs(id);
     if (configDocs.mostrarAllDocs == true) { docsActualizados = await traerDocsMover(id); }
     let docsSeleccionados = configDocs.valuesInputMover.map((doc) => {
@@ -1545,7 +1054,7 @@ async function inputsValue(id) {
     html += '<div class="my-3 d-flex justify-content-center">'
     html += '<ul class="list-group w-75" style="font-size:12px">'
     docsSeleccionados.forEach(doc => {
-        html += '<li class="list-group-item"><i class="fa-solid fa-file-pdf fa-xl" style="margin-right:5px"></i> ' + (doc.alias != "" ? doc.alias : doc.codigo) + '</li>'
+        html += '<li class="list-group-item">* ' + (doc.alias != "" ? doc.alias : doc.codigo) + '</li>'
     })
     html += '<ul>'
     html += '</div>'
@@ -1591,8 +1100,7 @@ async function saveMoverDocs(id) {
         }, 3000);
         return;
     }
-    datos.append('idSeccionAnterior', id)
-    datos.append('idSeccionNueva', seccion);
+    datos.append('idSeccion', seccion);
     datos.append('documentos', JSON.stringify(configDocs.valuesInputMover));
     console.log([...datos]);
 
@@ -1648,7 +1156,7 @@ async function saveMoverDocs(id) {
             html += '</li>'
         })
         html += '</ul>'
-        document.getElementById('alertasMoverDoc').innerHTML = html;
+        document.getElementById('alertas').innerHTML = html;
     }
     alertas();
 
@@ -1744,7 +1252,6 @@ async function waitResponse(contenedor, altura = '129.5px', tipo = 1) {
 async function saveEditDoc(id) {
     const inputs = document.querySelectorAll('.edit-campos' + id)
     const nombres = Array.apply(null, inputs);
-    const alias = document.getElementById('aliasDoc').value
     var html = "";
     const info = [];
     let claves;
@@ -1779,7 +1286,6 @@ async function saveEditDoc(id) {
         datos.append('id', id);
         datos.append('keywords', claves)
         datos.append('data', JSON.stringify(info));
-        datos.append('alias', alias);
         console.log([...datos]);
         let url = URL_BASE + '/documento/update';
         const request = await fetch(url, {
@@ -1827,14 +1333,14 @@ async function saveEditDoc(id) {
             })
         } else {
             html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
-            console.log('swf', response.alertas.error);
+            console.log('swf',response.alertas.error);
             response.alertas.error.forEach(alerta => {
                 html += '<li class="text-danger"  >'
                 html += alerta
                 html += '</li>'
             })
             html += '</ul>'
-            document.getElementById('alertasEditarMetadata' + id).innerHTML = html;
+            document.getElementById('alertasEditarMetadata'+id).innerHTML = html;
         }
         alertas();
     }
@@ -1842,6 +1348,7 @@ async function saveEditDoc(id) {
 
 async function mostrarDocsPro(padre) {
     configDocs.mostrarAllDocs = true;
+    console.log('mostrarAllDocs luego de aplastar el boton', configDocs.mostrarAllDocs);
     $.ajax({
         data: { "tipo": "allDocs", "id": padre },
         url: URL_BASE + '/carpeta/datos',
@@ -1862,7 +1369,7 @@ async function mostrarDocsPro(padre) {
                 window.location.href = URL_BASE + "/?r=8";
             })
         }
-        waitResponse('.docsContenido', '50px', 2);
+        waitResponse('.contenido', '50px', 2);
         setTimeout(() => {
             if (response.length == 0) {
                 var html = "";
@@ -1883,8 +1390,9 @@ async function mostrarDocsPro(padre) {
 }
 
 async function agregarDocumento(padre) {
+    let secciones = await traerSecciones();
     let formularios = await traerFormularios();
-    let seccionActual = await traerSeccion(padre);
+    let seccionActual = secciones.find(sec => sec.id == padre);
     var html = "";
     let tipo = 1;
     document.getElementById("dibujar-tabla").innerHTML = "";
@@ -1898,15 +1406,15 @@ async function agregarDocumento(padre) {
     if (tipo == "2") {
         html += '<h3 class="text-black mt-2 mb-4">Edite los datos de ' + +"</h3>";
     } else {
-        html += '<h3 class="text-black mt-2 mb-4">Elija un Formulario para agregar el documento</h3>';
+        html +='<h3 class="text-black mt-2 mb-4">Elija un Formulario para agregar el documento</h3>';
     }
     html += '<div class="mb-3">';
     html +=
         '<label for="exampleFormControlInput1" class="form-label"><strong>Formulario:</strong></label>';
-    html += '<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,' + padre + ')">';
-    html += ' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
+    html +='<select class="form-select w-100" style="height:30px" id="seccion" onchange="elegirSeccionAgregar(this.value,' + padre + ')">';
+    html +=' <option value="" selected disabled> -- Seleccione un formulario -- </option>';
     formularios.forEach((formulario) => {
-        html += ' <option value="' + formulario.id + '">' + formulario.nombre + "</option>";
+        html +=' <option value="' + formulario.id + '">' + formulario.nombre + "</option>";
     });
     html += "</select>";
     html += "</div>";
@@ -2102,7 +1610,6 @@ async function saveArchivo(idFormulario, padre) {
 
 async function deleteDoc(id) {
     let doc = await traerDocumento(id);
-    console.log('doc',doc);
     let nombre;
     if (doc.alias == "") {
         nombre = doc.codigo
@@ -2131,6 +1638,7 @@ async function deleteDoc(id) {
                 },
                 dataType: 'json'
             }).done((response) => {
+                console.log('response Eliminar', response);
                 if (response.exito) {
                     Swal.fire({
                         position: 'top-end',
@@ -2139,15 +1647,16 @@ async function deleteDoc(id) {
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        dibujarPadreAndCarpetas(doc.idSeccion)
+                        dibujarPadreAndCarpetas(response.padre)
                     })
                 } else if (response.error) {
                     Swal.fire({
                         icon: 'error',
                         title: 'ERROR',
-                        html: '<strong>' + nombre + '</strong> ' + response.error
+                        html: '<strong>' + response.carpeta + '</strong> ' + response.error
                     }).then(() => {
-                        dibujarPadreAndCarpetas(doc.idSeccion)
+                        dibujarPadreAndCarpetas(response.padre)
+
                     })
                 } else if (response.exit) {
                     Swal.fire({
@@ -2255,7 +1764,9 @@ async function updateSeccion(padre, hijo, tipo) {
     datos.append('seccion', seccion);
     datos.append('descripcion', descripcion);
     datos.append('color', color);
-    datos.append('idPadre', idPadre);
+    if (padre != idPadre) {
+        datos.append('idPadre', idPadre);
+    }
     tipo == 1 ? datos.append('tipo', 1) : datos.append('tipo', 2);
     console.log([...datos]);
     let url = URL_BASE + '/carpeta/update';
@@ -2278,11 +1789,7 @@ async function updateSeccion(padre, hijo, tipo) {
         }).then(() => {
             $('#exampleModal' + hijo).modal('hide')
             $('#exampleModalEditar' + hijo).modal('hide')
-            if (tipo == 1) {
-                dibujarPadreAndCarpetas(hijo);
-            } else {
-                dibujarHijosPadre(padre)
-            }
+            dibujarPadreAndCarpetas(padre);
         })
     } else if (response.error) {
         Swal.fire({
@@ -2292,11 +1799,7 @@ async function updateSeccion(padre, hijo, tipo) {
         }).then(() => {
             $('#exampleModal' + hijo).modal('hide')
             $('#exampleModalEditar' + hijo).modal('hide')
-            if (tipo == 1) {
-                dibujarPadreAndCarpetas(hijo);
-            } else {
-                dibujarHijosPadre(padre)
-            }
+            dibujarPadreAndCarpetas(padre);
         })
     } else if (response.exit) {
         Swal.fire({
@@ -2323,7 +1826,8 @@ async function updateSeccion(padre, hijo, tipo) {
 }
 
 async function deleteSeccion(hijo) {
-    const seccionEliminar = await traerSeccion(hijo)
+    const secciones = await traerSecciones();
+    const seccionEliminar = secciones.find(sec => sec.id == hijo)
     Swal.fire({
         title: 'ELIMINAR',
         text: `Estas seguro de Eliminar de forma permamente a ${seccionEliminar.seccion}?`,
@@ -2362,7 +1866,8 @@ async function deleteSeccion(hijo) {
                         title: 'ERROR',
                         html: '<strong>' + response.carpeta + '</strong> ' + response.error
                     }).then(() => {
-                        dibujarPadreAndCarpetas(seccionEliminar.id)
+                        dibujarPadreAndCarpetas(seccionEliminar.idPadre)
+
                     })
                 } else if (response.exit) {
                     Swal.fire({
@@ -2398,4 +1903,3 @@ async function abrirPdf(path, nombre) {
     let carpeta = '/public/archivos';
     window.open(URL_BASE + carpeta + path);
 }
-

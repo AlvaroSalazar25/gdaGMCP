@@ -21,7 +21,11 @@ async function iniciarApp() {
     formulario = await traerFormularios();
     console.log('formuarios',formulario);
     dibujarFormulario();
-    $('#tablaFormularios').DataTable();
+    $('#tablaFormularios').DataTable({
+        language: {
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
+    });
 }
 
 function alertas() {
@@ -221,7 +225,11 @@ async function dibujarFormulario(id, tipo = 1) {
     html += '</tbody>'
     html += '</table>'
     document.getElementById("dibujar-js").innerHTML = html;
-    $('#tablaFormularios').DataTable();
+    $('#tablaFormularios').DataTable({
+        language: {
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
+    });
 }
 
 async function agregarFormulario(tipo = 1, id) {
@@ -427,7 +435,11 @@ async function guardarFormulario(id) {
                 timer: 1500
             }).then(() => {
                 dibujarSecciones();
-                $('#tablaSecciones').DataTable();
+                $('#tablaSecciones').DataTable({
+                    language: {
+                        url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+                      }
+                });
             })
         } else if (response.error) {
             Swal.fire({
@@ -436,7 +448,11 @@ async function guardarFormulario(id) {
                 text: response.error
             }).then(() => {
                 dibujarSecciones();
-                $('#tablaSecciones').DataTable();
+                $('#tablaSecciones').DataTable({
+                    language: {
+                        url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+                      }
+                });
 
             })
         } else if (response.exit) {

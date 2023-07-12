@@ -266,7 +266,11 @@ async function dibujarDocumentos() {
     html2 += '</tbody>';
 
     document.getElementById("dibujar-tabla").innerHTML = html2;
-    $("#tablaDocsUltimo").DataTable();
+    $("#tablaDocsUltimo").DataTable({
+        language: {
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
+    });
 
 }
 
@@ -577,7 +581,11 @@ async function elegirSeccion() {
         html += "</table>";
 
         document.getElementById("dibujar-tabla").innerHTML = html;
-        $("#tablaDocs").DataTable();
+        $("#tablaDocs").DataTable({
+            language: {
+                url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+              }
+        });
     }
 }
 

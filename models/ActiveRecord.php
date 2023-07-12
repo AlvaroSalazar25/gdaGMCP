@@ -3,6 +3,7 @@
 namespace Model;
 
 use Exception;
+use mysqli;
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -25,6 +26,31 @@ class ActiveRecord
         public static function getTabla()
         {
                 return static::$tabla;
+        }
+
+        public static function initTransaction()
+        {
+                self::$db->autocommit(false);
+        }
+
+        public static function endTransaction()
+        {
+                self::$db->commit();
+                self::$db->autocommit(true);
+        }
+
+        public static function rollback()
+        {
+                self::$db->rollback();
+                self::$db->autocommit(true);
+        }
+
+        public static function debug()
+        {
+                $result = self::$db->query('SHOW ENGINE INNODB STATUS');
+                $row = $result->fetch_assoc();
+                $info = $row['Status'];
+                return $info;
         }
 
         public static function setAlerta($tipo, $mensaje)
@@ -135,23 +161,11 @@ class ActiveRecord
                 return $resultado;
         }
 
-        public function guardarPermiso($campo,$valor)
+ 
+        public static function cantidadPermisos($campo, $valor,$campo2, $valor2)
         {
-                $resultado = '';
-                $permisos = $this->cantidadPermisos($campo,$valor);
-                if (!empty($permisos)) {
-                        // actualizar
-                        $resultado = $this->actualizarPermiso($campo,$valor);
-                } else {
-                        // Creando un nuevo registro
-                        $resultado = $this->crear();
-                }
-                return $resultado;
-        }
-
-        public function cantidadPermisos($campo, $valor){
-                $consulta = "SELECT * FROM ".static::$tabla." WHERE ".$campo." = ".$valor." AND idSeccion = ".$this->idSeccion;
-                $permisos = self::consultaPlana($consulta); 
+                $consulta = "SELECT * FROM " . static::$tabla . " WHERE " . $campo . " = " . $valor . " AND $campo2 = " . $valor2;
+                $permisos = self::consultaPlana($consulta);
                 return array_shift($permisos);
         }
 
@@ -284,7 +298,7 @@ class ActiveRecord
         }
 
         // Actualizar el registro
-        public function actualizarPermiso($campo,$valor)
+        public function actualizarPermiso($campo, $valor)
         {
                 // Sanitizar los datos
                 $atributos = $this->sanitizarAtributos();
@@ -296,7 +310,7 @@ class ActiveRecord
                 // Consulta SQL
                 $query = "UPDATE " . static::$tabla . " SET ";
                 $query .=  join(', ', $valores);
-                $query .= " WHERE ".$campo." = '" . self::$db->escape_string($valor) . "' AND idSeccion = '" . self::$db->escape_string($this->idSeccion) . "' ";
+                $query .= " WHERE " . $campo . " = '" . self::$db->escape_string($valor) . "' AND idSeccion = '" . self::$db->escape_string($this->idSeccion) . "' ";
                 // Actualizar BD
                 $resultado = self::$db->query($query);
                 return $resultado;

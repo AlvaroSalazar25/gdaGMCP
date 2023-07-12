@@ -24,15 +24,17 @@
                 </div>
             </div>
         </nav>
-    <div class="dibujar my-4" id="dibujar-botones">
+<div class="px-5 py-3">
+<div class="dibujar my-4" id="dibujar-botones">
 
-    </div>
-    <div class="dibujar" id="dibujar-js">
+</div>
+<div class="dibujar" id="dibujar-js">
 
-    </div>
-    <div class="dibujar mt-4" id="dibujar-tabla">
+</div>
+<div class="dibujar mt-4" id="dibujar-tabla">
 
-    </div>
+</div>
+</div>
 
 
 <?php include __DIR__ . "/../templates/alertasUser.php" ?>
@@ -43,5 +45,5 @@
 <?php
 
 $script = '
-<script src="build/js/user/editor.js"></script>
+<script src="'.$_ENV['URL_BASE'] .'/build/js/user/editor.js"></script>
 ' ?>

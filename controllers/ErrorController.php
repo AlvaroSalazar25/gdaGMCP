@@ -36,7 +36,8 @@ class ErrorController
             switch ($_POST['tipo']) {
                 case 'errores':
                     $errores = Errors::all();
-                    echo json_encode($errores);
+                    $sorted = ordenarPorCreatedAtObj($errores);
+                    echo json_encode($sorted);
                     return;
                     break;
                 default:

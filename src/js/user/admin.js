@@ -411,7 +411,11 @@ async function dibujarUsuarios(contenedor, tipo = 1, usuarios = []) {
     html += '</table>'
 
     document.getElementById(contenedor.toString()).innerHTML = html;
-    $('#tablaUsuarios').DataTable();
+    $('#tablaUsuarios').DataTable({
+        language: {
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
+    });
 }
 
 async function permisosUser(id) {

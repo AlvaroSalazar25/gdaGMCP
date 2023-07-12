@@ -136,5 +136,9 @@ async function dibujarErrores() {
     html += '</table>'
 
     document.getElementById('dibujar-js').innerHTML = html;
-    $('#tablaError').DataTable();
+    $('#tablaError').DataTable({
+        language: {
+            url: URL_BASE+'/public/build/js/varios/DataTable_es_es.json'
+          }
+    });
 }

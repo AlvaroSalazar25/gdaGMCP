@@ -22,30 +22,30 @@ let permisosDefault = [
     {
         "id": 4,
         "status": false,
-        "nombre": "Ver_Documento",
+        "nombre": "Ver_Documentos",
         "type": "documento",
         "descripcion": "Permiso para visualizar el documento",
     },
     {
         "id": 5,
         "status": false,
+        "nombre": "Mover_Documentos",
+        "type": "documento",
+        "descripcion": "Permiso para mover de carpeta los documentos",
+    },
+    {
+        "id": 6,
+        "status": false,
         "nombre": "Crear_Documento",
         "type": "documento",
         "descripcion": "Permiso para Crear un documento",
     },
     {
-        "id": 6,
+        "id": 7,
         "status": false,
         "nombre": "Editar_Documento",
         "type": "documento",
         "descripcion": "Permiso para Editar la metadata del documento",
-    },
-    {
-        "id": 7,
-        "status": false,
-        "nombre": "Mover_Documentos",
-        "type": "documento",
-        "descripcion": "Permiso para mover de carpeta los documentos",
     },
     {
         "id": 8,
@@ -53,6 +53,13 @@ let permisosDefault = [
         "nombre": "Eliminar_Documento",
         "type": "documento",
         "descripcion": "Permiso para Eliminar el documento",
+    },
+    {
+        "id": 9,
+        "status": false,
+        "nombre": "Descargar_Documento",
+        "type": "documento",
+        "descripcion": "Permiso para Descargar los documentos",
     },
 ]
 document.addEventListener('DOMContentLoaded', iniciarApp())
@@ -119,10 +126,56 @@ function traerSeccion(id) {
     })
 }
 
+function traerHistorial(id) {
+    return new Promise((resolve, reject) => {
+        let datos = [];
+        $.ajax({
+            data: {
+                "idSeccion": id,
+                "tipo": "historial",
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + "/carpeta/datos",
+            type: "POST",
+            headers: {
+                token: token,
+            },
+            dataType: "json",
+        })
+            .done((response) => {
+                if (response.exit) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: "Sesión expirada, vuelva a iniciar sesión",
+                        timer: 3000,
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    });
+                }
+                if (response.length == 0) {
+                    resolve(datos);
+                }
+                $.each(response, (index, dato) => {
+                    datos.push(dato);
+                    if (response.length == index + 1) {
+                        resolve(datos);
+                    }
+                });
+            })
+            .fail((err) => {
+                reject(err);
+            });
+    });
+}
+
 async function dibujarCarpeta(id) {
     var html = "";
     document.getElementById('contenedor-titulo').innerHTML = "";
     let seccionActual = await traerSeccion(id);
+    let historial = await traerHistorial(id);
+
     html += '<div class="d-flex justify-content-center padreAtras">'
     html += '<div class="d-flex justify-content-center hijoAtras">'
     html += '<a class=" btn btn-outline-danger ' + (seccionActual == undefined ? 'noVisible' : '') + ' " onclick="dibujarAtras()"><i class="fa-solid fa-arrow-left-long fa-2x"></i> <span class="span-boton">Atrás</span></a>'
@@ -131,17 +184,28 @@ async function dibujarCarpeta(id) {
         html += '<h1 class="text-black mb-3"><strong>Administrar Carpetas</strong></h1>'
     } else {
         html += '<div class="d-flex flex-column justify-content-center">'
-        html += '<div class="d-flex justify-content-center">'
-        html += '<h1 class="text-black mb-3"><i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;color:' + seccionActual.color + '"></i><strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong></h1>'
-        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" style="margin-left:5px;margin-top:4px;width:25px;height:30px;border-radius:15px">'
-        html += '<i class="fa-solid fa-ellipsis-vertical fa-xl "></i>'
+        html += '<div class="d-flex justify-content-center align-items-center">'
+        html += '<i class="fa-solid fa-folder-open fa-xl" style="margin-right:7px;font-size:35px;color:' + seccionActual.color + '"></i>'
+        html += '<div class="d-flex justify-content-center align-items-center">'
+        html += '<h1 class="text-black m-0 p-0"><strong>' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</strong></h1>'
+        html += '</div>'
+        html += '<div class="d-flex justify-content-center align-items-center mb-2" style="margin-left:5px">'
+        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle py-0" data-bs-toggle="dropdown" style="width:25px;height:30px;border:none">'
+        html += '<i class="fa-solid fa-ellipsis-vertical" style="font-size:25px"></i>'
         html += '</button>'
+
         html += '<ul class="dropdown-menu dropdown-menu-dark">'
         html += ' <li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalEditar' + seccionActual.id + '"><i class="fa-solid fa-pen-to-square" style="margin-right:7px"></i>Editar</a></li>'
+        html += ' <li class="puntero"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalInfo' + seccionActual.id + '"><i class="fa-solid fa-circle-info" style="margin-right:7px"></i>Información</a></li>'
         html += '<li class="puntero"><a class="dropdown-item" onclick="deleteSeccion(' + seccionActual.id + ')"><i class="fa-solid fa-trash" style="margin-right:7px"></i>Eliminar</a></li>'
         html += '</ul>'
         html += '</div>'
-        html += '<h3 class="text-black mt-3 mb-4">Lista de usuarios permitidos para interactuar con la carpeta seleccionada</h3>'
+        html += '</div>'
+        if (seccionActual.descripcion.length > 0) {
+            html += '<h3 class="text-black mt-3 mb-4">' + (seccionActual.descripcion[0].toUpperCase() + seccionActual.descripcion.substring(1)) + '</h3>'
+        } else {
+            html += '<h3 class="text-black mt-3 mb-4">' + seccionActual.descripcion + '</h3>'
+        }
         html += '</div>'
     }
     /*=============================================================================================================//
@@ -241,16 +305,125 @@ async function dibujarCarpeta(id) {
     html += '</div>'
     html += '<div class="modal-footer">'
     html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
-    html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + padre + ',' + seccionActual.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
+    html += '<a class="btn btn-success" id="botonCrear" onclick="updateSeccion(' + seccionActual.idPadre + ',' + seccionActual.id + ',2)"><i class="fa-solid fa-floppy-disk"></i> <span style="margin-left:8px">Guardar</span></a>'
     html += '</div>'
     html += '</div>'
     html += '</div>'
     html += '</div>'
+
+    html += '<div class="w-100 mt-2" id="alertas">'
+    html += '</div>'
+
+    html += '</div>'
+    html += '<div class="modal-footer">'
+    html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>'
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+
+    /*=============================================================================================================//
+                                                modal para Mostrar Informacion de carpeta
+            //==============================================================================================================*/
+
+    html += '<div class="modal fade" id="exampleModalInfo' + seccionActual.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" >'
+    html += '<div class="modal-dialog modal-lg" style="min-width:800px !important" >'
+    html += '<div class="modal-content">'
+    html += '  <div class="modal-header bg-black">'
+    html += '   <h5 class="modal-title text-white">Información de Carpeta</h5>'
+    html += '<button type="button" class="btn text-white" style="font-size:11px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+    html += '  </div>'
+    html += '  <div class="modal-body">'
+    if (seccionActual == false) {
+        html += '   <h5 class="modal-title text-white">Modificaciones</h5>'
+    } else {
+        html += '<div class="d-flex justify-content-between">'
+        html += '<div style="width:160px"></div>'
+        html += '<h3 class="text-black mt-2 mb-4"> <i class="fa-solid fa-folder-open" style="color:' + seccionActual.color + '"></i> ' + (seccionActual.seccion[0].toUpperCase() + seccionActual.seccion.substring(1)) + '</h3>'
+        html += '<div><button type="button" class="btn btn-warning" style="font-size:13.4px" onclick="historialDocs(' + seccionActual.id + ')"><i class="fa-solid fa-rotate-right fa-flip-horizontal" style="margin-right:5px"></i>Historial Documentos</button></div>'
+        html += '</div>'
+    }
+
+    html += '<div id="historialDoc">'
+    html += '<table class="table table-hover align-middle" id="tablaHistorialCarpeta">'
+    html += '<thead class="table-secondary ">'
+    html += '<tr style="text-transform:uppercase">'
+    html += '<th >#</th>'
+    html += '<th >Usuario</th>'
+    html += '<th >Acción</th>'
+    html += '<th style="width:170px">Carpeta</th>'
+    html += '<th >Fecha</th>'
+    html += '<th  >Detalle</th>'
+    html += '</tr>'
+
+    html += '</thead>'
+    html += '<tbody class="contenido" id="contenido">'
+    historial.forEach((dato, index) => {
+        var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
+        html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
+        html += `<td >${index + 1}</td>`
+        html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
+        html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
+        html += `<td >${carpeta[0].toUpperCase() + carpeta.substring(1)}</td>`
+        html += `<td style="min-width:172px"> ${dato.created_at}</td>`
+        html += '<td ">';
+        html += '<div class="d-flex justify-content-center dropend">'
+        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
+        html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
+        html += '</button>'
+        html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
+        html += '<div class="d-flex" style="font-size:13px">';
+        html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-folder-open" style="margin-right:5px"></i> <strong>' + (carpeta[0].toUpperCase() + carpeta.substring(1)) + '</strong>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="row" style="font-size:13px">';
+        var data = JSON.parse(dato.data);
+
+        for (var key in data.new) {
+            html += '<div style="display:block;height:auto;">';
+            html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
+            html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
+            html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '</td>';
+        html += '</tr>';
+    })
+    html += '</tbody>'
+    html += '</table>'
+    html += '</div>'
+
+    html += '<div class="w-100 mt-2" id="alertas">'
+    html += '</div>'
+
+    html += '</div>'
+    html += '<div class="modal-footer">'
+    html += '<button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancelar</button>'
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+    html += '</div>'
+
+
+
     document.getElementById('dibujar-js').innerHTML = html;
     document.getElementById("dibujar-tabla").innerHTML = "";
     waitResponse('#contenedorCarpetas');
     $("#select" + id).select2({
         dropdownParent: $("#exampleModalEditar" + id)
+    });
+    $("#tablaHistorialCarpeta").DataTable({
+        columnDefs: [
+            {
+                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
+                searchable: false // La columna "Detalle" no será incluida en la búsqueda
+            }
+        ],
+        language: {
+            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
+        }
     });
     await dibujarUsers('contenedorCarpetas', id);
     // await dibujarUnidades('contenedorUnidades', id);
@@ -298,7 +471,7 @@ async function dibujarUsers(contenedor, carpeta, tipo = 1, usuarios = []) {
     let combinedArray = combinarArrays(usuarios, unidades);
     var html = '';
     html += '<h4><strong>Usuarios</strong></h4>'
-    html += '<table class="table" style="min-width:900px" id="tablaUsuarios">'
+    html += '<table class="table" style="min-width:900px" id="tablaUsuariosPermisos">'
     html += '<thead class="table-dark">'
     html += '<tr class="" style="text-transform:uppercase">'
     html += '<th >N°</th>'
@@ -316,18 +489,33 @@ async function dibujarUsers(contenedor, carpeta, tipo = 1, usuarios = []) {
         let estado = dato.estado == '1' ? 'btn-outline-success' : 'btn-outline-danger'
         //console.log(dato);
         html += '<tr class="">'
-        html += '<td>' + (parseInt(index) + 1) + '</p></td>'
-        html += '<td class="col"><i class="fa-solid ' + (dato.idUser != '-' ? 'fa-user' : 'fa-building') + '" style="margin-right:10px"></i>' + dato.nombre + '</p></td>'
+        html += '<td>' + (parseInt(index) + 1) + '</td>'
+        html += `<td class="col">`
+        html += '<div class="d-flex justify-content-between">'
+        html += '<div class="" style="min-width:180px">'
+        html +=`<i class="fa-solid ${dato.idUser != "-" ? "fa-user" : "fa-building"}" style="margin-right:6px"></i>`
+        html += `<span>${dato.nombre}</span>`
+        html += '</div>'
+        if (dato.idUser != "-") {
+        html += '<div class="d-flex justify-content-start w-100" >'
+            html += '<button type="button" class="btn btn-outline-secondary" style="border-radius:15px;border:0px" onclick="dibujarHistorialUser('+carpeta+','+dato.idUser+')">'
+            html += '<i class="fa-solid fa-ellipsis-vertical fa-xl"></i>'
+            html += '</button>'
+        html += '</div>'
 
-        html += '<td class="col">' + dato.rol + '</p></td>'
-        html += '<td class="col">' + dato.unidad + '</p></td>'
-        if (dato.estado != '-') {
-            html += '<td class="col"><buttom type="buttom" disabled class="botonDisabled btn btn-rounded ' + estado + '"  style="">' + (dato.estado == '1' ? 'Activo' : 'Inactivo') + '</buttom></p></td>'
-        } else {
-            html += '<td class="col">' + dato.estado + '</p></td>'
         }
-        html += '<td class="col">' + dato.jefe + '</p></td>'
-        html += '<td class="col">' + dato.usuarios + '</p></td>'
+        html += '</div>'
+        html += '</div>'
+        html += '</td>'
+        html += '<td class="col">' + dato.rol + '</td>'
+        html += '<td class="col">' + dato.unidad + '</td>'
+        if (dato.estado != '-') {
+            html += '<td class="col"><buttom type="buttom" disabled class="botonDisabled btn btn-rounded ' + estado + '"  style="">' + (dato.estado == '1' ? 'Activo' : 'Inactivo') + '</buttom></td>'
+        } else {
+            html += '<td class="col">' + dato.estado + '</td>'
+        }
+        html += '<td class="col">' + dato.jefe + '</td>'
+        html += '<td class="col">' + dato.usuarios + '</td>'
         html += '<td class="col">'
         html += '<div class="d-flex">'
         let tipoDato = (dato.idUnidad != '-' ? 1 : 0);
@@ -341,8 +529,311 @@ async function dibujarUsers(contenedor, carpeta, tipo = 1, usuarios = []) {
     html += '</table>'
     document.getElementById(contenedor.toString()).classList.add('mt-5')
     document.getElementById(contenedor.toString()).innerHTML = html;
-    $('#tablaUsuarios').DataTable();
+    $('#tablaUsuariosPermisos').DataTable({
+        language: {
+            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
+        }
+    });
 }
+
+async function dibujarHistorialUser(carpeta,id){
+    let dato = await findUserById(id);
+    let permisosUser ;
+    permisosUser = await traerPermisosUser(carpeta,dato.id);
+    if(permisosUser.length == 0){
+        permisosUser = await traerPermisosUnidad(carpeta,dato.idUnidad);
+        //seguir aqui para terminar el historial
+    }
+    console.log('permisos User',permisosUser);
+
+}
+
+async function dibujarModalHistorialDoc(id) {
+    var html = "";
+    let documento = await traerDocumento(id);
+    let historial = await traerHistorialDoc(id);
+    /* ================================================================================================================
+            Modal Historial del documento
+    ==================================================================================================================*/
+    html += '<div class="modal fade" id="exampleModalHistorialByDoc' + documento.id + '" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">';
+    html += ' <div class="modal-dialog modal-lg">';
+    html += ' <div class="modal-content">';
+    html += ' <div class="modal-header bg-black ">';
+    html += ' <h5 class="modal-title text-white" id="exampleModalLabel">Historial Documento <strong>' + documento.codigo + '</strong></h5>';
+    html += '<button type="button" class="btn text-white" style="font-size:13px" data-bs-dismiss="modal" aria-label="Close"><i class="fa-solid fa-x fa-lg"></i></button>';
+    html += ' </div>';
+    html += '  <div class="modal-body">';
+    html += '<h3 class="text-black mt-2 mb-4"> <i class="fa-solid fa-file-pdf" "></i> ' + (documento.alias != "" ? documento.alias : documento.codigo) + '</h3>'
+    html += '<div id="historialDoc">'
+    html += '<table class="table table-hover align-middle" id="tablaHistorialByDoc">'
+    html += '<thead class="table-secondary ">'
+    html += '<tr style="text-transform:uppercase">'
+    html += '<th >#</th>'
+    html += '<th >Usuario</th>'
+    html += '<th >Acción</th>'
+    html += '<th style="width:170px">Carpeta</th>'
+    html += '<th >Fecha</th>'
+    html += '<th  >Detalle</th>'
+    html += '</tr>'
+
+    html += '</thead>'
+    html += '<tbody class="contenido" id="contenido">'
+    historial.forEach((dato, index) => {
+        console.log('dato', dato);
+        var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
+        html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
+        html += `<td >${index + 1}</td>`
+        html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
+        html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
+        html += `<td >${carpeta[0].toUpperCase() + carpeta.substring(1)}</td>`
+        html += `<td style="min-width:172px"> ${dato.created_at}</td>`
+        html += '<td ">';
+        html += '<div class="d-flex justify-content-center dropend">'
+        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
+        html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
+        html += '</button>'
+        html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
+        html += '<div class="d-flex" style="font-size:13px">';
+        html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-file-pdf" style="margin-right:5px"></i> <strong>' + dato.documento + '</strong>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="row" style="font-size:13px">';
+        var data = JSON.parse(dato.data);
+        for (var key in data.new) {
+            html += '<div style="display:block;height:auto;">';
+            html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
+            if (key != 'data') {
+                html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
+                if (data.old != null) {
+                    html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
+                }
+            } else {
+                var dataDoc = JSON.parse(data.new.data);
+                html += '<div style="display:block;height:auto;">';
+                if (data.old !== null) {
+                    for (let i = 0; i < dataDoc.length; i++) {
+                        var dataDocOld = JSON.parse(data.old.data);
+                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
+                        html += '<div> <span class="text-warning">Old =></span> ' + (dataDocOld[i].nombre != null ? dataDocOld[i].nombre : 'null') + ' => ' + (dataDocOld[i].valor != null ? dataDocOld[i].valor : 'null') + '</div>';
+                    }
+                } else {
+                    for (let i = 0; i < dataDoc.length; i++) {
+                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
+                    }
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+
+        html += '</div>';
+        html += '</td>';
+        html += '</tr>';
+
+    })
+    html += '</tbody>'
+    html += '</table>'
+    html += '</div>'
+    html += '<div>';
+
+    html += '</div>';
+    html += ' <div class="modal-footer mt-3">';
+    html += ' <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cerrar</button>';
+    html += "  </div>";
+    html += "</div>";
+    html += "</div>";
+    html += "</div>";
+    document.getElementById("modales").innerHTML = html;
+    $("#tablaHistorialByDoc").DataTable({
+        columnDefs: [
+            {
+                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
+                searchable: false // La columna "Detalle" no será incluida en la búsqueda
+            }
+        ],
+        language: {
+            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
+        }
+    });
+    $('#exampleModalHistorialByDoc' + documento.id).modal('show');
+}
+
+async function historialDocs(id) {
+    var html = "";
+    await waitResponse('#historialDoc', '374.5px', 2);
+    let historial = await traerHistorialDocCarpeta(id);
+    html += '<h3 class="text-black mt-2 mb-4"><strong>HISTORIAL DOCUMENTOS</strong></h3>'
+    html += '<table class="table table-hover align-middle" id="tablaHistorialDocs">'
+    html += '<thead class="table-secondary">'
+    html += '<tr style="text-transform:uppercase">'
+    html += '<th >#</th>'
+    html += '<th >Usuario</th>'
+    html += '<th >Acción</th>'
+    html += '<th style="width:170px">Documento</th>'
+    html += '<th >Fecha</th>'
+    html += '<th  >Detalle</th>'
+    html += '</tr>'
+    html += '</thead>'
+    html += '<tbody class="contenido" id="contenido">'
+    historial.forEach((dato, index) => {
+        console.log('dato', dato);
+        var carpeta = dato.nombreSeccion != null ? dato.nombreSeccion : dato.seccion;
+        html += `<tr title="${carpeta[0].toUpperCase() + carpeta.substring(1)}">`
+        html += `<td >${index + 1}</td>`
+        html += `<td style="min-width:112px"> ${dato.nombre != null ? dato.nombre : dato.user}</td>`
+        html += `<td class="${dato.accion == 'create' ? 'text-success' : dato.accion == 'delete' ? 'text-danger' : 'text-primary'}"> ${dato.accion[0].toUpperCase() + dato.accion.substring(1)}</td>`
+        html += `<td >${dato.documento}</td>`
+        html += `<td style="min-width:172px"> ${dato.created_at}</td>`
+        html += '<td ">';
+        html += '<div class="d-flex justify-content-center dropend">'
+        html += '<button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"  style="border-radius:15px;border:0px">'
+        html += '<i class="fa-solid fa-ellipsis-vertical fa-2x"></i>'
+        html += '</button>'
+        html += ' <div class="dropdown-menu dropdown-menu-dark p-4" style="min-width:400px" >'
+        html += '<div class="d-flex" style="font-size:13px">';
+        html += '<div class="d-flex w-100 justify-content-center" style="font-size:13px"><i class="fa-solid fa-file-pdf" style="margin-right:5px"></i> <strong>' + dato.documento + '</strong>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="row" style="font-size:13px">';
+        var data = JSON.parse(dato.data);
+        for (var key in data.new) {
+            html += '<div style="display:block;height:auto;">';
+            html += '<div style="min-width:100px"><strong>' + (key[0].toUpperCase() + key.substring(1)) + ':</strong></div>'
+            if (key != 'data') {
+                html += '<div > <span class="text-info">New </span> => ' + (data.new[key] != null ? data.new[key] : 'null') + '</div>';
+                if (data.old != null) {
+                    html += '<div > <span class="text-warning">Old </span> => ' + (data.old[key] != null ? data.old[key] : 'null') + '</div>';
+                }
+            } else {
+                var dataDoc = JSON.parse(data.new.data);
+                html += '<div style="display:block;height:auto;">';
+                if (data.old !== null) {
+                    for (let i = 0; i < dataDoc.length; i++) {
+                        var dataDocOld = JSON.parse(data.old.data);
+                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
+                        html += '<div> <span class="text-warning">Old =></span> ' + (dataDocOld[i].nombre != null ? dataDocOld[i].nombre : 'null') + ' => ' + (dataDocOld[i].valor != null ? dataDocOld[i].valor : 'null') + '</div>';
+                    }
+                } else {
+                    for (let i = 0; i < dataDoc.length; i++) {
+                        html += '<div> <span class="text-info">New => </span>' + (dataDoc[i].nombre != null ? dataDoc[i].nombre : 'null') + '  => ' + (dataDoc[i].valor != null ? dataDoc[i].valor : 'null') + '</div>';
+                    }
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        html += '</div>';
+
+        html += '</div>';
+        html += '</td>';
+        html += '</tr>';
+
+    })
+    html += '</tbody>'
+    html += '</table>'
+    document.getElementById('historialDoc').innerHTML = html;
+    $("#tablaHistorialDocs").DataTable({
+        columnDefs: [
+            {
+                targets: [5], // Índice de la columna "Detalle" (empezando desde 0)
+                searchable: false // La columna "Detalle" no será incluida en la búsqueda
+            }
+        ],
+        language: {
+            url: URL_BASE + '/public/build/js/varios/DataTable_es_es.json'
+        }
+    });
+
+}
+function traerHistorialDocCarpeta(id) {
+    return new Promise((resolve, reject) => {
+        let datos = [];
+        $.ajax({
+            data: {
+                "idSeccion": id,
+                "tipo": "historial",
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + "/documento/datos",
+            type: "POST",
+            headers: {
+                token: token,
+            },
+            dataType: "json",
+        })
+            .done((response) => {
+                if (response.exit) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: "Sesión expirada, vuelva a iniciar sesión",
+                        timer: 3000,
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    });
+                }
+                if (response.length == 0) {
+                    resolve(datos);
+                }
+                $.each(response, (index, dato) => {
+                    datos.push(dato);
+                    if (response.length == index + 1) {
+                        resolve(datos);
+                    }
+                });
+            })
+            .fail((err) => {
+                reject(err);
+            });
+    });
+}
+
+function traerHistorialDoc(id) {
+    return new Promise((resolve, reject) => {
+        let datos = [];
+        $.ajax({
+            data: {
+                "idDoc": id,
+                "tipo": "historialByDoc",
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + "/documento/datos",
+            type: "POST",
+            headers: {
+                token: token,
+            },
+            dataType: "json",
+        })
+            .done((response) => {
+                if (response.exit) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: "Sesión expirada, vuelva a iniciar sesión",
+                        timer: 3000,
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    });
+                }
+                if (response.length == 0) {
+                    resolve(datos);
+                }
+                $.each(response, (index, dato) => {
+                    datos.push(dato);
+                    if (response.length == index + 1) {
+                        resolve(datos);
+                    }
+                });
+            })
+            .fail((err) => {
+                reject(err);
+            });
+    });
+}
+
 
 function traerUsers() {
     return new Promise((resolve, reject) => {
@@ -624,7 +1115,6 @@ function findUnidadById(id) {
     })
 }
 
-
 async function modalPermiso(carpeta, dato, tipo) {
     let permisos;
     if (tipo == 0) {
@@ -653,7 +1143,7 @@ async function crearModalAgregarPermisos(carpeta, dato, tipo,) {
     }
 
     dato = mutarDato(dato)
-    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
+    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-folder-tree', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-trash', 'fa-solid fa-download']
     /*=============================================================================================================//
                                                 Modal de permisos carpeta y documentos
     //==============================================================================================================*/
@@ -761,8 +1251,8 @@ async function crearModalEditarPermisos(carpeta, dato, tipo) {
     }
     dato = mutarDato(dato)
     let permisosUN = JSON.parse(permisos[0].permisos);
-    console.log('permisos',permisos);
-    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-folder-tree', 'fa-solid fa-trash']
+    console.log('permisos', permisos);
+    let iconos = ['fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-eye', 'fa-solid fa-folder-tree', 'fa-solid fa-plus', 'fa-solid fa-edit', 'fa-solid fa-trash', 'fa-solid fa-download']
     /*=============================================================================================================//
                                                 Modal de permisos carpeta y documentos
     //==============================================================================================================*/
@@ -844,7 +1334,10 @@ async function crearModalEditarPermisos(carpeta, dato, tipo) {
     if (datoUserPermiso == true) {
         html += `<div class="form-text">* Permisos Heredados de la Unidad <strong>${dato.unidad}</strong></div>`
     } else {
+
         html += '<div>'
+        console.log('datooo', dato);
+        html += `<button type="button" class="btn btn-primary" onclick="heredarUnidad(${dato.id},${carpeta})">Heredar de <strong>Unidad</strong></button>`
         html += '</div>'
     }
     html += '<div>'
@@ -895,6 +1388,64 @@ document.addEventListener('click', function (e) {
     })
 })
 
+async function heredarUnidad(id, padre) {
+    $.ajax({
+        data: {
+            "idUser": id,
+        },
+        //url: ENV.URL_BASE + '/user/datos',
+        url: URL_BASE + '/permisos/heredar',
+        type: 'POST',
+        headers: {
+            'token': token
+        },
+        dataType: 'json'
+    }).done((response) => {
+        console.log(response);
+        if (response.exito) {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: response.exito,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                $('#exampleModalPermisosUser').modal('hide')
+                dibujarCarpeta(padre);
+            })
+        } else if (response.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR',
+                text: response.error
+            }).then(() => {
+                $('#exampleModalPermisosUser').modal('hide')
+                dibujarCarpeta(padre);
+            })
+        } else if (response.exit) {
+            Swal.fire({
+                icon: 'warning',
+                title: response.exit,
+                showConfirmButton: false,
+                text: 'Sesión expirada, vuelva a iniciar sesión',
+                timer: 3000
+            }).then(() => {
+                window.location.href = URL_BASE + "/?r=8";
+            })
+        } else {
+            html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+            response.alertas.error.forEach(alerta => {
+                html += '<li class="text-danger"  >'
+                html += alerta
+                html += '</li>'
+            })
+            html += '</ul>'
+            document.getElementById('alertas').innerHTML = html;
+        }
+        alertas();
+    })
+}
+
 async function savePermisos(carpeta, dato, tipo, accion) {
     console.log('tipo', tipo);
     let heredar = document.getElementById('heredar').checked
@@ -908,7 +1459,7 @@ async function savePermisos(carpeta, dato, tipo, accion) {
         .map(permiso => permiso.id);
 
     let verSeccion = document.querySelector("input[id='1']").checked;
-    console.log('verSeccion',verSeccion);
+    console.log('verSeccion', verSeccion);
     let permisosArray = permisosDefault
         .filter(permiso => {
             if (permiso.id === 1) {
@@ -1009,3 +1560,207 @@ async function savePermisos(carpeta, dato, tipo, accion) {
     alertas();
 }
 
+async function updateSeccion(padre, hijo, tipo) {
+    var html = "";
+    const seccion = document.getElementById('seccion' + hijo).value
+    const descripcion = document.getElementById('descripcion' + hijo).value
+    const color = document.getElementById('color' + hijo).value
+    const idPadre = document.getElementById('select' + hijo).value;
+
+    const datos = new FormData()
+    datos.append('hijo', hijo);
+    datos.append('padre', padre);
+    datos.append('seccion', seccion);
+    datos.append('descripcion', descripcion);
+    datos.append('color', color);
+    if (padre != idPadre) {
+        datos.append('idPadre', idPadre);
+    }
+    tipo == 1 ? datos.append('tipo', 1) : datos.append('tipo', 2);
+    console.log([...datos]);
+    let url = URL_BASE + '/carpeta/update';
+    const request = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'token': token
+        },
+        body: datos
+    });
+    //  respuesta de la peticion de arriba, me arroja true o false
+    const response = await request.json();
+    if (response.exito) {
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: response.exito,
+            showConfirmButton: false,
+            timer: 1500
+        }).then(() => {
+            $('#exampleModal' + hijo).modal('hide')
+            $('#exampleModalEditar' + hijo).modal('hide')
+            dibujarCarpeta(hijo);
+        })
+    } else if (response.error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ERROR',
+            text: response.error
+        }).then(() => {
+            $('#exampleModal' + hijo).modal('hide')
+            $('#exampleModalEditar' + hijo).modal('hide')
+            dibujarCarpeta(hijo);
+        })
+    } else if (response.exit) {
+        Swal.fire({
+            icon: 'warning',
+            title: response.exit,
+            showConfirmButton: false,
+            text: 'Sesión expirada, vuelva a iniciar sesión',
+            timer: 3000
+        }).then(() => {
+            window.location.href = URL_BASE + "/?r=8";
+        })
+    } else {
+        console.log('alertas', response);
+        html += '<ul class="alert bg-white px-5 mt-3" style="border-radius:5px;border:1px solid red"  style="width:100%" >'
+        response.alertas.error.forEach(alerta => {
+            html += '<li class="text-danger"  >'
+            html += alerta
+            html += '</li>'
+        })
+        html += '</ul>'
+        document.getElementById('alertas' + hijo).innerHTML = html;
+    }
+    alertas();
+}
+
+async function deleteSeccion(hijo) {
+    const seccionEliminar = await traerSeccion(hijo)
+    Swal.fire({
+        title: 'ELIMINAR',
+        text: `Estas seguro de Eliminar de forma permamente a ${seccionEliminar.seccion}?`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#dc3545',
+    }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+            $.ajax({
+                data: {
+                    "id": hijo
+                },
+                url: URL_BASE + '/carpeta/delete',
+                type: 'POST',
+                headers: {
+                    'token': token
+                },
+                dataType: 'json'
+            }).done((response) => {
+                console.log('response Eliminar', response);
+                if (response.exito) {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'success',
+                        title: response.exito,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/permisos";
+                    })
+                } else if (response.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ERROR',
+                        html: '<strong>' + response.carpeta + '</strong> ' + response.error
+                    }).then(() => {
+                        dibujarCarpeta(seccionEliminar.id)
+
+                    })
+                } else if (response.exit) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: response.exit,
+                        showConfirmButton: false,
+                        text: 'Sesión expirada, vuelva a iniciar sesión',
+                        timer: 3000
+                    }).then(() => {
+                        window.location.href = URL_BASE + "/?r=8";
+                    })
+                }
+            }).fail((err) => {
+                console.log(err);
+            });
+        }
+    })
+}
+
+function userPermisosHistorial(carpeta, usuario) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                "tipo": 'userPermisosHistorial',
+                "idUser": usuario,
+                "idSeccion": carpeta
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/user/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+            resolve(response)
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}
+
+function unidadPermisosHistorial(carpeta, unidad) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            data: {
+                "tipo": 'unidadPermisosHistorial',
+                "idUnidad": unidad,
+                "idSeccion": carpeta
+            },
+            //url: ENV.URL_BASE + '/user/datos',
+            url: URL_BASE + '/unidad/datos',
+            type: 'POST',
+            headers: {
+                'token': token
+            },
+            dataType: 'json'
+        }).done((response) => {
+            //console.log(response);
+            if (response.exit) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: response.exit,
+                    showConfirmButton: false,
+                    text: 'Sesión expirada, vuelva a iniciar sesión',
+                    timer: 3000
+                }).then(() => {
+                    window.location.href = URL_BASE + "/?r=8";
+                })
+            }
+            resolve(response)
+
+        }).fail((err) => {
+            reject(err);
+        });
+    })
+}

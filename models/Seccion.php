@@ -37,6 +37,9 @@ class Seccion extends ActiveRecord
         if (!$this->seccion) {
             self::$alertas['error'][] = 'El Nombre de la Sección es Obligatorio';
         }
+        if (strlen($this->seccion) > 60) {
+            self::$alertas['error'][] = 'El Nombre de la Sección es demasiado largo';
+        }
 
         $texto = preg_match('([^A-Za-z0-9 ])', $this->seccion);
         if ($texto > 0) {
@@ -78,14 +81,20 @@ class Seccion extends ActiveRecord
         return json_encode($moverHijos);
     }
 
+
     public function getPath()
     {
         $idPadre = intval($this->idPadre);
-        // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
         $pathBase = "/" . str_replace(" ", "_", $this->seccion);
 
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
+            if (!$secPadre) {
+                throw new Exception(json_encode([
+                    'error' => 'No se encontró los hijos para generar el path de la carpeta',
+                    'carpeta' => $this
+                ]));
+            }
             $nombreCarpeta = str_replace(" ", "_", $secPadre->seccion);
             $pathBase = "/" . $nombreCarpeta . $pathBase;
             $idPadre = $secPadre->idPadre;
@@ -93,13 +102,41 @@ class Seccion extends ActiveRecord
         return $pathBase;
     }
 
+    public function getPathLink()
+    {
+        $idPadre = intval($this->idPadre);
+        // $pathBase = "/".htmlspecialchars(str_replace(" ","_",$this->seccion));
+        $arrPath = [];
+        $pathCarpeta = ['seccion' => $this->seccion, 'id' => $this->id];
+        $pathBase2 = ['seccion' => 'Base', 'id' => 0];
+        array_unshift($arrPath, $pathCarpeta);
+        while ($idPadre != 0) {
+            $secPadre = Seccion::where('id', $idPadre);
+            if (!$secPadre) {
+                throw new Exception(json_encode([
+                    'error' => 'No se encontró la carpeta padre',
+                    'carpeta' => $this
+                ]));
+            }
+            $pathBase = ['seccion' => $secPadre->seccion, 'id' => $secPadre->id];
+            array_unshift($arrPath, $pathBase);
+            $idPadre = $secPadre->idPadre;
+        }
+        array_unshift($arrPath, $pathBase2);
+        return $arrPath;
+    }
+
     public function renameDir($oldPath)
     {
         $carpetaArchivos = '../public/archivos';
-        $old = $carpetaArchivos . $oldPath;
-        $new = $carpetaArchivos . $this->path;
-        $resolve = rename($old, $new);
-        return $resolve;
+        if (is_dir($carpetaArchivos . $oldPath)) {
+            rename($carpetaArchivos . $oldPath, $carpetaArchivos . $this->path);
+        } else {
+            throw new Exception(json_encode([
+                'error' => 'No se encuentra el directorio en el servidor para mover la carpeta',
+                'carpeta' => $this
+            ]));
+        }
     }
 
     public function move_to($oldPath)
@@ -117,136 +154,79 @@ class Seccion extends ActiveRecord
     {
         $carpetaArchivos = '../public/archivos';
         $carpeta = $carpetaArchivos . $this->path;
-        if (!mkdir($carpeta, 0777, true)) {
-            mkdir($carpeta, 0777, true);
-            return true;
+        if (is_dir($carpeta)) {
+            throw new Exception(json_encode([
+                'error' => 'No se pudo crear la carpeta en el servidor porque ya existe',
+                'carpeta' => $this
+            ]));
+        }
+
+        if (mkdir($carpeta, 0777, true)) {
+            return true; // Carpeta creada exitosamente
         } else {
-            return new Exception('No se pudo crear la carpeta');
+            throw new Exception(json_encode([
+                'error' => 'No se pudo crear la carpeta en el servidor, problemas con el path',
+                'carpeta' => $this
+            ]));
         }
     }
 
     public static function updatePathHijos($hijos)
     {
-        foreach ($hijos as $hijo) {
-            $seccion = Seccion::where('id', $hijo);
-            if ($seccion) {
+        try {
+            Seccion::initTransaction();
+            foreach ($hijos as $hijo) {
+                $seccion = Seccion::where('id', $hijo);
+                if (!$seccion) {
+                    throw new Exception(json_encode([
+                        'error' => 'No se encuentran los hijos de la carpeta para actualizar el path',
+                        'carpeta' => 'idCarpeta => ' . $hijo
+                    ]));
+                }
                 $seccion->path = $seccion->getPath();
                 $seccion->guardar();
-            } else {
-                throw new Exception('No se encuentran los hijos');
+                Seccion::endTransaction();
             }
+        } catch (Exception $e) {
+            Seccion::rollback();
+            Seccion::generarError($e->getMessage());
         }
-        return true;
     }
 
     public static function updateStatus($hijos)
     {
-        foreach ($hijos as $hijo) {
-            $seccion = Seccion::where('id', $hijo);
-            if ($seccion) {
+        try {
+            Seccion::initTransaction();
+            foreach ($hijos as $hijo) {
+                $seccion = Seccion::where('id', $hijo);
+                if (!$seccion) {
+                    throw new Exception(json_encode([
+                        'error' => 'No se encuentran los hijos de la carpeta para actualizar el estado',
+                        'carpeta' => 'idCarpeta => ' . $hijo
+                    ]));
+                }
                 $seccion->status = ($seccion->status == 0) ? 1 : 0;
                 $seccion->guardar();
-            } else {
-                throw new Exception('error');
             }
-        }
-        return true;
-    }
-
-    public static function updatePermisosPadreUser($idPadre, $idSeccion, $idUser, $verSeccion, $accion)
-    {
-        try {
-            $cont = 0;
-            $permisoCarpetasHijas = SeccionUser::whereCamposTodos('idUser', $idUser, 'idPadre', $idPadre);
-            foreach ($permisoCarpetasHijas as $carpetaHijas) {
-                if ($carpetaHijas->verSeccion == true && $carpetaHijas->idSeccion != $idSeccion) {
-                    $cont++;
-                }
-            }
-            if ($verSeccion == true) {
-                $cont++;
-            }
-            $idCarpetas = [];
-            while ($idPadre != 0) {
-                $secPadre = Seccion::where('id', $idPadre);
-                array_push($idCarpetas, $secPadre->id);
-                $idPadre = $secPadre->idPadre;
-            }
-            foreach ($idCarpetas as $idCarpeta) {
-                $permiso = new SeccionUser();
-                $permiso->idUser = $idUser;
-                $seccion = Seccion::find($idCarpeta);
-                $permiso->idSeccion = $seccion->id;
-                $permiso->idPadre = $seccion->idPadre;
-                switch ($accion) {
-                    case 0:
-                        $permiso->verSeccion = $verSeccion;
-                        break;
-                    case 1:
-                        $permiso->verSeccion = ($cont == 0) ? false : true;
-                        break;
-                    default:
-                        $permiso->verSeccion = false;
-                        break;
-                }
-                $permiso->guardarPermiso('idUser', $permiso->idUser);
-            }
-            return true;
+            Seccion::endTransaction();
         } catch (Exception $e) {
-            return false;
+            Seccion::rollback();
+            Seccion::generarError($e->getMessage());
         }
     }
-
-    public static function updatePermisosPadreUnidad($idPadre, $idSeccion, $idUnidad, $verSeccion,$accion)
-    {
-        try {
-            $cont = 0;
-            $permisoCarpetasHijas = SeccionUnidad::whereCamposTodos('idUnidad', $idUnidad, 'idPadre', $idPadre);
-            foreach ($permisoCarpetasHijas as $carpetaHijas) {
-                if ($carpetaHijas->verSeccion == true && $carpetaHijas->idSeccion != $idSeccion) {
-                    $cont++;
-                }
-            }
-            if ($verSeccion == true) {
-                $cont++;
-            }
-            $idCarpetas = [];
-            while ($idPadre != 0) {
-                $secPadre = Seccion::where('id', $idPadre);
-                array_push($idCarpetas, $secPadre->id);
-                $idPadre = $secPadre->idPadre;
-            }
-            foreach ($idCarpetas as $idCarpeta) {
-                $permiso = new SeccionUnidad();
-                $permiso->idUnidad = $idUnidad;
-                $seccion = Seccion::find($idCarpeta);
-                $permiso->idSeccion = $seccion->id;
-                $permiso->idPadre = $seccion->idPadre;
-                switch ($accion) {
-                    case 0:
-                        $permiso->verSeccion = $verSeccion;
-                        break;
-                    case 1:
-                        $permiso->verSeccion = ($cont == 0) ? false : true;
-                        break;
-                    default:
-                        $permiso->verSeccion = false;
-                        break;
-                }
-                $permiso->guardarPermiso('idUnidad', $permiso->idUnidad);
-            }
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
-
+    
     public static function getIdFolderPath($idPadre, $idSeccion)
     {
         $idCarpetas = [];
         array_push($idCarpetas, $idSeccion, 0);
         while ($idPadre != 0) {
             $secPadre = Seccion::where('id', $idPadre);
+            if (!$secPadre) {
+                throw new Exception(json_encode([
+                    'error' => 'No se encuentra los hijos de la carpeta para obtener el path',
+                    'carpeta' => 'idCarpeta => ' . $idSeccion
+                ]));
+            }
             array_push($idCarpetas, $secPadre->id);
             $idPadre = $secPadre->idPadre;
         }
